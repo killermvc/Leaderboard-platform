@@ -11,6 +11,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 	public DbSet<Role> Roles { get; set; } = null!;
 	public DbSet<UserRole> UserRoles { get; set; } = null!;
 	public DbSet<GameModerator> GameModerators { get; set; } = null!;
+	public DbSet<ApiKey> ApiKeys { get; set; } = null!;
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
