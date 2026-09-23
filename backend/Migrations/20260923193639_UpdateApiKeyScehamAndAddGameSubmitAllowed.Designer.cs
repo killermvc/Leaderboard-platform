@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Leaderboard.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260923185618_AddPrefixAndUsedAtForKeyAndGameSubmitsAllowed")]
-    partial class AddPrefixAndUsedAtForKeyAndGameSubmitsAllowed
+    [Migration("20260923193639_UpdateApiKeyScehamAndAddGameSubmitAllowed")]
+    partial class UpdateApiKeyScehamAndAddGameSubmitAllowed
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -43,10 +43,6 @@ namespace Leaderboard.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("KeyHash")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("KeyPrefix")
                         .IsRequired()
                         .HasColumnType("longtext");
 

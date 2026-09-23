@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Leaderboard.Migrations
 {
     /// <inheritdoc />
-    public partial class AddPrefixAndUsedAtForKeyAndGameSubmitsAllowed : Migration
+    public partial class UpdateApiKeyScehamAndAddGameSubmitAllowed : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -21,13 +21,6 @@ namespace Leaderboard.Migrations
                 type: "tinyint(1)",
                 nullable: false,
                 defaultValue: false);
-
-            migrationBuilder.AddColumn<string>(
-                name: "KeyPrefix",
-                table: "ApiKeys",
-                type: "longtext",
-                nullable: false)
-                .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.AddColumn<DateTime>(
                 name: "LastUsedAt",
@@ -48,10 +41,6 @@ namespace Leaderboard.Migrations
             migrationBuilder.DropColumn(
                 name: "SubmitsAllowed",
                 table: "Games");
-
-            migrationBuilder.DropColumn(
-                name: "KeyPrefix",
-                table: "ApiKeys");
 
             migrationBuilder.DropColumn(
                 name: "LastUsedAt",

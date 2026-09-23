@@ -43,10 +43,6 @@ namespace Leaderboard.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<string>("KeyPrefix")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
                     b.Property<DateTime?>("LastUsedAt")
                         .HasColumnType("datetime(6)");
 
