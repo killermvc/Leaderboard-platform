@@ -44,6 +44,16 @@ public class ScoreController(
 
         try
         {
+			var game = await _gameRepository.GetGameByIdAsync(request.GameId);
+			if (game is null)
+			{
+				return NotFound("Game not found.");
+			}
+			if (!game.SubmitsAllowed)
+			{
+				return BadRequest("Submissions are not allowed for this game.");
+			}
+
             // Submit the score through the repository
             await _scoreRepository.SubmitScoreAsync(userId, request.GameId, request.Score, request.Title, request.Description);
             return Ok("Score submitted successfully.");
