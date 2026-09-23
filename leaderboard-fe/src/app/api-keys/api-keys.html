@@ -1,0 +1,154 @@
+<div class="api-keys-container">
+	@if (!isAuthenticated()) {
+		<div class="auth-warning">
+			<p>You need to be logged in to manage api keys.</p>
+			<button class="btn-primary" routerLink="/auth/login">Login</button>
+		</div>
+	} @else if (loading()) {
+		<div class="loading-state">
+			<p>Loading...</p>
+		</div>
+	} @else if (!authorized()) {
+		<div class="error-state access-denied">
+			<p>You do not have permission to manage api keys for this game.</p>
+			<button class="btn-primary" (click)="goBack()">Back to Game</button>
+		</div>
+	} @else if (error()) {
+		<div class="error-state">
+			<p>{{ error() }}</p>
+			<button class="btn-primary" (click)="goBack()">Back to Game</button>
+		</div>
+	} @else if (game(); as gameData) {
+		<button class="back-btn" (click)="goBack()">← Back to Game</button>
+
+		<header class="page-header">
+			<h1>🔑 Api Keys for {{ gameData.name }}</h1>
+			<p class="subtitle">Create, view and revoke api keys used to integrate with this game</p>
+		</header>
+
+		<!-- Generated key disclosure (shown only once) -->
+		@if (createdKey(); as created) {
+			<section class="created-key-box">
+				<h2>✅ Key created</h2>
+				<p class="disclosure-warning">
+					<strong>Store this key now.</strong> For security reasons the full key can only be shown once.
+				</p>
+				<div class="created-key-row">
+					<code class="full-key">{{ created.apiKey }}</code>
+					<button class="btn-copy" (click)="copyKey()">
+						@if (copied()) { Copied! } @else { Copy }
+					</button>
+				</div>
+				<p class="key-hint">Name "{{ created.name }}" · Created {{ formatDate(created.createdAt) }}</p>
+				<button class="btn-done" (click)="dismissCreatedKey()">Done</button>
+			</section>
+		}
+
+		<!-- Generate key section -->
+		<section class="generate-section">
+			<h2>Generate New Key</h2>
+			<div class="generate-form">
+				<div class="form-group">
+					<label for="key-name">Key Name</label>
+					<input
+						id="key-name"
+						type="text"
+						[ngModel]="keyName()"
+						(ngModelChange)="keyName.set($event)"
+						placeholder="e.g. Mobile app, CI pipeline, Third-party service..."
+					/>
+				</div>
+
+				<fieldset class="permissions-group">
+					<legend>Permissions</legend>
+					<label class="checkbox-label">
+						<input type="checkbox" [checked]="permSubmitScores()" (change)="permSubmitScores.set(!!$any($event.target).checked)" />
+						Submit scores
+					</label>
+					<label class="checkbox-label">
+						<input type="checkbox" [checked]="permReadScores()" (change)="permReadScores.set(!!$any($event.target).checked)" />
+						Read scores
+					</label>
+					<label class="checkbox-label">
+						<input type="checkbox" [checked]="permReadLeaderboard()" (change)="permReadLeaderboard.set(!!$any($event.target).checked)" />
+						Read leaderboard
+					</label>
+				</fieldset>
+
+				<div class="form-group">
+					<label for="key-expires">Expires At <span class="optional">(optional)</span></label>
+					<input
+						id="key-expires"
+						type="datetime-local"
+						[ngModel]="expiresAt()"
+						(ngModelChange)="expiresAt.set($event)"
+					/>
+				</div>
+
+				@if (generateError()) {
+					<div class="error-message">{{ generateError() }}</div>
+				}
+
+				<button class="btn-primary" (click)="generateKey()" [disabled]="generating() || !keyName().trim()">
+					@if (generating()) {
+						Generating...
+					} @else {
+						Generate Key
+					}
+				</button>
+			</div>
+		</section>
+
+		<!-- Keys list -->
+		<section class="keys-section">
+			<h2>Keys</h2>
+
+			@if (loading()) {
+				<p class="loading-text">Loading keys...</p>
+			} @else if (keys().length === 0) {
+				<div class="empty-state">
+					<p>No api keys for this game yet.</p>
+					<p class="hint">Generate a key above to get started.</p>
+				</div>
+			} @else {
+				<ul class="keys-list">
+					@for (key of keys(); track key.id) {
+						<li [class.revoked]="isRevoked(key)">
+							<div class="key-main">
+								<div class="key-identity">
+									<span class="key-name">{{ key.name }}</span>
+									<span class="key-id">ID #{{ key.id }}</span>
+								</div>
+								<div class="key-dates">
+									<span class="key-date">Created {{ formatDate(key.createdAt) }}</span>
+									<span class="key-date">Last used {{ formatDate(key.lastUsedAt) }}</span>
+									@if (key.expiresAt) {
+										<span class="key-date">Expires {{ formatDate(key.expiresAt) }}</span>
+									}
+									@if (key.revokedAt) {
+										<span class="key-date">Revoked {{ formatDate(key.revokedAt) }}</span>
+									}
+								</div>
+							</div>
+							<div class="key-actions">
+								<span class="status-badge" [class]="statusClass(key)">{{ statusLabel(key) }}</span>
+								<button
+									class="btn-remove"
+									(click)="revokeKey(key.id)"
+									[disabled]="isRevoked(key) || revokingId() === key.id"
+									aria-label="Revoke key"
+								>
+									@if (revokingId() === key.id) {
+										Revoking...
+									} @else {
+										Revoke
+									}
+								</button>
+							</div>
+						</li>
+					}
+				</ul>
+			}
+		</section>
+	}
+</div>

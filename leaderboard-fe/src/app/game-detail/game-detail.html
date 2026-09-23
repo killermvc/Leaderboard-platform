@@ -29,6 +29,9 @@
           @if (canModerate()) {
             <button class="btn-secondary" (click)="goToPendingScores()">⏳ Review Pending Scores</button>
           }
+          @if (canManageKeys()) {
+            <button class="btn-secondary" (click)="goToApiKeys()">🔑 Api Keys</button>
+          }
         </div>
       </div>
     </header>

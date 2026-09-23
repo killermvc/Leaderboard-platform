@@ -30,6 +30,7 @@ builder.Services.AddScoped<IGameModeratorRepository, GameModeratorRepository>();
 builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
+builder.Services.AddScoped<IApiKeyAuthorizationService, ApiKeyAuthorizationService>();
 
 builder.Services.AddLogging(loggingBuilder =>
 {

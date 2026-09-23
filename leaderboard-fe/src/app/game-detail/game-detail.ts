@@ -6,6 +6,7 @@ import { GameService, Game } from '../core/game-service';
 import { ScoreService, LeaderboardEntry } from '../core/score-service';
 import { AuthService } from '../core/auth-service';
 import { ModerationService } from '../core/moderation-service';
+import { ApiKeyService } from '../core/api-key-service';
 
 @Component({
   selector: 'app-game-detail',
@@ -21,6 +22,7 @@ export class GameDetail implements OnInit {
   private scoreService = inject(ScoreService);
   private authService = inject(AuthService);
   private moderationService = inject(ModerationService);
+  private apiKeyService = inject(ApiKeyService);
   private fb = inject(FormBuilder);
 
   game = signal<Game | null>(null);
@@ -32,6 +34,7 @@ export class GameDetail implements OnInit {
   submitError = signal<string | null>(null);
   submitting = signal(false);
   canModerate = signal(false);
+  canManageKeys = signal(false);
 
   isLoggedIn = computed(() => this.authService.isAuthenticated());
   isAdmin = computed(() => this.authService.hasRole('Admin'));
@@ -53,6 +56,7 @@ export class GameDetail implements OnInit {
     this.loadGame(gameId);
     this.loadLeaderboard(gameId);
     this.checkModerationRights(gameId);
+    this.checkApiKeyRights(gameId);
   }
 
   private loadGame(gameId: number) {
@@ -95,6 +99,21 @@ export class GameDetail implements OnInit {
       },
       error: () => {
         this.canModerate.set(false);
+      }
+    });
+  }
+
+  private checkApiKeyRights(gameId: number) {
+    if (!this.isLoggedIn()) {
+      return;
+    }
+
+    this.apiKeyService.canManageKeys(gameId).subscribe({
+      next: (result) => {
+        this.canManageKeys.set(result.canManage);
+      },
+      error: () => {
+        this.canManageKeys.set(false);
       }
     });
   }
@@ -155,6 +174,13 @@ export class GameDetail implements OnInit {
     const gameId = this.game()?.id;
     if (gameId) {
       this.router.navigate(['/games', gameId, 'pending-scores']);
+    }
+  }
+
+  goToApiKeys() {
+    const gameId = this.game()?.id;
+    if (gameId) {
+      this.router.navigate(['/games', gameId, 'api-keys']);
     }
   }
 

@@ -12,12 +12,12 @@ namespace Leaderboard.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class ApiKeyController(IApiKeyRepository apiKeyRepository, IApiKeyService apiKeyService, IGameRepository gameRepository, IGameModeratorRepository gameModeratorRepository) : ControllerBase
+public class ApiKeyController(IApiKeyRepository apiKeyRepository, IApiKeyService apiKeyService, IGameRepository gameRepository, IApiKeyAuthorizationService apiKeyAuthorizationService) : ControllerBase
 {
 	private readonly IApiKeyRepository _apiKeyRepository = apiKeyRepository;
 	private readonly IApiKeyService _apiKeyService = apiKeyService;
 	private readonly IGameRepository _gameRepository = gameRepository;
-	private readonly IGameModeratorRepository _gameModeratorRepository = gameModeratorRepository;
+	private readonly IApiKeyAuthorizationService _apiKeyAuthorizationService = apiKeyAuthorizationService;
 
 	// POST: api/ApiKey
 	[HttpPost]
@@ -39,7 +39,7 @@ public class ApiKeyController(IApiKeyRepository apiKeyRepository, IApiKeyService
 			return NotFound(new { Message = "Game not found" });
 		}
 
-		if (!await CanManageKeysAsync(request.GameId, userId))
+		if (!await _apiKeyAuthorizationService.CanManageKeysAsync(User, request.GameId))
 		{
 			return Forbid();
 		}
@@ -83,7 +83,7 @@ public class ApiKeyController(IApiKeyRepository apiKeyRepository, IApiKeyService
 			return NotFound(new { Message = "Game not found" });
 		}
 
-		if (!await CanManageKeysAsync(gameId, userId))
+		if (!await _apiKeyAuthorizationService.CanManageKeysAsync(User, gameId))
 		{
 			return Forbid();
 		}
@@ -118,7 +118,7 @@ public class ApiKeyController(IApiKeyRepository apiKeyRepository, IApiKeyService
 			return NotFound(new { Message = "Api key not found" });
 		}
 
-		if (!await CanManageKeysAsync(key.GameId, userId))
+		if (!await _apiKeyAuthorizationService.CanManageKeysAsync(User, key.GameId))
 		{
 			return Forbid();
 		}
@@ -142,14 +142,17 @@ public class ApiKeyController(IApiKeyRepository apiKeyRepository, IApiKeyService
 		});
 	}
 
+	// GET: api/ApiKey/game/{gameId}/can-manage
+	[HttpGet("game/{gameId}/can-manage")]
+	public async Task<IActionResult> CanManageKeys(int gameId)
+	{
+		var canManage = await _apiKeyAuthorizationService.CanManageKeysAsync(User, gameId);
+		return Ok(new { CanManage = canManage });
+	}
+
 	private bool TryGetUserId(out int userId)
 	{
 		var userIdClaim = User.FindFirst(ClaimTypes.Name)?.Value;
 		return int.TryParse(userIdClaim, out userId);
-	}
-
-	private async Task<bool> CanManageKeysAsync(int gameId, int userId)
-	{
-		return User.IsInRole("Admin") || await _gameModeratorRepository.CanModerateGameAsync(gameId, userId);
 	}
 }

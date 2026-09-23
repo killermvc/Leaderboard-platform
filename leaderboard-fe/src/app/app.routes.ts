@@ -13,6 +13,7 @@ import { PendingScoresComponent } from './pending-scores/pending-scores';
 import { MySubmissionsComponent } from './my-submissions/my-submissions';
 import { GameModeratorsComponent } from './game-moderators/game-moderators';
 import { ScorePostComponent } from './score-post/score-post';
+import { ApiKeysComponent } from './api-keys/api-keys';
 
 export const routes: Routes = [
 	  {
@@ -42,6 +43,10 @@ export const routes: Routes = [
 	  {
 		path: 'games/:id/pending-scores',
 		component: PendingScoresComponent
+	  },
+	  {
+		path: 'games/:id/api-keys',
+		component: ApiKeysComponent
 	  },
 	  {
 		path: 'games/:id',
