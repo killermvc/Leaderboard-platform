@@ -9,6 +9,7 @@ A real-time leaderboard platform with an ASP.NET Core 9.0 backend and Angular 21
 - **Score Submission** — Submit scores with moderator approval workflow
 - **Real-time Leaderboards** — Redis-backed sorted sets for fast ranking queries
 - **Moderation System** — Per-game moderators can approve/reject score submissions
+- **API Keys** — Per-game, permission-scoped keys for game clients (header or query string)
 - **Role-based Access** — Three tiers: User, Moderator, Admin
 - **Reports** — Admin top-players report with date filtering
 - **Search** — Combined game and user search
@@ -23,7 +24,7 @@ A real-time leaderboard platform with an ASP.NET Core 9.0 backend and Angular 21
 | Frontend | Angular 21 (Standalone Components, Signals) |
 | Database | MySQL 8.0 (EF Core + Pomelo) |
 | Cache | Redis (StackExchange.Redis) |
-| Auth | JWT Bearer + BCrypt |
+| Auth | JWT Bearer + API Keys + BCrypt |
 | API Docs | Scalar + OpenAPI |
 
 ## Prerequisites
@@ -151,6 +152,48 @@ Key settings in `backend/appsettings.json`:
 |---|---|---|---|
 | GET | `/top-players?start_date=&end_date=&limit=` | Admin | Top players report |
 
+### API Keys (`/api/apikey`)
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/` | Moderator/Admin | Create a key for a game |
+| GET | `/game/{gameId}` | Moderator/Admin | List a game's keys |
+| POST | `/{id}/revoke` | Moderator/Admin | Revoke a key |
+| POST | `/{id}/regenerate` | Moderator/Admin | Revoke and replace a key |
+| GET | `/game/{gameId}/can-manage` | Yes | Check if user can manage keys |
+
+The full key is only returned once, on creation. Everything else exposes prefix/metadata only.
+
+## API Key Authentication
+
+Game integrations authenticate with a per-game API key instead of a JWT. The key is accepted in either place:
+
+| Where | Example |
+|---|---|
+| Header | `X-API-Key: <key>` |
+| Query string | `GET /api/score/leaderboard/1?apiKey=<key>` (also accepts `api_key`) |
+
+The query string form exists for clients that cannot set headers when sending a request. The header wins when both are present.
+
+Behaviour:
+
+- Requests without a key are unaffected — still anonymous, or authenticated by JWT when an `Authorization` header is present. A validated JWT always takes precedence over an API key.
+- The key is SHA-256 hashed and matched against `ApiKeys.KeyHash`; the raw value is never stored or logged.
+- Unknown, revoked or expired key → `401`. Key used against a `gameId` other than the one it is scoped to (route value or `gameId` query) → `403`. If the lookup itself fails, the request is rejected with `503` rather than falling through to anonymous access.
+- Successful keys are attached to the request as claims, readable from any controller via `Leaderboard.Middleware.ApiKeyClaims`:
+
+  ```csharp
+  User.GetApiKeyId();                                     // id of the key
+  User.GetApiKeyGameId();                                 // game the key is scoped to
+  User.GetApiKeyPermissions();                            // ApiKeyPermissions flags
+  User.HasApiKeyPermission(ApiKeyPermissions.SubmitScores);
+  ```
+
+- Credential and role based endpoints stay JWT-only (`PUT /api/auth`, `PUT /api/auth/username`, anything requiring `Admin`/`Moderator`), so a key can never change a password, rename an account, or moderate/manage anything.
+- `LastUsedAt` is written at most once every 5 minutes to avoid a database write per request.
+
+> A key passed in the query string can end up in access logs and proxy logs. Prefer the header when the client allows it.
+
 ## Database Schema
 
 | Table | Purpose |
@@ -161,6 +204,7 @@ Key settings in `backend/appsettings.json`:
 | `Games` | Game definitions |
 | `Scores` | Score submissions with approval status |
 | `GameModerators` | Per-game moderator assignments |
+| `ApiKeys` | Per-game API keys, stored as SHA-256 hashes |
 
 ## Project Structure
 
@@ -171,7 +215,8 @@ Leaderboard/
 │   ├── Models/            # Entities and DbContext
 │   ├── Dtos/              # Data Transfer Objects
 │   ├── Repositories/      # Repository pattern (interface + implementation)
-│   ├── Services/          # Business logic (JWT)
+│   ├── Services/          # Business logic (JWT, API keys)
+│   ├── Middleware/        # API key authentication middleware
 │   ├── Migrations/        # EF Core migrations
 │   └── Program.cs         # Application entry point
 │

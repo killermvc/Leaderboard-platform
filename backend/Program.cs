@@ -12,6 +12,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Leaderboard.Repositories;
 using Leaderboard.Models;
 using Leaderboard.Services;
+using Leaderboard.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -109,6 +110,7 @@ if (app.Environment.IsDevelopment())
 //app.UseHttpsRedirection();
 
 app.UseAuthentication();
+app.UseMiddleware<ApiKeyAuthenticationMiddleware>();
 app.UseAuthorization();
 
 app.UseCors();

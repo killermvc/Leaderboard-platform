@@ -7,6 +7,7 @@ using Leaderboard.Models;
 using Leaderboard.Services;
 using Leaderboard.Dtos;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace Leaderboard.Controllers;
 
@@ -63,7 +64,7 @@ public class AuthController(IUserRepository userRepository, IJwtService jwtServi
 	}
 
 	[HttpPut]
-	[Authorize]
+	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 	public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
 	{
 		var userIdClaim = User.FindFirst(ClaimTypes.Name)?.Value;
@@ -120,7 +121,7 @@ public class AuthController(IUserRepository userRepository, IJwtService jwtServi
 	}
 
 	[HttpPut("username")]
-	[Authorize]
+	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 	public async Task<IActionResult> UpdateUsername([FromBody] UpdateUsernameRequest request)
 	{
 		var userIdClaim = User.FindFirst(ClaimTypes.Name)?.Value;

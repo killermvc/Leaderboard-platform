@@ -142,6 +142,63 @@ public class ApiKeyController(IApiKeyRepository apiKeyRepository, IApiKeyService
 		});
 	}
 
+	// POST: api/ApiKey/{id}/regenerate
+	[HttpPost("{id}/regenerate")]
+	public async Task<IActionResult> RegenerateKey(int id)
+	{
+		if (!TryGetUserId(out int userId))
+		{
+			return Unauthorized(new { Message = "Invalid token" });
+		}
+
+		ApiKey? key = await _apiKeyRepository.GetByIdAsync(id);
+		if (key == null)
+		{
+			return NotFound(new { Message = "Api key not found" });
+		}
+
+		if (!await _apiKeyAuthorizationService.CanManageKeysAsync(User, key.GameId))
+		{
+			return Forbid();
+		}
+
+		if (key.RevokedAt.HasValue)
+		{
+			return BadRequest(new { Message = "Api key is already revoked" });
+		}
+
+		// Keep the same name unless another key in the game already uses it
+		string newName = key.Name;
+		if (await _apiKeyRepository.HasKeyWithNameAsync(key.GameId, key.Name, key.Id))
+		{
+			newName = $"{key.Name} - Copy";
+		}
+
+		// Regenerate an expired key carries its expiry over, preserving the expired status
+		string newApiKey = _apiKeyService.GenerateApiKey();
+		var newKey = new ApiKey
+		{
+			Name = newName,
+			KeyHash = _apiKeyService.HashApiKey(newApiKey),
+			GameId = key.GameId,
+			UserId = userId,
+			Permissions = key.Permissions,
+			CreatedAt = DateTime.UtcNow,
+			ExpiresAt = key.ExpiresAt
+		};
+
+		await _apiKeyRepository.RegenerateAsync(key, newKey);
+
+		return CreatedAtAction(nameof(GetKeysForGame), new { gameId = newKey.GameId }, new CreatedApiKeyDto
+		{
+			Id = newKey.Id,
+			Name = newKey.Name,
+			ApiKey = newApiKey,
+			CreatedAt = newKey.CreatedAt,
+			ExpiresAt = newKey.ExpiresAt
+		});
+	}
+
 	// GET: api/ApiKey/game/{gameId}/can-manage
 	[HttpGet("game/{gameId}/can-manage")]
 	public async Task<IActionResult> CanManageKeys(int gameId)
