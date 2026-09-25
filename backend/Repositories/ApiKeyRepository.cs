@@ -37,6 +37,36 @@ public class ApiKeyRepository(AppDbContext context) : IApiKeyRepository
 	}
 
 	/// <summary>
+	/// Retrieves an api key by the hash of its secret value.
+	/// </summary>
+	public async Task<ApiKey?> GetByHashAsync(string keyHash)
+	{
+		return await _context.ApiKeys
+			.AsNoTracking()
+			.FirstOrDefaultAsync(k => k.KeyHash == keyHash);
+	}
+
+	/// <summary>
+	/// Checks whether another api key in the game already uses the given name.
+	/// </summary>
+	public async Task<bool> HasKeyWithNameAsync(int gameId, string name, int excludeKeyId)
+	{
+		return await _context.ApiKeys
+			.AnyAsync(k => k.GameId == gameId && k.Name == name && k.Id != excludeKeyId);
+	}
+
+	/// <summary>
+	/// Revokes an existing api key and creates a new one in a single transaction.
+	/// </summary>
+	public async Task RegenerateAsync(ApiKey existingKey, ApiKey newKey)
+	{
+		existingKey.RevokedAt = DateTime.UtcNow;
+		_context.ApiKeys.Update(existingKey);
+		await _context.ApiKeys.AddAsync(newKey);
+		await _context.SaveChangesAsync();
+	}
+
+	/// <summary>
 	/// Updates an existing api key in the database.
 	/// </summary>
 	public async Task UpdateAsync(ApiKey apiKey)

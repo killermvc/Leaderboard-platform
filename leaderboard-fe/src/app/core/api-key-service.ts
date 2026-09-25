@@ -65,6 +65,14 @@ export class ApiKeyService {
   }
 
   /**
+   * Regenerate an api key: revokes the existing key and creates a new one
+   * with the same name and permissions. The full key is only returned once.
+   */
+  regenerateKey(id: number): Observable<CreatedApiKey> {
+    return this.http.post<CreatedApiKey>(`${this.baseUrl}/${id}/regenerate`, {});
+  }
+
+  /**
    * Revoke an api key.
    */
   revokeKey(id: number): Observable<ApiKeyInfo> {

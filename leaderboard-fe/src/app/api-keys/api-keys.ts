@@ -46,6 +46,7 @@ export class ApiKeysComponent implements OnInit {
   copied = signal(false);
 
   revokingId = signal<number | null>(null);
+  regeneratingId = signal<number | null>(null);
 
   isAuthenticated = computed(() => this.authService.isAuthenticated());
 
@@ -180,6 +181,39 @@ export class ApiKeysComponent implements OnInit {
         console.error('Failed to revoke api key', err);
         this.revokingId.set(null);
         alert('Failed to revoke api key. Please try again.');
+      }
+    });
+  }
+
+  regenerateKey(id: number) {
+    const key = this.keys().find(k => k.id === id);
+    if (!key) return;
+
+    if (!confirm(`Regenerate api key "${key.name}"? The current key will be revoked and a new key will be created with the same name and permissions.`)) {
+      return;
+    }
+
+    this.regeneratingId.set(id);
+    this.generateError.set(null);
+
+    this.apiKeyService.regenerateKey(id).subscribe({
+      next: (created) => {
+        this.createdKey.set(created);
+        this.regeneratingId.set(null);
+        const gameId = this.game()?.id;
+        if (gameId) {
+          this.loadKeys(gameId);
+        }
+      },
+      error: (err) => {
+        console.error('Failed to regenerate api key', err);
+        this.regeneratingId.set(null);
+        if (err?.status === 403) {
+          this.generateError.set('You do not have permission to manage api keys for this game.');
+        } else {
+          this.generateError.set('Failed to regenerate api key. Please try again.');
+        }
+        alert('Failed to regenerate api key. Please try again.');
       }
     });
   }

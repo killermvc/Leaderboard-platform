@@ -130,8 +130,23 @@
 									}
 								</div>
 							</div>
-							<div class="key-actions">
-								<span class="status-badge" [class]="statusClass(key)">{{ statusLabel(key) }}</span>
+<div class="key-actions">
+							<span class="status-badge" [class]="statusClass(key)">{{ statusLabel(key) }}</span>
+							<div class="key-action-buttons">
+								@if (!isRevoked(key)) {
+									<button
+										class="btn-regen"
+										(click)="regenerateKey(key.id)"
+										[disabled]="regeneratingId() === key.id"
+										aria-label="Regenerate key"
+									>
+										@if (regeneratingId() === key.id) {
+											Regenerating...
+										} @else {
+											Regenerate
+										}
+									</button>
+								}
 								<button
 									class="btn-remove"
 									(click)="revokeKey(key.id)"
@@ -145,7 +160,8 @@
 									}
 								</button>
 							</div>
-						</li>
+						</div>
+					</li>
 					}
 				</ul>
 			}
