@@ -13,6 +13,7 @@ public interface IScoreRepository
 	public Task<Score> SubmitNamedScoreAsync(int gameId, string playerName, int score, string? title = null, string? description = null);
 
 	public Task<Score?> GetByIdAsync(int id);
+	public Task<Score?> GetBestNamedScoreByGameAsync(int gameId, string playerName);
 	public Task<List<LeaderboardEntry>> GetLeaderboardAsync(int game, int limit);
 	public Task<long?> GetRankAsync(int game, int user);
 	public Task<List<LeaderboardEntry>> GetTopPlayersAsync(DateTime start_date, DateTime end_date, int limit);

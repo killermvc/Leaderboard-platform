@@ -142,6 +142,21 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.FirstOrDefaultAsync(s => s.Id == id);
 	}
 
+	public async Task<Score?> GetBestNamedScoreByGameAsync(int gameId, string playerName)
+	{
+		string normalizedName = NormalizePlayerName(playerName);
+
+		return await _context.Scores
+			.AsNoTracking()
+			.Include(s => s.Game)
+			.Where(s => s.Game.Id == gameId
+				&& s.Status == ScoreStatus.Approved
+				&& s.PlayerName != null
+				&& s.PlayerName.ToLower() == normalizedName)
+			.OrderByDescending(s => s.Value)
+			.FirstOrDefaultAsync();
+	}
+
 	private static string GetLeaderboardKey(int gameId) => $"{LeaderboardKeyPrefix}{gameId}";
 
 	/// <summary>

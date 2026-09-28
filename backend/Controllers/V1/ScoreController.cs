@@ -100,6 +100,76 @@ public class ScoreController(
 		}
 	}
 
+	/// <summary>
+	/// Gets the highest approved score submitted by a named player for the game's api key.
+	/// </summary>
+	[HttpGet("game/{gameId}/player/{playerName}")]
+	[Authorize]
+	public async Task<IActionResult> GetScoreByPlayerName(int gameId, string playerName)
+	{
+		if (!TryAuthorizeGameRead(gameId, ApiKeyPermissions.ReadScores, out IActionResult? authorizationResult))
+		{
+			return authorizationResult!;
+		}
+
+		Score? score = await _scoreRepository.GetBestNamedScoreByGameAsync(gameId, playerName);
+		return score is null
+			? NotFound(new { Message = "Score not found." })
+			: Ok(ToScoreDto(score));
+	}
+
+	/// <summary>
+	/// Gets the complete approved leaderboard for the game's api key.
+	/// </summary>
+	[HttpGet("game/{gameId}/leaderboard")]
+	[Authorize]
+	public async Task<IActionResult> GetLeaderboard(int gameId)
+	{
+		if (!TryAuthorizeGameRead(gameId, ApiKeyPermissions.ReadLeaderboard, out IActionResult? authorizationResult))
+		{
+			return authorizationResult!;
+		}
+
+		try
+		{
+			List<LeaderboardEntry> leaderboard = await _scoreRepository.GetLeaderboardAsync(gameId, int.MaxValue);
+			return Ok(leaderboard);
+		}
+		catch (KeyNotFoundException ex)
+		{
+			return NotFound(new { Message = ex.Message });
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Error retrieving leaderboard for game {GameId}.", gameId);
+			return StatusCode(500, new { Message = "An error occurred while retrieving the leaderboard." });
+		}
+	}
+
+	private bool TryAuthorizeGameRead(int gameId, ApiKeyPermissions permission, out IActionResult? result)
+	{
+		if (User.GetApiKeyId() is null)
+		{
+			result = Unauthorized(new { Message = "An api key is required to read scores." });
+			return false;
+		}
+
+		if (!User.HasApiKeyPermission(permission))
+		{
+			result = Forbid();
+			return false;
+		}
+
+		if (User.GetApiKeyGameId() != gameId)
+		{
+			result = Forbid();
+			return false;
+		}
+
+		result = null;
+		return true;
+	}
+
 	private static ScoreDto ToScoreDto(Score s) => new()
 	{
 		Id = s.Id,

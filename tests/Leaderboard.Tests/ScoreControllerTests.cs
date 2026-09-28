@@ -92,6 +92,79 @@ public class V1ScoreControllerTests
 		gameRepository.Verify(repository => repository.GetGameByIdAsync(It.IsAny<int>()), Times.Never);
 	}
 
+	[Fact]
+	public async Task GetScoreByPlayerName_WithReadPermission_ReturnsBestScore()
+	{
+		var scoreRepository = new Mock<IScoreRepository>();
+		var gameRepository = new Mock<IGameRepository>();
+		var score = new Score
+		{
+			Id = 42,
+			Game = new Game { Id = 7, Name = "Arcade", Description = "Test game" },
+			PlayerName = "Ryu",
+			Value = 9000,
+			Status = ScoreStatus.Approved
+		};
+		scoreRepository
+			.Setup(repository => repository.GetBestNamedScoreByGameAsync(7, "Ryu"))
+			.ReturnsAsync(score);
+
+		var controller = CreateController(scoreRepository, gameRepository, ApiKeyPermissions.ReadScores, 7);
+		var result = await controller.GetScoreByPlayerName(7, "Ryu");
+
+		var response = Assert.IsType<OkObjectResult>(result);
+		var scoreDto = Assert.IsType<ScoreDto>(response.Value);
+		Assert.Equal("Ryu", scoreDto.PlayerName);
+		Assert.Equal(9000, scoreDto.Value);
+	}
+
+	[Fact]
+	public async Task GetLeaderboard_WithReadPermission_ReturnsEntireGameLeaderboard()
+	{
+		var scoreRepository = new Mock<IScoreRepository>();
+		var gameRepository = new Mock<IGameRepository>();
+		var leaderboard = new List<LeaderboardEntry>
+		{
+			new() { UserName = "Ryu", Score = 9000 }
+		};
+		scoreRepository
+			.Setup(repository => repository.GetLeaderboardAsync(7, int.MaxValue))
+			.ReturnsAsync(leaderboard);
+
+		var controller = CreateController(scoreRepository, gameRepository, ApiKeyPermissions.ReadLeaderboard, 7);
+		var result = await controller.GetLeaderboard(7);
+
+		var response = Assert.IsType<OkObjectResult>(result);
+		Assert.Same(leaderboard, response.Value);
+		scoreRepository.Verify(repository => repository.GetLeaderboardAsync(7, int.MaxValue), Times.Once);
+	}
+
+	[Fact]
+	public async Task GetScoreByPlayerName_WithoutReadPermission_ReturnsForbidden()
+	{
+		var scoreRepository = new Mock<IScoreRepository>();
+		var gameRepository = new Mock<IGameRepository>();
+		var controller = CreateController(scoreRepository, gameRepository, ApiKeyPermissions.ReadLeaderboard, 7);
+
+		var result = await controller.GetScoreByPlayerName(7, "Ryu");
+
+		Assert.IsType<ForbidResult>(result);
+		scoreRepository.Verify(repository => repository.GetBestNamedScoreByGameAsync(It.IsAny<int>(), It.IsAny<string>()), Times.Never);
+	}
+
+	[Fact]
+	public async Task GetLeaderboard_WithDifferentGameId_ReturnsForbidden()
+	{
+		var scoreRepository = new Mock<IScoreRepository>();
+		var gameRepository = new Mock<IGameRepository>();
+		var controller = CreateController(scoreRepository, gameRepository, ApiKeyPermissions.ReadLeaderboard, 7);
+
+		var result = await controller.GetLeaderboard(8);
+
+		Assert.IsType<ForbidResult>(result);
+		scoreRepository.Verify(repository => repository.GetLeaderboardAsync(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
+	}
+
 	[Theory]
 	[InlineData(" ")]
 	[InlineData("\t\n")]
