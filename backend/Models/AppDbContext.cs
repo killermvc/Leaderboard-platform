@@ -27,6 +27,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
 		modelBuilder.Entity<Game>().HasIndex(g => g.Name).IsUnique();
 
+		modelBuilder.Entity<ApiKey>()
+			.Property(key => key.KeyHash)
+			.HasMaxLength(64)
+			.IsRequired();
+
+		modelBuilder.Entity<ApiKey>()
+			.HasIndex(key => key.KeyHash)
+			.IsUnique();
+
+		modelBuilder.Entity<ApiKey>()
+			.HasOne<User>()
+			.WithMany()
+			.HasForeignKey(key => key.UserId)
+			.OnDelete(DeleteBehavior.Cascade);
+
 		modelBuilder.Entity<UserRole>().HasKey(ur => new { ur.UserId, ur.RoleId });
 
 		modelBuilder.Entity<UserRole>()

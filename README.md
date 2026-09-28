@@ -215,6 +215,7 @@ Content-Type: application/json
 {
   "name": "Ryu",
   "score": 9000,
+  "submissionId": "match-2026-09-28-0001",
   "title": "New record",
   "description": "optional"
 }
@@ -224,6 +225,7 @@ Content-Type: application/json
 |---|---|---|
 | `name` | string, required | Player name, max 64 characters, trimmed. Identifies the player. |
 | `score` | int, required | The score value. |
+| `submissionId` | string, required | Client-generated idempotency key, max 128 characters. Retrying with the same ID returns the original submission. |
 | `title` | string, optional | Defaults to `<game name> - <score>`. |
 | `description` | string, optional | Free text. |
 | `gameId` | int, optional | May only be sent as the key's own game, anything else → `403`. |
