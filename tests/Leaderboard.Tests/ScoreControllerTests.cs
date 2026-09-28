@@ -13,7 +13,7 @@ using Xunit;
 
 namespace Leaderboard.Tests;
 
-public class ScoreControllerTests
+public class V1ScoreControllerTests
 {
 	[Fact]
 	public async Task SubmitScore_WithApiKeyAndPermission_CreatesApprovedAnonymousScore()
