@@ -10,7 +10,7 @@ public interface IScoreRepository
 	/// Submits a score for a player that has a name but no user account, as game clients do through the api.
 	/// The score is approved right away and written to the leaderboard of the game immediately.
 	/// </summary>
-	public Task<Score> SubmitNamedScoreAsync(int gameId, string playerName, int score, string? title = null, string? description = null);
+	public Task<Score> SubmitNamedScoreAsync(int gameId, string playerName, int score, string submissionId, string? title = null, string? description = null);
 
 	public Task<Score?> GetByIdAsync(int id);
 	public Task<Score?> GetBestNamedScoreByGameAsync(int gameId, string playerName);

@@ -12,8 +12,18 @@ public class Score
 	public User? User { get; set; }
 
 	public required Game Game { get; set; }
+	/// <summary>
+	/// The game this score belongs to.
+	/// </summary>
+	public int GameId { get; set; }
 	public int Value { get; set; }
 	public DateTime DateAchieved { get; set; }
+
+	/// <summary>
+	/// Client-generated identifier used to make game-client score submissions idempotent.
+	/// Null for scores submitted by registered users.
+	/// </summary>
+	public string? SubmissionId { get; set; }
 
 	/// <summary>
 	/// The name given to this score when it is not tied to a user account.

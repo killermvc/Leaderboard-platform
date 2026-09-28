@@ -84,14 +84,23 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// <param name="gameId">The ID of the game for which the score is being submitted.</param>
 	/// <param name="playerName">The name given to the player by the game client.</param>
 	/// <param name="scoreValue">The score value to be submitted.</param>
+	/// <param name="submissionId">Client-generated identifier that makes retries return the original score.</param>
 	/// <param name="title">Optional title of the score post.</param>
 	/// <param name="description">Optional description of the score post.</param>
 	/// <returns>The created score, approved and with its generated id.</returns>
 	/// <exception cref="KeyNotFoundException">Thrown when the specified game ID is not found.</exception>
-	public async Task<Score> SubmitNamedScoreAsync(int gameId, string playerName, int scoreValue, string? title = null, string? description = null)
+	public async Task<Score> SubmitNamedScoreAsync(int gameId, string playerName, int scoreValue, string submissionId, string? title = null, string? description = null)
 	{
 		Game game = await _context.Games.FirstOrDefaultAsync(g => g.Id == gameId)
 			?? throw new KeyNotFoundException($"Game with ID {gameId} not found.");
+
+		Score? existingScore = await _context.Scores
+			.Include(s => s.Game)
+			.FirstOrDefaultAsync(s => s.GameId == gameId && s.SubmissionId == submissionId);
+		if (existingScore is not null)
+		{
+			return existingScore;
+		}
 
 		string trimmedName = playerName.Trim();
 
@@ -100,6 +109,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			Value = scoreValue,
 			Game = game,
 			PlayerName = trimmedName,
+			SubmissionId = submissionId,
 			Title = string.IsNullOrWhiteSpace(title) ? $"{game.Name} - {scoreValue}" : title.Trim(),
 			Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim(),
 			// Set explicitly because the column defaults to Pending for moderated submissions
@@ -108,7 +118,23 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 		};
 
 		_context.Scores.Add(score);
-		await _context.SaveChangesAsync();
+		try
+		{
+			await _context.SaveChangesAsync();
+		}
+		catch (DbUpdateException)
+		{
+			_context.Entry(score).State = EntityState.Detached;
+			Score? concurrentScore = await _context.Scores
+				.Include(s => s.Game)
+				.FirstOrDefaultAsync(s => s.GameId == gameId && s.SubmissionId == submissionId);
+			if (concurrentScore is null)
+			{
+				throw;
+			}
+
+			return concurrentScore;
+		}
 
 		// Game client scores are approved on submission, so they go straight to the leaderboard
 		var leaderboardKey = GetLeaderboardKey(gameId);

@@ -33,7 +33,7 @@ public class V1ScoreControllerTests
 
 		gameRepository.Setup(repository => repository.GetGameByIdAsync(7)).ReturnsAsync(game);
 		scoreRepository
-			.Setup(repository => repository.SubmitNamedScoreAsync(7, "Ryu", 9000, "New record", null))
+			.Setup(repository => repository.SubmitNamedScoreAsync(7, "Ryu", 9000, "submission-1", "New record", null))
 			.ReturnsAsync(score);
 
 		var controller = CreateController(scoreRepository, gameRepository, ApiKeyPermissions.SubmitScores, 7);
@@ -41,6 +41,7 @@ public class V1ScoreControllerTests
 		{
 			Name = "Ryu",
 			Score = 9000,
+			SubmissionId = "submission-1",
 			Title = "New record"
 		});
 
@@ -50,7 +51,7 @@ public class V1ScoreControllerTests
 		Assert.Equal(ScoreStatus.Approved, response.Status);
 		Assert.Null(response.User);
 		Assert.Equal("Ryu", response.PlayerName);
-		scoreRepository.Verify(repository => repository.SubmitNamedScoreAsync(7, "Ryu", 9000, "New record", null), Times.Once);
+		scoreRepository.Verify(repository => repository.SubmitNamedScoreAsync(7, "Ryu", 9000, "submission-1", "New record", null), Times.Once);
 	}
 
 	[Fact]
@@ -63,7 +64,7 @@ public class V1ScoreControllerTests
 		var result = await controller.SubmitScore(new SubmitScoreRequest { Name = "Ryu", Score = 100 });
 
 		Assert.IsType<UnauthorizedObjectResult>(result);
-		scoreRepository.Verify(repository => repository.SubmitNamedScoreAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string?>(), It.IsAny<string?>()), Times.Never);
+		scoreRepository.Verify(repository => repository.SubmitNamedScoreAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>()), Times.Never);
 	}
 
 	[Fact]
@@ -177,6 +178,18 @@ public class V1ScoreControllerTests
 		Assert.False(Validator.TryValidateObject(request, validationContext, errors, validateAllProperties: true));
 
 		Assert.Contains(errors, error => error.MemberNames.Contains(nameof(SubmitScoreRequest.Name)));
+	}
+
+	[Fact]
+	public void SubmitScoreRequest_RequiresSubmissionId()
+	{
+		var request = new SubmitScoreRequest { Name = "Ryu", Score = 100 };
+		var validationContext = new ValidationContext(request);
+		var errors = new List<ValidationResult>();
+
+		Assert.False(Validator.TryValidateObject(request, validationContext, errors, validateAllProperties: true));
+
+		Assert.Contains(errors, error => error.MemberNames.Contains(nameof(SubmitScoreRequest.SubmissionId)));
 	}
 
 	private static ScoreController CreateController(

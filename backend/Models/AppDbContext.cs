@@ -53,6 +53,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 			.Property(s => s.PlayerName)
 			.HasMaxLength(64);
 
+		modelBuilder.Entity<Score>()
+			.Property(s => s.SubmissionId)
+			.HasMaxLength(128);
+
+		modelBuilder.Entity<Score>()
+			.HasIndex(s => new { s.GameId, s.SubmissionId })
+			.IsUnique();
+
 		// The score owner is optional, scores from game clients only carry a PlayerName
 		modelBuilder.Entity<Score>()
 			.HasOne(s => s.User)

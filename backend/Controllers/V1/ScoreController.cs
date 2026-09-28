@@ -30,7 +30,7 @@ public class ScoreController(
 	/// Submits a score for a named player on behalf of a game client.
 	/// The score belongs to the game the api key is scoped to and is approved immediately.
 	/// </summary>
-	/// <response code="201">The score was created and is on the leaderboard.</response>
+	/// <response code="201">The score was created and is on the leaderboard. Repeating the same submission ID returns the original score.</response>
 	/// <response code="400">The payload is missing, malformed or the game does not accept submissions.</response>
 	/// <response code="401">The request was not authenticated with an api key.</response>
 	/// <response code="403">The api key lacks the submit permission or is scoped to another game.</response>
@@ -87,6 +87,7 @@ public class ScoreController(
 				keyGameId,
 				request.Name!,
 				request.Score,
+				request.SubmissionId!,
 				request.Title,
 				request.Description);
 
@@ -248,6 +249,14 @@ public class SubmitScoreRequest
 	/// </summary>
 	/// <example>12500</example>
 	public int Score { get; set; }
+
+	/// <summary>
+	/// Client-generated unique identifier for this submission. Retrying with the same identifier
+	/// returns the original score instead of creating another submission.
+	/// </summary>
+	[Required]
+	[StringLength(128, MinimumLength = 1)]
+	public string? SubmissionId { get; set; }
 
 	/// <summary>
 	/// The name of the player. The score is not tied to a user account, so this name is how the
