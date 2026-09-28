@@ -142,13 +142,32 @@ internal sealed class BearerSecuritySchemeTransformer(Microsoft.AspNetCore.Authe
             };
             document.Components ??= new OpenApiComponents();
             document.Components.SecuritySchemes = requirements;
-
-            foreach (var operation in document.Paths.Values.SelectMany(path => path.Operations))
+            document.Components.SecuritySchemes[ApiKeyAuthenticationMiddleware.HeaderName] = new OpenApiSecurityScheme
             {
-                operation.Value.Security.Add(new OpenApiSecurityRequirement
+                Type = SecuritySchemeType.ApiKey,
+                Name = ApiKeyAuthenticationMiddleware.HeaderName,
+                In = ParameterLocation.Header,
+                Description = "Game-scoped API key. The key may also be supplied as the apiKey or api_key query parameter for clients that cannot set headers."
+            };
+
+            foreach (var path in document.Paths)
+            {
+                foreach (var operation in path.Value.Operations)
                 {
-                    [new OpenApiSecurityScheme { Reference = new OpenApiReference { Id = "Bearer", Type = ReferenceType.SecurityScheme } }] = Array.Empty<string>()
-                });
+                    bool isGameClientEndpoint = path.Key.StartsWith("/api/v1/", StringComparison.OrdinalIgnoreCase);
+                    operation.Value.Security.Clear();
+                    operation.Value.Security.Add(new OpenApiSecurityRequirement
+                    {
+                        [new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Id = isGameClientEndpoint ? ApiKeyAuthenticationMiddleware.HeaderName : "Bearer",
+                                Type = ReferenceType.SecurityScheme
+                            }
+                        }] = Array.Empty<string>()
+                    });
+                }
             }
         }
     }

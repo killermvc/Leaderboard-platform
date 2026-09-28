@@ -35,6 +35,17 @@ public class ScoreController(
 	/// <response code="401">The request was not authenticated with an api key.</response>
 	/// <response code="403">The api key lacks the submit permission or is scoped to another game.</response>
 	/// <response code="404">The game of the api key does not exist.</response>
+	/// <response code="429">The score-submission rate limit was exceeded. The response includes a Retry-After header in seconds.</response>
+	/// <response code="503">API-key validation is temporarily unavailable.</response>
+	/// <response code="500">An unexpected server error occurred.</response>
+	[ProducesResponseType(typeof(ScoreDto), StatusCodes.Status201Created)]
+	[ProducesResponseType(StatusCodes.Status400BadRequest)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	[ProducesResponseType(StatusCodes.Status403Forbidden)]
+	[ProducesResponseType(StatusCodes.Status404NotFound)]
+	[ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+	[ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+	[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 	[HttpPost("submit")]
 	[Authorize]
 	public async Task<IActionResult> SubmitScore([FromBody] SubmitScoreRequest request)
@@ -103,6 +114,23 @@ public class ScoreController(
 	/// <summary>
 	/// Gets the highest approved score submitted by a named player for the game's api key.
 	/// </summary>
+	/// <remarks>
+	/// Send the key in the X-API-Key header. Clients that cannot set headers may use the apiKey
+	/// or api_key query parameter instead. The key must have ReadScores permission and be scoped
+	/// to the gameId in the route.
+	/// </remarks>
+	/// <response code="200">The player's highest approved score.</response>
+	/// <response code="401">The API key is missing, invalid, revoked, or expired.</response>
+	/// <response code="403">The key lacks ReadScores permission or is scoped to another game.</response>
+	/// <response code="404">No approved score exists for the player, or the game does not exist.</response>
+	/// <response code="503">API-key validation is temporarily unavailable.</response>
+	/// <response code="500">An unexpected server error occurred.</response>
+	[ProducesResponseType(typeof(ScoreDto), StatusCodes.Status200OK)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	[ProducesResponseType(StatusCodes.Status403Forbidden)]
+	[ProducesResponseType(StatusCodes.Status404NotFound)]
+	[ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+	[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 	[HttpGet("game/{gameId}/player/{playerName}")]
 	[Authorize]
 	public async Task<IActionResult> GetScoreByPlayerName(int gameId, string playerName)
@@ -121,6 +149,23 @@ public class ScoreController(
 	/// <summary>
 	/// Gets the complete approved leaderboard for the game's api key.
 	/// </summary>
+	/// <remarks>
+	/// Send the key in the X-API-Key header. Clients that cannot set headers may use the apiKey
+	/// or api_key query parameter instead. The key must have ReadLeaderboard permission and be
+	/// scoped to the gameId in the route.
+	/// </remarks>
+	/// <response code="200">The approved leaderboard, ordered from highest to lowest score.</response>
+	/// <response code="401">The API key is missing, invalid, revoked, or expired.</response>
+	/// <response code="403">The key lacks ReadLeaderboard permission or is scoped to another game.</response>
+	/// <response code="404">The game does not exist.</response>
+	/// <response code="503">API-key validation is temporarily unavailable.</response>
+	/// <response code="500">An unexpected server error occurred.</response>
+	[ProducesResponseType(typeof(List<LeaderboardEntry>), StatusCodes.Status200OK)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	[ProducesResponseType(StatusCodes.Status403Forbidden)]
+	[ProducesResponseType(StatusCodes.Status404NotFound)]
+	[ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+	[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 	[HttpGet("game/{gameId}/leaderboard")]
 	[Authorize]
 	public async Task<IActionResult> GetLeaderboard(int gameId)
@@ -201,6 +246,7 @@ public class SubmitScoreRequest
 	/// <summary>
 	/// The score value reported by the game.
 	/// </summary>
+	/// <example>12500</example>
 	public int Score { get; set; }
 
 	/// <summary>
@@ -215,10 +261,12 @@ public class SubmitScoreRequest
 	/// <summary>
 	/// Optional title of the score post. Defaults to "GameName - ScoreValue".
 	/// </summary>
+	/// <example>Level 7 completed</example>
 	public string? Title { get; set; }
 
 	/// <summary>
 	/// Optional description of the score post.
 	/// </summary>
+	/// <example>Finished the bonus route without taking damage.</example>
 	public string? Description { get; set; }
 }
