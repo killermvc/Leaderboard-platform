@@ -102,7 +102,7 @@ public sealed class ApiKeyAuthenticationMiddleware(RequestDelegate next, ILogger
 	/// <summary>
 	/// Reads the api key from the header, falling back to the query string for header-less clients.
 	/// </summary>
-	private static string? ExtractKey(HttpContext context)
+	public static string? ExtractPresentedKey(HttpContext context)
 	{
 		if (context.Request.Headers.TryGetValue(HeaderName, out var headerValue) && !StringValues.IsNullOrEmpty(headerValue))
 		{
@@ -119,6 +119,8 @@ public sealed class ApiKeyAuthenticationMiddleware(RequestDelegate next, ILogger
 
 		return null;
 	}
+
+	private static string? ExtractKey(HttpContext context) => ExtractPresentedKey(context);
 
 	/// <summary>
 	/// Resolves the game the caller is asking about, from the route or the query string.

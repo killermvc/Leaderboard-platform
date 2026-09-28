@@ -13,6 +13,7 @@ using Leaderboard.Repositories;
 using Leaderboard.Models;
 using Leaderboard.Services;
 using Leaderboard.Middleware;
+using Leaderboard.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,6 +55,7 @@ if(builder.Configuration["Cors:Origins"] is not null)
 
 
 builder.Services.AddControllers();
+builder.Services.Configure<RateLimitOptions>(builder.Configuration.GetSection("RateLimiting"));
 
 
 builder.Services.AddOpenApi("v1", options => {
@@ -110,6 +112,7 @@ if (app.Environment.IsDevelopment())
 //app.UseHttpsRedirection();
 
 app.UseAuthentication();
+app.UseMiddleware<GameClientRateLimitingMiddleware>();
 app.UseMiddleware<ApiKeyAuthenticationMiddleware>();
 app.UseAuthorization();
 
