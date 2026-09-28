@@ -7,6 +7,7 @@ A real-time leaderboard platform with an ASP.NET Core 9.0 backend and Angular 21
 - **Authentication & Users** — Registration, login, JWT-based auth, profile management
 - **Game Management** — Create and browse games (admin-only creation)
 - **Score Submission** — Submit scores with moderator approval workflow
+- **Game Client Scores** — API-key endpoint for name-only players, approved on submission
 - **Real-time Leaderboards** — Redis-backed sorted sets for fast ranking queries
 - **Moderation System** — Per-game moderators can approve/reject score submissions
 - **API Keys** — Per-game, permission-scoped keys for game clients (header or query string)
@@ -132,6 +133,12 @@ Key settings in `backend/appsettings.json`:
 | GET | `/scores/submissions` | — | All submissions (any status) |
 | GET | `/scores/my-submissions` | Yes | Current user's submissions |
 
+### Score V1 (`/api/v1/scores`)
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/submit` | API key | Submit a score for a player, approved immediately |
+
 ### Moderation (`/api/moderation`)
 
 | Method | Endpoint | Auth | Description |
@@ -194,6 +201,56 @@ Behaviour:
 
 > A key passed in the query string can end up in access logs and proxy logs. Prefer the header when the client allows it.
 
+## Game Client Scores
+
+`POST /api/v1/scores/submit` is the endpoint a game integration calls to report a score for one of its
+players. It requires an API key with the `SubmitScores` permission, and the key's game — there is no
+`gameId` in the URL, a key is already scoped to one game.
+
+```http
+POST /api/v1/scores/submit
+X-API-Key: <key>
+Content-Type: application/json
+
+{
+  "name": "Ryu",
+  "score": 9000,
+  "title": "New record",
+  "description": "optional"
+}
+```
+
+| Field | Type | Rules |
+|---|---|---|
+| `name` | string, required | Player name, max 64 characters, trimmed. Identifies the player. |
+| `score` | int, required | The score value. |
+| `title` | string, optional | Defaults to `<game name> - <score>`. |
+| `description` | string, optional | Free text. |
+| `gameId` | int, optional | May only be sent as the key's own game, anything else → `403`. |
+
+Behaviour:
+
+- The score is stored with `Status = Approved` and no `UserId`: the player is a name, not an account.
+  The name is kept in `Scores.PlayerName`, and the API returns it as `playerName` with `user: null`.
+- One leaderboard entry per player name, compared case-insensitively after trimming
+  (`"  ryu "` and `"Ryu"` are the same player). Only a higher score moves the entry; the display name
+  shown is the one from the player's best approved score.
+- A name that matches an account's username is still a separate entry, so a game client can never
+  write to somebody's account leaderboard entry.
+- The submission is added to the cached leaderboard immediately and the board is completed from the
+  database when its cache entry is missing, so the first submission of a game never yields a partial
+  leaderboard.
+- `201` with the stored score, `400` for a validation error or when the game has submissions
+  disabled, `401` without a valid key, `403` for a key without the permission or for another game.
+- Guest entries have no score post to open, so the frontend shows them without a profile link.
+
+Leaderboard cache layout in Redis, `leaderboard:v2:<gameId>`:
+
+| Member | Meaning |
+|---|---|
+| `u:<userId>` | Best approved score of an account |
+| `g:<normalized player name>` | Best approved score of a name-only player, lowercased and trimmed |
+
 ## Database Schema
 
 | Table | Purpose |
@@ -202,7 +259,7 @@ Behaviour:
 | `Roles` | Role definitions (User, Moderator, Admin) |
 | `UserRoles` | User-role assignments (many-to-many) |
 | `Games` | Game definitions |
-| `Scores` | Score submissions with approval status |
+| `Scores` | Score submissions with approval status, nullable `UserId` and optional `PlayerName` for name-only players |
 | `GameModerators` | Per-game moderator assignments |
 | `ApiKeys` | Per-game API keys, stored as SHA-256 hashes |
 

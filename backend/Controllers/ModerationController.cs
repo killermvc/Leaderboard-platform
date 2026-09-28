@@ -54,7 +54,7 @@ public class ModerationController(
             }
 
             // Prevent moderators from approving their own scores
-            if (score.User.Id == userId)
+            if (score.UserId == userId)
             {
                 return BadRequest("You cannot approve your own score.");
             }
@@ -107,7 +107,7 @@ public class ModerationController(
             }
 
             // Prevent moderators from rejecting their own scores
-            if (score.User.Id == userId)
+            if (score.UserId == userId)
             {
                 return BadRequest("You cannot reject your own score.");
             }
@@ -375,6 +375,7 @@ public class ModerationController(
     {
         Id = s.Id,
         User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = s.User.Username },
+        PlayerName = s.PlayerName,
         Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name },
         Value = s.Value,
         DateAchieved = s.DateAchieved,

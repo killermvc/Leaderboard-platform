@@ -52,8 +52,8 @@
           <p class="empty-text">No scores yet. Be the first to play!</p>
         } @else {
           <ol class="leaderboard-list">
-            @for (entry of leaderboard(); track entry.userId; let i = $index) {
-              <li [class.top-three]="i < 3" class="clickable" (click)="viewScorePost(entry.userId)">
+            @for (entry of leaderboard(); track entry.userId ?? entry.userName; let i = $index) {
+              <li [class.top-three]="i < 3" [class.clickable]="entry.userId !== null" (click)="viewScorePost(entry.userId)">
                 <span class="rank">
                   @switch (i) {
                     @case (0) { 🥇 }

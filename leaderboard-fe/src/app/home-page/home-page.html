@@ -29,7 +29,7 @@
 							<li class="clickable" (click)="viewScorePost(score.id)">
 								<div class="player-block">
 									<p class="post-title">{{ score.title || (score.game.name + ' - ' + score.value) }}</p>
-									<p class="player-name">{{ score.user.username ?? 'Anonymous player' }} · {{ score.game.name }}</p>
+									<p class="player-name">{{ score.user?.username ?? score.playerName ?? 'Anonymous player' }} · {{ score.game.name }}</p>
 								</div>
 								<div class="score-meta">
 									<span class="score-value">{{ score.value | number }}</span>

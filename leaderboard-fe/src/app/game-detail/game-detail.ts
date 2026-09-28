@@ -184,7 +184,10 @@ export class GameDetail implements OnInit {
     }
   }
 
-  viewScorePost(userId: number) {
+  viewScorePost(userId: number | null) {
+    // A score sent by a game client belongs to a player name, there is no score post to open
+    if (userId === null) return;
+
     const gameId = this.game()?.id;
     if (!gameId) return;
 

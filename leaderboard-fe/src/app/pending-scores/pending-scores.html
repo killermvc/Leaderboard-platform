@@ -46,16 +46,20 @@
                 }
               </td>
               <td>
-                <button class="link-btn" (click)="viewUser(score.user.id)">
-                  {{ score.user.username }}
-                </button>
+                @if (score.user) {
+                  <button class="link-btn" (click)="viewUser(score.user.id)">
+                    {{ score.user.username }}
+                  </button>
+                } @else {
+                  <span class="player-name">{{ score.playerName ?? 'Unknown player' }}</span>
+                }
               </td>
               <td class="score-value">{{ score.value | number }}</td>
               <td class="date">{{ formatDate(score.dateAchieved) }}</td>
               <td class="actions">
                 @if (processingScoreId() === score.id) {
                   <span class="processing-indicator">Processing...</span>
-                } @else if (score.user.id === currentUserId()) {
+                } @else if (score.user?.id === currentUserId()) {
                   <span class="self-score-badge">Self Score</span>
                 } @else {
                   <button class="btn-approve" (click)="approveScore(score.id)" title="Approve">

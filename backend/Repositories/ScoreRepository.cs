@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Linq.Expressions;
 using Leaderboard.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
@@ -10,6 +12,24 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 
 	private readonly AppDbContext _context = context;
 	private readonly IDatabase _redisDb = multiplexer.GetDatabase();
+
+	/// <summary>
+	/// Redis member prefix for a leaderboard entry owned by a user account.
+	/// </summary>
+	private const string UserMemberPrefix = "u:";
+
+	/// <summary>
+	/// Redis member prefix for a leaderboard entry owned by a name given by a game client,
+	/// holding the normalized (trimmed, lowercased) player name.
+	/// </summary>
+	private const string PlayerNameMemberPrefix = "g:";
+
+	/// <summary>
+	/// Versioned leaderboard key, bumped when the member format changes so caches written by an
+	/// older build are never read back with the wrong member format. Keys without a version are
+	/// stale and can be dropped with: redis-cli --scan --pattern 'leaderboard:[0-9]*' | xargs -r redis-cli del
+	/// </summary>
+	private const string LeaderboardKeyPrefix = "leaderboard:v2:";
 
 	/// <summary>
 	/// Submits a score for a user in a specific game.
@@ -31,7 +51,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 
 		// Check if the user already has a higher or equal approved score for this game
 		var existingHighScore = await _context.Scores
-			.Where(s => s.User.Id == userId && s.Game.Id == gameId && s.Status == ScoreStatus.Approved)
+			.Where(s => s.UserId == userId && s.Game.Id == gameId && s.Status == ScoreStatus.Approved)
 			.MaxAsync(s => (int?)s.Value);
 
 		if (existingHighScore.HasValue && scoreValue <= existingHighScore.Value)
@@ -56,6 +76,58 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	}
 
 	/// <summary>
+	/// Submits a score on behalf of a player that only has a name, as game clients do through the api.
+	/// The score is not tied to a user account and is approved right away, so it lands on the
+	/// leaderboard of the game immediately. A score that is not the player's best only keeps their
+	/// entry as is, it never lowers it.
+	/// </summary>
+	/// <param name="gameId">The ID of the game for which the score is being submitted.</param>
+	/// <param name="playerName">The name given to the player by the game client.</param>
+	/// <param name="scoreValue">The score value to be submitted.</param>
+	/// <param name="title">Optional title of the score post.</param>
+	/// <param name="description">Optional description of the score post.</param>
+	/// <returns>The created score, approved and with its generated id.</returns>
+	/// <exception cref="KeyNotFoundException">Thrown when the specified game ID is not found.</exception>
+	public async Task<Score> SubmitNamedScoreAsync(int gameId, string playerName, int scoreValue, string? title = null, string? description = null)
+	{
+		Game game = await _context.Games.FirstOrDefaultAsync(g => g.Id == gameId)
+			?? throw new KeyNotFoundException($"Game with ID {gameId} not found.");
+
+		string trimmedName = playerName.Trim();
+
+		var score = new Score
+		{
+			Value = scoreValue,
+			Game = game,
+			PlayerName = trimmedName,
+			Title = string.IsNullOrWhiteSpace(title) ? $"{game.Name} - {scoreValue}" : title.Trim(),
+			Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim(),
+			// Set explicitly because the column defaults to Pending for moderated submissions
+			Status = ScoreStatus.Approved,
+			DateAchieved = DateTime.UtcNow
+		};
+
+		_context.Scores.Add(score);
+		await _context.SaveChangesAsync();
+
+		// Game client scores are approved on submission, so they go straight to the leaderboard
+		var leaderboardKey = GetLeaderboardKey(gameId);
+		await EnsureLeaderboardCachedAsync(leaderboardKey, gameId);
+
+		string member = GetPlayerNameMember(trimmedName);
+		int bestValue = await GetBestApprovedNamedScoreAsync(gameId, trimmedName) ?? scoreValue;
+
+		// ZADD overwrites the member, so only write when the player actually improved
+		var currentValue = await _redisDb.SortedSetScoreAsync(leaderboardKey, member);
+		if (!currentValue.HasValue || bestValue > currentValue.Value)
+		{
+			await _redisDb.SortedSetAddAsync(leaderboardKey, member, bestValue);
+		}
+
+		return score;
+	}
+
+	/// <summary>
 	/// Retrieves a score from the SQL database by its ID.
 	/// </summary>
 	/// <param name="id">The ID of the score to retrieve.</param>
@@ -70,32 +142,123 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.FirstOrDefaultAsync(s => s.Id == id);
 	}
 
+	private static string GetLeaderboardKey(int gameId) => $"{LeaderboardKeyPrefix}{gameId}";
+
 	/// <summary>
-	/// Updates the leaderboard for a given game in Redis.
-	/// Only includes approved scores.
+	/// Makes sure the cached leaderboard of a game is complete before an entry is written to it.
+	/// A score that creates the key would otherwise leave the rest of the game off the board until
+	/// the key is dropped.
+	/// </summary>
+	private async Task EnsureLeaderboardCachedAsync(string leaderboardKey, int gameId)
+	{
+		if (!await _redisDb.KeyExistsAsync(leaderboardKey))
+		{
+			await UpdateRedisDbForGame(gameId);
+		}
+	}
+
+	private static string GetUserMember(int userId) => $"{UserMemberPrefix}{userId}";
+
+	private static string GetPlayerNameMember(string playerName) => $"{PlayerNameMemberPrefix}{NormalizePlayerName(playerName)}";
+
+	/// <summary>
+	/// Normalizes a player name so the same player always maps to the same leaderboard member,
+	/// no matter how the game client cased or padded it.
+	/// </summary>
+	private static string NormalizePlayerName(string playerName) => playerName.Trim().ToLowerInvariant();
+
+	/// <summary>
+	/// Splits a redis member into the player it belongs to. Members look like "u:{userId}" for an
+	/// account or "g:{normalizedPlayerName}" for a name given by a game client.
+	/// </summary>
+	private static bool TryParseMember(string? member, out int? userId, out string? playerName)
+	{
+		userId = null;
+		playerName = null;
+
+		if (string.IsNullOrWhiteSpace(member))
+		{
+			return false;
+		}
+
+		if (member.StartsWith(UserMemberPrefix, StringComparison.Ordinal)
+			&& int.TryParse(member.AsSpan(UserMemberPrefix.Length), NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsedUserId))
+		{
+			userId = parsedUserId;
+			return true;
+		}
+
+		if (member.StartsWith(PlayerNameMemberPrefix, StringComparison.Ordinal) && member.Length > PlayerNameMemberPrefix.Length)
+		{
+			playerName = member[PlayerNameMemberPrefix.Length..];
+			return true;
+		}
+
+		return false;
+	}
+
+	/// <summary>
+	/// Gets the best approved score a named player has in a game, or null when they have none.
+	/// The comparison is case insensitive so "Bob" and "bob" are treated as the same player.
+	/// </summary>
+	private async Task<int?> GetBestApprovedNamedScoreAsync(int gameId, string playerName)
+	{
+		string normalizedName = NormalizePlayerName(playerName);
+
+		return await _context.Scores
+			.Where(s => s.Game.Id == gameId
+				&& s.Status == ScoreStatus.Approved
+				&& s.PlayerName != null
+				&& s.PlayerName.ToLower() == normalizedName)
+			.MaxAsync(s => (int?)s.Value);
+	}
+
+	/// <summary>
+	/// Rebuilds the leaderboard for a given game in Redis from the SQL database.
+	/// Only includes approved scores, keeping the best one per player where a player is either a
+	/// user account or a name given by a game client.
 	/// </summary>
 	/// <param name="gameId">The ID of the game.</param>
 	private async Task UpdateRedisDbForGame(int gameId)
 	{
-		var leaderboardKey = $"leaderboard:{gameId}";
-
-		// Get only the highest approved score per user for this game
-		var lb = await _context.Scores
+		var approvedScores = await _context.Scores
+			.AsNoTracking()
 			.Where(s => s.Game.Id == gameId && s.Status == ScoreStatus.Approved)
-			.Include(s => s.User)
-			.GroupBy(s => new { s.User.Id, s.User.Username })
-			.Select(g => new { g.Key.Id, g.Key.Username, Value = g.Max(s => s.Value) })
-			.OrderByDescending(s => s.Value)
+			.Select(s => new { s.UserId, s.PlayerName, s.Value })
 			.ToListAsync();
 
-		if (lb.Count == 0)
+		var bestPerPlayer = new Dictionary<string, int>(StringComparer.Ordinal);
+		foreach (var approvedScore in approvedScores)
+		{
+			string? member = approvedScore.UserId.HasValue
+				? GetUserMember(approvedScore.UserId.Value)
+				: string.IsNullOrWhiteSpace(approvedScore.PlayerName)
+					? null
+					: GetPlayerNameMember(approvedScore.PlayerName);
+
+			// A score with neither an account nor a name cannot be ranked
+			if (member is null)
+			{
+				continue;
+			}
+
+			if (!bestPerPlayer.TryGetValue(member, out int currentBest) || approvedScore.Value > currentBest)
+			{
+				bestPerPlayer[member] = approvedScore.Value;
+			}
+		}
+
+		if (bestPerPlayer.Count == 0)
 		{
 			throw new KeyNotFoundException($"No approved scores found for game ID {gameId}");
 		}
 
+		// Replace the key so entries that no longer have an approved score disappear
+		await _redisDb.KeyDeleteAsync(GetLeaderboardKey(gameId));
+
 		// Cache the leaderboard in Redis
-		var entries = lb.Select(entry => new SortedSetEntry(entry.Id.ToString(), entry.Value)).ToArray();
-		await _redisDb.SortedSetAddAsync(leaderboardKey, entries);
+		var entries = bestPerPlayer.Select(entry => new SortedSetEntry(entry.Key, entry.Value)).ToArray();
+		await _redisDb.SortedSetAddAsync(GetLeaderboardKey(gameId), entries);
 	}
 
 	/// <summary>
@@ -109,7 +272,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// <exception cref="KeyNotFoundException">Thrown when no approved scores are found for the specified game ID.</exception>
 	public async Task<List<LeaderboardEntry>> GetLeaderboardAsync(int gameId, int limit)
 	{
-		var leaderboardKey = $"leaderboard:{gameId}";
+		var leaderboardKey = GetLeaderboardKey(gameId);
 
 		// If the leaderboard doesn't exist or is empty, update it
 		if (
@@ -129,54 +292,166 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 		// Fetch the top players from Redis
 		var leaderboardEntries = await _redisDb.SortedSetRangeByRankWithScoresAsync(leaderboardKey, 0, limit - 1, order: Order.Descending);
 
-		// Map Redis entries to leaderboard model
-		var leaderboard = leaderboardEntries.Select(entry => new LeaderboardEntry
+		return await MapRedisEntriesAsync(gameId, leaderboardEntries);
+	}
+
+	/// <summary>
+	/// Maps redis leaderboard members to leaderboard entries, resolving the display name of every
+	/// player from the SQL database. A single query per kind of player keeps this off the hot path
+	/// of a per entry lookup.
+	/// </summary>
+	private async Task<List<LeaderboardEntry>> MapRedisEntriesAsync(int gameId, IEnumerable<SortedSetEntry> redisEntries)
+	{
+		var parsedEntries = new List<(SortedSetEntry Entry, int? UserId, string? PlayerName)>();
+		foreach (var entry in redisEntries)
 		{
-			UserId = int.Parse(entry.Element!),
-			UserName = _context.Users.Find(int.Parse(entry.Element!))?.Username, // Get the username from the User entity
-			Score = (int)entry.Score
-		}).ToList();
+			if (TryParseMember(entry.Element, out int? userId, out string? playerName))
+			{
+				parsedEntries.Add((entry, userId, playerName));
+			}
+		}
+
+		var userIds = parsedEntries.Where(e => e.UserId.HasValue).Select(e => e.UserId!.Value).Distinct().ToList();
+		var playerNames = parsedEntries.Where(e => e.PlayerName is not null).Select(e => e.PlayerName!).Distinct(StringComparer.Ordinal).ToList();
+		var usernames = await GetUsernamesAsync(userIds);
+		var playerNameDisplayNames = await GetPlayerNameDisplayNamesAsync(gameId, playerNames);
+
+		var leaderboard = new List<LeaderboardEntry>();
+		foreach (var (entry, userId, playerName) in parsedEntries)
+		{
+			leaderboard.Add(new LeaderboardEntry
+			{
+				UserId = userId,
+				// Without a display name the normalized name is still a truthful label for the entry
+				UserName = userId.HasValue
+					? usernames.GetValueOrDefault(userId.Value)
+					: playerNameDisplayNames.GetValueOrDefault(playerName!) ?? playerName,
+				Score = (int)entry.Score
+			});
+		}
 
 		return leaderboard;
 	}
 
 	/// <summary>
+	/// Builds a predicate matching a column against any of the given values, so the players of one
+	/// leaderboard page can be resolved with a single query.
+	/// A disjunction of comparisons is used because Contains over a collection is not translated by
+	/// the mysql provider of this project. The values must not be empty.
+	/// </summary>
+	private static Expression<Func<TEntity, bool>> IsAnyOf<TEntity, TValue>(
+		Expression<Func<TEntity, bool>> condition,
+		IReadOnlyCollection<TValue> values,
+		Expression<Func<TEntity, TValue>> column)
+	{
+		ParameterExpression parameter = condition.Parameters[0];
+		Expression columnBody = new ParameterReplacer(column.Parameters[0], parameter).Visit(column.Body)!;
+
+		Expression? matchesAnyValue = null;
+		foreach (TValue value in values)
+		{
+			Expression isValue = Expression.Equal(columnBody, Expression.Constant(value, column.Body.Type));
+			matchesAnyValue = matchesAnyValue is null ? isValue : Expression.OrElse(matchesAnyValue, isValue);
+		}
+
+		return Expression.Lambda<Func<TEntity, bool>>(Expression.AndAlso(condition.Body, matchesAnyValue!), condition.Parameters);
+	}
+
+	/// <inheritdoc cref="IsAnyOf{TEntity, TValue}(Expression{Func{TEntity, bool}}, IReadOnlyCollection{TValue}, Expression{Func{TEntity, TValue}})"/>
+	private static Expression<Func<TEntity, bool>> IsAnyOf<TEntity, TValue>(IReadOnlyCollection<TValue> values, Expression<Func<TEntity, TValue>> column)
+		=> IsAnyOf(_ => true, values, column);
+
+	/// <summary>
+	/// Rebinds the parameter of one expression to the parameter of another, so a column expression
+	/// can be embedded in a bigger predicate.
+	/// </summary>
+	private sealed class ParameterReplacer(ParameterExpression from, ParameterExpression to) : ExpressionVisitor
+	{
+		protected override Expression VisitParameter(ParameterExpression node) => node == from ? to : base.VisitParameter(node);
+	}
+
+	/// <summary>
+	/// Looks up the usernames of the given user ids in a single query.
+	/// </summary>
+	private async Task<Dictionary<int, string>> GetUsernamesAsync(IReadOnlyCollection<int> userIds)
+	{
+		if (userIds.Count == 0)
+		{
+			return [];
+		}
+
+		var users = await _context.Users
+			.AsNoTracking()
+			.Where(IsAnyOf<User, int>(userIds, u => u.Id))
+			.Select(u => new { u.Id, u.Username })
+			.ToListAsync();
+
+		return users.ToDictionary(u => u.Id, u => u.Username);
+	}
+
+	/// <summary>
+	/// Looks up the display name to show for the normalized player names of a leaderboard page in a
+	/// single query, keeping the name behind the player's best approved score.
+	/// </summary>
+	private async Task<Dictionary<string, string>> GetPlayerNameDisplayNamesAsync(int gameId, IReadOnlyCollection<string> playerNames)
+	{
+		if (playerNames.Count == 0)
+		{
+			return [];
+		}
+
+		var bestScores = await _context.Scores
+			.AsNoTracking()
+			.Where(IsAnyOf<Score, string?>(
+				s => s.Game.Id == gameId && s.Status == ScoreStatus.Approved && s.PlayerName != null,
+				playerNames,
+				s => s.PlayerName!.ToLower()))
+			.OrderByDescending(s => s.Value)
+			.Select(s => new { s.PlayerName })
+			.ToListAsync();
+
+		var wanted = new HashSet<string>(playerNames, StringComparer.Ordinal);
+		var displayNames = new Dictionary<string, string>(StringComparer.Ordinal);
+		foreach (var bestScore in bestScores)
+		{
+			if (bestScore.PlayerName is null)
+			{
+				continue;
+			}
+
+			// The scores are ordered by value, so the first name found for a player is their best one
+			string normalized = NormalizePlayerName(bestScore.PlayerName);
+			if (wanted.Remove(normalized))
+			{
+				displayNames[normalized] = bestScore.PlayerName;
+			}
+		}
+
+		return displayNames;
+	}
+
+	/// <summary>
 	/// Retrieves the rank of a specific user in the leaderboard for a given game.
 	/// Only considers approved scores.
-	/// If the leaderboard is not available in Redis, it checks the SQL database for the user's approved score
-	/// and caches it in Redis. If the user is not found in the database, a KeyNotFoundException is thrown.
+	/// If the leaderboard is not available in Redis, it is cached from the sql database first.
+	/// If the game has no approved scores, a KeyNotFoundException is thrown.
 	/// </summary>
 	/// <param name="gameId">The ID of the game.</param>
 	/// <param name="userId">The ID of the user whose rank is being retrieved.</param>
 	/// <returns>The rank of the user in the leaderboard, or null if the user is not ranked.</returns>
-	/// <exception cref="KeyNotFoundException">Thrown when the specified user ID is not found in the specified game.</exception>
+	/// <exception cref="KeyNotFoundException">Thrown when the specified game has no approved scores.</exception>
 	public async Task<long?> GetRankAsync(int gameId, int userId)
 	{
-		var leaderboardKey = $"leaderboard:{gameId}";
+		var leaderboardKey = GetLeaderboardKey(gameId);
 
-		// Check if leaderboard exists in Redis
+		// If the leaderboard doesn't exist in Redis, cache the whole game, a single user is not a leaderboard
 		if (!await _redisDb.KeyExistsAsync(leaderboardKey))
 		{
-			// Check if approved data exists in the SQL database
-			var userScore = await _context.Scores
-				.Where(s => s.Game.Id == gameId && s.User.Id == userId && s.Status == ScoreStatus.Approved)
-				.Select(s => new { s.User.Id, s.Value })
-				.FirstOrDefaultAsync();
-
-			if (userScore != null)
-			{
-				// Cache the user's score in Redis
-				await _redisDb.SortedSetAddAsync(leaderboardKey, userScore.Id.ToString(), userScore.Value);
-			}
-			else
-			{
-				throw new KeyNotFoundException($"User with ID {userId} not found in game ID {gameId}");
-			}
-
+			await UpdateRedisDbForGame(gameId);
 		}
 
 		// Fetch the rank of the user from Redis
-		var rank = await _redisDb.SortedSetRankAsync(leaderboardKey, userId.ToString());
+		var rank = await _redisDb.SortedSetRankAsync(leaderboardKey, GetUserMember(userId));
 
 		return rank.HasValue ? rank + 1 : null;
 	}
@@ -198,8 +473,9 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.Take(limit)
 			.Select(s => new LeaderboardEntry
 			{
-				UserId = s.User.Id,
-				UserName = s.User.Username,
+				UserId = s.UserId,
+				// Scores without an account are displayed with the name the game client gave them
+				UserName = s.User!.Username ?? s.PlayerName,
 				Score = s.Value
 			})
 			.ToListAsync();
@@ -213,7 +489,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.AsNoTracking()
 			.Include(s => s.User)
 			.Include(s => s.Game)
-			.Where(s => s.User.Id == userId && s.Status == ScoreStatus.Approved)
+			.Where(s => s.UserId == userId && s.Status == ScoreStatus.Approved)
 			.OrderByDescending(s => s.DateAchieved)
 			.Skip(offset)
 			.Take(limit)
@@ -231,7 +507,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.Include(s => s.User)
 			.Include(s => s.Game)
 			.Include(s => s.ReviewedBy)
-			.Where(s => s.User.Id == userId)
+			.Where(s => s.UserId == userId)
 			.OrderByDescending(s => s.DateAchieved)
 			.Skip(offset)
 			.Take(limit)
@@ -260,7 +536,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.AsNoTracking()
 			.Include(s => s.User)
 			.Include(s => s.Game)
-			.Where(s => s.Game.Id == gameId && s.User.Id == userId && s.Status == ScoreStatus.Approved)
+			.Where(s => s.Game.Id == gameId && s.UserId == userId && s.Status == ScoreStatus.Approved)
 			.OrderByDescending(s => s.Value)
 			.FirstOrDefaultAsync();
 	}
@@ -286,6 +562,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// <summary>
 	/// Approves a pending score and adds it to the Redis leaderboard.
 	/// </summary>
+	/// <exception cref="InvalidOperationException">Thrown when the score is not pending or has no user account.</exception>
 	public async Task ApproveScoreAsync(int scoreId, int moderatorId)
 	{
 		var score = await _context.Scores
@@ -299,6 +576,12 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			throw new InvalidOperationException($"Score is not pending. Current status: {score.Status}");
 		}
 
+		// Only scores of a user account go through moderation, api submissions are approved on creation
+		if (!score.UserId.HasValue)
+		{
+			throw new InvalidOperationException("Score is not associated with a user and cannot be moderated.");
+		}
+
 		var moderator = await _context.Users.FirstOrDefaultAsync(u => u.Id == moderatorId)
 			?? throw new KeyNotFoundException($"Moderator with ID {moderatorId} not found.");
 
@@ -309,15 +592,16 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 		await _context.SaveChangesAsync();
 
 		// Add the approved score to Redis leaderboard
-		var leaderboardKey = $"leaderboard:{score.Game.Id}";
+		var leaderboardKey = GetLeaderboardKey(score.Game.Id);
+		await EnsureLeaderboardCachedAsync(leaderboardKey, score.Game.Id);
 
 		// Get the user's current highest approved score for this game
 		var highestScore = await _context.Scores
-			.Where(s => s.User.Id == score.User.Id && s.Game.Id == score.Game.Id && s.Status == ScoreStatus.Approved)
+			.Where(s => s.UserId == score.UserId && s.Game.Id == score.Game.Id && s.Status == ScoreStatus.Approved)
 			.MaxAsync(s => (int?)s.Value) ?? 0;
 
 		// Update Redis with the highest score
-		await _redisDb.SortedSetAddAsync(leaderboardKey, score.User.Id.ToString(), highestScore);
+		await _redisDb.SortedSetAddAsync(leaderboardKey, GetUserMember(score.UserId.Value), highestScore);
 	}
 
 	/// <summary>
@@ -403,7 +687,10 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 
 public class LeaderboardEntry
 {
-    public int UserId { get; set; }
+	/// <summary>
+	/// The account of the player, null when the player is only known by the name a game client gave.
+	/// </summary>
+    public int? UserId { get; set; }
 	public string? UserName {get; set;}
     public int Score { get; set; }
 }

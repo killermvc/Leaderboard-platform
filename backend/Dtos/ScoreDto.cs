@@ -7,6 +7,12 @@ public class ScoreDto
 {
     public int Id { get; set; }
     public UserDto? User { get; set; }
+
+    /// <summary>
+    /// The name given to this score when it is not tied to a user account.
+    /// </summary>
+    public string? PlayerName { get; set; }
+
     public GameDto? Game { get; set; }
     public int Value { get; set; }
     public DateTime DateAchieved { get; set; }

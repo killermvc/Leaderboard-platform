@@ -162,6 +162,7 @@ public class ScoreController(
 			{
 				Id = s.Id,
 				User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = s.User?.Username ?? string.Empty },
+				PlayerName = s.PlayerName,
 				Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name },
 				Value = s.Value,
 				DateAchieved = s.DateAchieved,
@@ -189,6 +190,7 @@ public class ScoreController(
 			{
 				Id = s.Id,
 				User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = s.User?.Username ?? string.Empty },
+				PlayerName = s.PlayerName,
 				Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name },
 				Value = s.Value,
 				DateAchieved = s.DateAchieved,
@@ -228,6 +230,7 @@ public class ScoreController(
 			{
 				Id = s.Id,
 				User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = s.User?.Username ?? string.Empty },
+				PlayerName = s.PlayerName,
 				Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name },
 				Value = s.Value,
 				DateAchieved = s.DateAchieved,
@@ -287,6 +290,7 @@ public class ScoreController(
 			{
 				Id = s.Id,
 				User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = s.User?.Username ?? string.Empty },
+				PlayerName = s.PlayerName,
 				Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name },
 				Value = s.Value,
 				DateAchieved = s.DateAchieved,
@@ -328,6 +332,7 @@ public class ScoreController(
 			{
 				Id = s.Id,
 				User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = s.User?.Username ?? string.Empty },
+				PlayerName = s.PlayerName,
 				Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name },
 				Value = s.Value,
 				DateAchieved = s.DateAchieved,

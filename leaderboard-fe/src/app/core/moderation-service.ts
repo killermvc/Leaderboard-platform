@@ -31,10 +31,12 @@ export interface ModeratedGame {
 
 export interface PendingScore {
   id: number;
+  /** Null for a score sent by a game client, which carries a playerName instead. */
   user: {
     id: number;
     username: string;
-  };
+  } | null;
+  playerName?: string | null;
   game: {
     id: number;
     name: string;

@@ -5,7 +5,8 @@ import { environment } from '../../environments/environment';
 import { AuthService } from './auth-service';
 
 export interface LeaderboardEntry {
-  userId: number;
+  /** Null for a score sent by a game client, which is identified by its player name. */
+  userId: number | null;
   userName?: string | null;
   score: number;
 }
@@ -40,7 +41,9 @@ export enum ScoreStatus {
 
 export interface ScoreRecord {
   id: number;
-  user: ScoreUser;
+  /** Null for a score sent by a game client, which carries a playerName instead. */
+  user: ScoreUser | null;
+  playerName?: string | null;
   game: ScoreGame;
   value: number;
   dateAchieved: string;

@@ -5,6 +5,13 @@ namespace Leaderboard.Repositories;
 public interface IScoreRepository
 {
 	public Task SubmitScoreAsync(int userId, int gameId, int score, string? title = null, string? description = null);
+
+	/// <summary>
+	/// Submits a score for a player that has a name but no user account, as game clients do through the api.
+	/// The score is approved right away and written to the leaderboard of the game immediately.
+	/// </summary>
+	public Task<Score> SubmitNamedScoreAsync(int gameId, string playerName, int score, string? title = null, string? description = null);
+
 	public Task<Score?> GetByIdAsync(int id);
 	public Task<List<LeaderboardEntry>> GetLeaderboardAsync(int game, int limit);
 	public Task<long?> GetRankAsync(int game, int user);

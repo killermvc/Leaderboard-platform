@@ -46,7 +46,7 @@ public class GameRepository(AppDbContext context) : IGameRepository
 	public async Task<List<Game>> GetGamesByPlayerIdAsync(int playerId)
 	{
 		var games = await _context.Scores
-			.Where(s => s.User.Id == playerId)
+			.Where(s => s.UserId == playerId)
 			.Select(s => s.Game)
 			.Distinct()
 			.ToListAsync();

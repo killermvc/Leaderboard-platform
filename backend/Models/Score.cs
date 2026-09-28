@@ -3,10 +3,23 @@ namespace Leaderboard.Models;
 public class Score
 {
 	public int Id { get; set; }
-	public required User User { get; set; }
+
+	/// <summary>
+	/// The account that submitted this score.
+	/// Null for scores submitted by a game client through the api, those carry a <see cref="PlayerName"/> instead.
+	/// </summary>
+	public int? UserId { get; set; }
+	public User? User { get; set; }
+
 	public required Game Game { get; set; }
 	public int Value { get; set; }
 	public DateTime DateAchieved { get; set; }
+
+	/// <summary>
+	/// The name given to this score when it is not tied to a user account.
+	/// Null for scores submitted by a registered user, their username is displayed then.
+	/// </summary>
+	public string? PlayerName { get; set; }
 
 	/// <summary>
 	/// The title of the score submission post.
@@ -22,6 +35,7 @@ public class Score
 	/// <summary>
 	/// The approval status of this score. Defaults to Pending.
 	/// Only approved scores are shown on the leaderboard.
+	/// Scores coming from a game client through the api are set to Approved on submission, they skip moderation.
 	/// </summary>
 	public ScoreStatus Status { get; set; } = ScoreStatus.Pending;
 

@@ -24,7 +24,11 @@
         <div class="post-meta">
           <span class="meta-item">
             by
-            <button class="link-btn" (click)="goToUser()">{{ s.user.username ?? 'Unknown' }}</button>
+            @if (s.user) {
+              <button class="link-btn" (click)="goToUser()">{{ s.user.username ?? 'Unknown' }}</button>
+            } @else {
+              <span class="meta-item">{{ s.playerName ?? 'Unknown player' }}</span>
+            }
           </span>
           <span class="meta-separator">·</span>
           <span class="meta-item">

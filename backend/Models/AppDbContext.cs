@@ -43,10 +43,22 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 			.Property(b => b.DateAchieved)
 			.HasDefaultValueSql("NOW(6)");
 
-		// Configure Score status with default value
+		// Configure Score status with default value, scores from game clients set Approved on submission
 		modelBuilder.Entity<Score>()
 			.Property(s => s.Status)
 			.HasDefaultValue(ScoreStatus.Pending);
+
+		// The name given to scores submitted without a user account, bounded so it stays a compact display name
+		modelBuilder.Entity<Score>()
+			.Property(s => s.PlayerName)
+			.HasMaxLength(64);
+
+		// The score owner is optional, scores from game clients only carry a PlayerName
+		modelBuilder.Entity<Score>()
+			.HasOne(s => s.User)
+			.WithMany()
+			.HasForeignKey(s => s.UserId)
+			.OnDelete(DeleteBehavior.Cascade);
 
 		// Configure GameModerator entity
 		modelBuilder.Entity<GameModerator>()
