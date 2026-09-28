@@ -9,6 +9,9 @@ using Leaderboard.Dtos;
 
 namespace Leaderboard.Controllers;
 
+/// <summary>
+/// Controller for managing score moderation and game moderators.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class ModerationController(
@@ -388,24 +391,36 @@ public class ModerationController(
     };
 }
 
+/// <summary>Request payload for rejecting a score.</summary>
 public class RejectScoreRequest
 {
+    /// <summary>Gets or sets the reason for rejecting the score.</summary>
     [JsonPropertyName("reason")]
     public string? Reason { get; set; }
 }
 
+/// <summary>Basic user information for a game moderator.</summary>
 public class GameModeratorUserDto
 {
+    /// <summary>Gets or sets the user's identifier.</summary>
     public int Id { get; set; }
+    /// <summary>Gets or sets the user's username.</summary>
     public string Username { get; set; } = string.Empty;
 }
 
+/// <summary>Represents a moderator assigned to a game.</summary>
 public class GameModeratorDto
 {
+    /// <summary>Gets or sets the moderator assignment identifier.</summary>
     public int Id { get; set; }
+    /// <summary>Gets or sets the moderator user's identifier.</summary>
     public int UserId { get; set; }
+    /// <summary>Gets or sets the moderator user.</summary>
     public GameModeratorUserDto User { get; set; } = null!;
+    /// <summary>Gets or sets the game identifier.</summary>
     public int GameId { get; set; }
+    /// <summary>Gets or sets the game name.</summary>
     public string GameName { get; set; } = string.Empty;
+    /// <summary>Gets or sets the assignment date and time.</summary>
     public DateTime AssignedAt { get; set; }
 }

@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Leaderboard.Repositories;
 
+/// <summary>
+/// Repository for managing users in the database.
+/// </summary>
 public class UserRepository(AppDbContext context) : IUserRepository
 {
     private readonly AppDbContext _context = context;
@@ -45,12 +48,23 @@ public class UserRepository(AppDbContext context) : IUserRepository
 		await _context.SaveChangesAsync();
 	}
 
+	/// <summary>
+	/// Updates an existing user in the database asynchronously.
+	/// </summary>
+	/// <param name="user">The user entity to update.</param>
+	/// <returns>A task representing the asynchronous operation.</returns>
 	public async Task UpdateUserAsync(User user)
 	{
 		_context.Users.Update(user);
 		await _context.SaveChangesAsync();
 	}
 
+	/// <summary>
+	/// Adds a role to a user in the database asynchronously.
+	/// </summary>
+	/// <param name="user">The user to add the role to.</param>
+	/// <param name="role">The role to add.</param>
+	/// <returns>A task representing the asynchronous operation.</returns>
 	public async Task AddRoleToUserAsync(User user, Role role)
 	{
 		var userRole = new UserRole
@@ -62,6 +76,12 @@ public class UserRepository(AppDbContext context) : IUserRepository
 		await _context.SaveChangesAsync();
 	}
 
+	/// <summary>
+	/// Searches for users in the database asynchronously.
+	/// </summary>
+	/// <param name="query">The search query.</param>
+	/// <param name="limit">The maximum number of results to return.</param>
+	/// <returns>A list of users matching the search query.</returns>
 	public async Task<List<User>> SearchUsersAsync(string query, int limit)
 	{
 		return await _context.Users

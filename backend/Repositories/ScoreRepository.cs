@@ -7,6 +7,9 @@ using StackExchange.Redis;
 
 namespace Leaderboard.Repositories;
 
+/// <summary>Provides score submission, moderation, and leaderboard operations.</summary>
+/// <param name="context">The application database context.</param>
+/// <param name="multiplexer">The Redis connection multiplexer.</param>
 public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multiplexer) : IScoreRepository
 {
 
@@ -40,6 +43,8 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// <param name="userId">The ID of the user submitting the score.</param>
 	/// <param name="gameId">The ID of the game for which the score is being submitted.</param>
 	/// <param name="scoreValue">The score value to be submitted.</param>
+	/// <param name="title">Optional title of the score post.</param>
+	/// <param name="description">Optional description of the score post.</param>
 	/// <exception cref="KeyNotFoundException">Thrown when the specified game or user ID is not found.</exception>
 	/// <exception cref="InvalidOperationException">Thrown when the new score is not higher than the existing highest approved score.</exception>
 	public async Task SubmitScoreAsync(int userId, int gameId, int scoreValue, string? title = null, string? description = null)
@@ -168,6 +173,10 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.FirstOrDefaultAsync(s => s.Id == id);
 	}
 
+	/// <summary>Gets the highest approved score for a named player in a game.</summary>
+	/// <param name="gameId">The ID of the game.</param>
+	/// <param name="playerName">The player's name.</param>
+	/// <returns>The best approved score, or null when none exists.</returns>
 	public async Task<Score?> GetBestNamedScoreByGameAsync(int gameId, string playerName)
 	{
 		string normalizedName = NormalizePlayerName(playerName);
@@ -414,7 +423,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// <summary>
 	/// Looks up the usernames of the given user ids in a single query.
 	/// </summary>
-	private async Task<Dictionary<int, string>> GetUsernamesAsync(IReadOnlyCollection<int> userIds)
+	private async Task<Dictionary<int, string>> GetUsernamesAsync(List<int> userIds)
 	{
 		if (userIds.Count == 0)
 		{
@@ -434,7 +443,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// Looks up the display name to show for the normalized player names of a leaderboard page in a
 	/// single query, keeping the name behind the player's best approved score.
 	/// </summary>
-	private async Task<Dictionary<string, string>> GetPlayerNameDisplayNamesAsync(int gameId, IReadOnlyCollection<string> playerNames)
+	private async Task<Dictionary<string, string>> GetPlayerNameDisplayNamesAsync(int gameId, List<string> playerNames)
 	{
 		if (playerNames.Count == 0)
 		{
@@ -524,6 +533,10 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 		return topPlayers;
 	}
 
+	/// <summary>Gets approved scores submitted by a user.</summary>
+	/// <param name="userId">The user's ID.</param>
+	/// <param name="limit">The maximum number of scores to return.</param>
+	/// <param name="offset">The number of scores to skip.</param>
 	public Task<List<Score>> GetScoresByUserAsync(int userId, int limit, int offset)
 	{
 		return _context.Scores
@@ -555,6 +568,9 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.ToListAsync();
 	}
 
+	/// <summary>Gets recent approved scores.</summary>
+	/// <param name="limit">The maximum number of scores to return.</param>
+	/// <param name="offset">The number of scores to skip.</param>
 	public Task<List<Score>> GetRecentScoresAsync(int limit, int offset)
 	{
 		return _context.Scores
@@ -726,12 +742,16 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	}
 }
 
+/// <summary>Represents a player and score on a leaderboard.</summary>
 public class LeaderboardEntry
 {
 	/// <summary>
 	/// The account of the player, null when the player is only known by the name a game client gave.
 	/// </summary>
-    public int? UserId { get; set; }
-	public string? UserName {get; set;}
-    public int Score { get; set; }
+	/// <summary>The account ID, or null for a name-only player.</summary>
+	public int? UserId { get; set; }
+	/// <summary>The player's display name.</summary>
+	public string? UserName { get; set; }
+	/// <summary>The player's score.</summary>
+	public int Score { get; set; }
 }

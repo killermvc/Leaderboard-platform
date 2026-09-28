@@ -7,6 +7,9 @@ using Leaderboard.Dtos;
 
 namespace Leaderboard.Controllers;
 
+/// <summary>
+/// Controller for generating reports related to the leaderboard system.
+/// </summary>
 [ApiController]
 [Route("reports")]
 public class ReportsController(IScoreRepository scoreRepository, ILogger<ReportsController> logger) : ControllerBase
@@ -14,6 +17,9 @@ public class ReportsController(IScoreRepository scoreRepository, ILogger<Reports
     private readonly IScoreRepository _scoreRepository = scoreRepository;
     private readonly ILogger _logger = logger;
 
+	/// <summary>
+	/// Generates a report of the top players within a specified date range, limited to a certain number of players. Accessible only by users with the "Admin" role.
+	/// </summary>
     [HttpGet("top-players")]
 	[Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetTopPlayersReport([FromQuery] DateTime start_date, [FromQuery] DateTime end_date, [FromQuery] int limit = 10)

@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Leaderboard.Repositories;
 
+/// <summary>
+/// Repository for managing game moderators in the database.
+/// </summary>
 public class GameModeratorRepository(AppDbContext context) : IGameModeratorRepository
 {
     private readonly AppDbContext _context = context;

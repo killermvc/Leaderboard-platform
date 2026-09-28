@@ -10,6 +10,9 @@ using Leaderboard.Dtos;
 
 namespace Leaderboard.Controllers;
 
+/// <summary>
+/// Controller for managing score submissions, leaderboards, and user scores in the leaderboard system.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class ScoreController(
@@ -25,6 +28,9 @@ public class ScoreController(
 	private readonly IUserRepository _userRepository = userRepository;
 	private readonly ILogger _logger = logger;
 
+	/// <summary>
+	/// Submits a score for a specific game. Accessible by any authenticated user.
+	/// </summary>
 	//POST /scores
     [HttpPost("submit")]
     [Authorize]
@@ -73,6 +79,9 @@ public class ScoreController(
         }
     }
 
+	/// <summary>
+	/// Gets the leaderboard for a specific game, limited to a certain number of top players. Accessible by any authenticated user.
+	/// </summary>
 	//GET /leaderboard/<game_id>
     [HttpGet]
     [Route("leaderboard/{gameId}")]
@@ -94,6 +103,9 @@ public class ScoreController(
         }
     }
 
+	/// <summary>
+	/// Gets the rank of a specific user in a specific game's leaderboard. Accessible by any authenticated user.
+	/// </summary>
 	//GET /leaderboard/<game_id>/rank/<user_id>
 	[HttpGet]
 	[Route("leaderboard/{gameId}/rank/{userId}")]
@@ -125,7 +137,9 @@ public class ScoreController(
 		}
 	}
 
-	//GET /leaderboard/<game_id>/top/<N>
+	/// <summary>
+	/// Gets the top N players for a specific game. Accessible by any authenticated user.
+	/// </summary>
 	[HttpGet]
 	[Route("leaderboard/{gameId}/top/{limit}")]
 	public async Task<IActionResult> GetTopPlayers(int gameId, int limit)
@@ -151,6 +165,9 @@ public class ScoreController(
 		}
 	}
 
+	/// <summary>
+	/// Gets a paginated list of scores submitted by a specific user. Accessible by any authenticated user.
+	/// </summary>
 	[HttpGet]
 	[Route("scores/user/{userId}")]
 	public async Task<IActionResult> GetScoresByUser(int userId, [FromQuery] int limit = 10, [FromQuery] int offset = 0)
@@ -179,6 +196,9 @@ public class ScoreController(
 		}
 	}
 
+	/// <summary>
+	/// Gets a paginated list of recent score submissions (posts) visible to everyone, regardless of status.
+	/// </summary>
 	[HttpGet]
 	[Route("scores/recent")]
 	public async Task<IActionResult> GetRecentScores([FromQuery] int limit = 10, [FromQuery] int offset = 0)
@@ -354,11 +374,25 @@ public class ScoreController(
 	}
 }
 
-
+/// <summary>
+/// Represents a request to submit a score for a game.
+/// </summary>
 public class ScoreRequest
 {
+    /// <summary>
+    /// The ID of the game for which the score is being submitted.
+    /// </summary>
     public required int GameId { get; set; }
+    /// <summary>
+    /// The score achieved.
+    /// </summary>
     public int Score { get; set; }
+    /// <summary>
+    /// The title of the score submission.
+    /// </summary>
     public string? Title { get; set; }
+    /// <summary>
+    /// The description of the score submission.
+    /// </summary>
     public string? Description { get; set; }
 }

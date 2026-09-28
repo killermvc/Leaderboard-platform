@@ -7,6 +7,9 @@ using Leaderboard.Options;
 
 namespace Leaderboard.Middleware;
 
+/// <summary>
+/// Middleware that enforces rate limiting on score submission requests, based on the client's IP address and the presented API key.
+/// </summary>
 public sealed class GameClientRateLimitingMiddleware(
 	RequestDelegate next,
 	IOptions<RateLimitOptions> options,
@@ -18,6 +21,9 @@ public sealed class GameClientRateLimitingMiddleware(
 	private readonly ConcurrentDictionary<string, TokenBucket> _ipBuckets = new();
 	private readonly ConcurrentDictionary<string, TokenBucket> _apiKeyBuckets = new();
 
+	/// <summary>
+	/// Processes a request, enforcing rate limits on score submission requests based on the client's IP address and the presented API key.
+	/// </summary>
 	public async Task InvokeAsync(HttpContext context)
 	{
 		if (!IsScoreSubmission(context))

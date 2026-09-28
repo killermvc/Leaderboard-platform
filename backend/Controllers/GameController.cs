@@ -13,12 +13,18 @@ using Leaderboard.Dtos;
 
 namespace Leaderboard.Controllers
 {
+	/// <summary>
+	/// Controller for managing games in the leaderboard system.
+	/// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class GameController(IGameRepository gameRepository) : ControllerBase
     {
 		private readonly IGameRepository _gameRepository = gameRepository;
 
+		/// <summary>
+		/// Creates a new game in the system. Only accessible by users with the "Admin" role.
+		/// </summary>
 		// POST: api/Games
 		[HttpPost]
 		[Authorize(Roles = "Admin")]
@@ -30,6 +36,9 @@ namespace Leaderboard.Controllers
 			return CreatedAtAction("GetGame", new { id = game.Id }, resultDto);
 		}
 
+		/// <summary>
+		/// Retrieves a game by its ID. Accessible by any authenticated user.
+		/// </summary>
 		[HttpGet("{id}")]
 		public async Task<ActionResult<GameDto>> GetGame(int id)
 		{
@@ -41,6 +50,9 @@ namespace Leaderboard.Controllers
 			return new GameDto { Id = game.Id, Name = game.Name, Description = game.Description, ImageUrl = game.ImageUrl };
 		}
 
+		/// <summary>
+		/// Retrieves a paginated list of all games. Accessible by any authenticated user.
+		/// </summary>
 		[HttpGet]
 		public async Task<ActionResult<IEnumerable<GameDto>>> GetAllGames(int limit, int offset)
 		{
@@ -63,6 +75,9 @@ namespace Leaderboard.Controllers
 			}
 		}
 
+		/// <summary>
+		/// Retrieves all games that a specific player has participated in. Accessible by any authenticated user.
+		/// </summary>
 		[HttpGet("player/{playerId}")]
 		public async Task<ActionResult<IEnumerable<GameDto>>> GetGamesByPlayer(int playerId)
 		{

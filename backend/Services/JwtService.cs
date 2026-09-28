@@ -6,10 +6,18 @@ using Leaderboard.Models;
 
 namespace Leaderboard.Services;
 
+/// <summary>
+/// Service responsible for generating JWT tokens for authenticated users.
+/// </summary>
 public class JwtService(IConfiguration configuration) : IJwtService
 {
     private readonly IConfiguration _configuration = configuration;
 
+	/// <summary>
+	/// Generates a JWT token for the specified user, including their roles as claims, and signs it using the configured secret key. The token is set to expire in one day.
+	/// </summary>
+	/// <param name="user">The user for whom to generate the token.</param>
+	/// <returns>The generated JWT token.</returns>
 	public string GenerateToken(User user)
     {
         var claims = new List<Claim>

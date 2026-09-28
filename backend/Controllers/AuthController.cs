@@ -11,14 +11,30 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace Leaderboard.Controllers;
 
+/// <summary>
+/// Provides authentication and user account endpoints.
+///</summary>
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController(IUserRepository userRepository, IJwtService jwtService, IScoreRepository scoreRepository) : ControllerBase
+public class AuthController : ControllerBase
 {
-	private readonly IUserRepository _userRepository = userRepository;
-	private readonly IJwtService _jwtService = jwtService;
-	private readonly IScoreRepository _scoreRepository = scoreRepository;
+	private readonly IUserRepository _userRepository;
+	private readonly IJwtService _jwtService;
+	private readonly IScoreRepository _scoreRepository;
 
+	/// <summary>
+	/// Initializes the authentication controller.
+	///</summary>
+	public AuthController(IUserRepository userRepository, IJwtService jwtService, IScoreRepository scoreRepository)
+	{
+		_userRepository = userRepository;
+		_jwtService = jwtService;
+		_scoreRepository = scoreRepository;
+	}
+
+	/// <summary>
+	/// Registers a new user.
+	///</summary>
 	[HttpPost("register")]
 	public async Task<IActionResult> Register([FromBody] CredentialsRequest request)
 	{
@@ -40,7 +56,9 @@ public class AuthController(IUserRepository userRepository, IJwtService jwtServi
 		await _userRepository.AddUserAsync(user);
 		return Ok(new { Message = "User registered successfully" });
 	}
-
+	/// <summary>
+	/// Authenticates a user and returns a JWT token if successful.
+	/// </summary>
 	[HttpPost("login")]
 	public async Task<IActionResult> Login([FromBody] CredentialsRequest request)
 	{
@@ -63,6 +81,7 @@ public class AuthController(IUserRepository userRepository, IJwtService jwtServi
 		return Ok(new {Token = token, Message = "Login successful"});
 	}
 
+	/// <summary>Changes the authenticated user's password.</summary>
 	[HttpPut]
 	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 	public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
@@ -86,6 +105,9 @@ public class AuthController(IUserRepository userRepository, IJwtService jwtServi
 		return Ok(new {Message = "Password changed successfully"});
 	}
 
+	/// <summary>
+	/// Promotes a user to administrator.
+	///</summary>
 	[HttpPut("promote/{userId}")]
 	[Authorize(Roles = "Admin")]
 	public async Task<IActionResult> PromoteToAdmin([FromRoute] int userId)
@@ -103,6 +125,7 @@ public class AuthController(IUserRepository userRepository, IJwtService jwtServi
 	}
 
 	// GET: api/auth/me
+	/// <summary>Returns the authenticated user's basic information.</summary>
 	[HttpGet("me")]
 	[Authorize]
 	public async Task<IActionResult> GetCurrentUser()
@@ -120,6 +143,7 @@ public class AuthController(IUserRepository userRepository, IJwtService jwtServi
 		return Ok(new { Id = user.Id, Username = user.Username });
 	}
 
+	/// <summary>Updates the authenticated user's username.</summary>
 	[HttpPut("username")]
 	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 	public async Task<IActionResult> UpdateUsername([FromBody] UpdateUsernameRequest request)
@@ -146,6 +170,9 @@ public class AuthController(IUserRepository userRepository, IJwtService jwtServi
 		return Ok(new { Message = "Username updated successfully" });
 	}
 
+	/// <summary>
+	/// Searches for users.
+	///</summary>
 	[HttpGet("search")]
 	public async Task<IActionResult> SearchUsers([FromQuery] string q, [FromQuery] int limit = 20)
 	{
@@ -171,6 +198,7 @@ public class AuthController(IUserRepository userRepository, IJwtService jwtServi
 		return Ok(userDtos);
 	}
 
+	/// <summary>Returns a user's profile and score statistics.</summary>
 	[HttpGet("user/{userId}")]
 	public async Task<IActionResult> GetUserProfile([FromRoute] int userId)
 	{
@@ -217,19 +245,43 @@ public class AuthController(IUserRepository userRepository, IJwtService jwtServi
 	}
 }
 
+/// <summary>
+/// Contains username and password credentials.
+///</summary>
 public class CredentialsRequest
 {
+	/// <summary>
+	/// Gets or sets the username.
+	///</summary>
 	public string? UserName {get; set;}
+	/// <summary>
+	/// Gets or sets the password.
+	///</summary>
 	public string? Password {get; set;}
 }
 
+/// <summary>
+/// Contains a replacement username.
+///</summary>
 public class UpdateUsernameRequest
 {
+	/// <summary>
+	/// Gets or sets the new username.
+	///</summary>
 	public string? NewUserName { get; set; }
 }
 
+/// <summary>
+/// Contains the current and replacement passwords.
+///</summary>
 public class ChangePasswordRequest
 {
+	/// <summary>
+	/// Gets or sets the current password.
+	///</summary>
 	public string? OldPassword { get; set; }
+	/// <summary>
+	/// Gets or sets the replacement password.
+	///</summary>
 	public string? NewPassword { get; set; }
 }

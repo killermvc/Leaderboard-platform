@@ -1,11 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 
 namespace Leaderboard.Models;
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
-    public DbSet<User> Users { get; set; } = null!;
 
+    public DbSet<User> Users { get; set; } = null!;
 	public DbSet<Game> Games { get; set; } = null!;
 	public DbSet<Score> Scores { get; set; } = null!;
 	public DbSet<Role> Roles { get; set; } = null!;
@@ -102,3 +103,5 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 			.IsUnique();
     }
 }
+
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

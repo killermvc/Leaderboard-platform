@@ -19,6 +19,9 @@ namespace Leaderboard.Middleware;
 /// </summary>
 public sealed class ApiKeyAuthenticationMiddleware(RequestDelegate next, ILogger<ApiKeyAuthenticationMiddleware> logger)
 {
+	/// <summary>
+	/// The name of the header that carries the api key.
+	/// </summary>
 	public const string HeaderName = "X-API-Key";
 
 	/// <summary>
@@ -31,6 +34,9 @@ public sealed class ApiKeyAuthenticationMiddleware(RequestDelegate next, ILogger
 	/// </summary>
 	private static readonly TimeSpan LastUsedWriteInterval = TimeSpan.FromMinutes(5);
 
+	/// <summary>
+	/// Processes a request, authenticating it with an api key if one is presented.
+	/// </summary>
 	public async Task InvokeAsync(HttpContext context, IApiKeyService apiKeyService, IApiKeyRepository apiKeyRepository)
 	{
 		// A validated jwt always wins, api key authentication only fills in anonymous requests.

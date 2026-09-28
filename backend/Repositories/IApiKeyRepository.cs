@@ -2,6 +2,9 @@ using Leaderboard.Models;
 
 namespace Leaderboard.Repositories;
 
+/// <summary>
+/// Defines the contract for a repository that manages API keys in the database, providing methods for adding, retrieving, updating, and regenerating API keys.
+/// </summary>
 public interface IApiKeyRepository
 {
 	/// <summary>

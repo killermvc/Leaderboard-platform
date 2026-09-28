@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Leaderboard.Repositories;
 
+/// <summary>
+/// Repository for managing API keys in the database.
+/// </summary>
 public class ApiKeyRepository(AppDbContext context) : IApiKeyRepository
 {
 	private readonly AppDbContext _context = context;

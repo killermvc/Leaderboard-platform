@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Leaderboard.Repositories;
 
+/// <summary>
+/// Repository for managing games in the database.
+/// </summary>
 public class GameRepository(AppDbContext context) : IGameRepository
 {
 	private AppDbContext _context = context;
@@ -38,11 +41,21 @@ public class GameRepository(AppDbContext context) : IGameRepository
 		return await _context.Games.FirstOrDefaultAsync(g => g.Name == name);
 	}
 
+	/// <summary>
+	/// Retrieves all games from the database.
+	/// </summary>
+	/// <returns>A list of all games in the database.</returns>
 	public async Task<List<Game>> GetAllGamesAsync()
 	{
 		return await _context.Games.ToListAsync();
 	}
 
+	/// <summary>
+	/// Retrieves all games associated with a specific player by their ID.
+	/// This method queries the Scores table to find all unique games that the player has participated in, based on their scores.
+	/// </summary>
+	/// <param name="playerId">The ID of the player.</param>
+	/// <returns>A list of all games associated with the player.</returns>
 	public async Task<List<Game>> GetGamesByPlayerIdAsync(int playerId)
 	{
 		var games = await _context.Scores

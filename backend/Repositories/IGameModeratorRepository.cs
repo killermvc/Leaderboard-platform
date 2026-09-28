@@ -2,6 +2,9 @@ using Leaderboard.Models;
 
 namespace Leaderboard.Repositories;
 
+/// <summary>
+/// Defines the contract for a repository that manages game moderators in the database, providing methods for adding, removing, and retrieving moderators for specific games, as well as checking moderator permissions.
+/// </summary>
 public interface IGameModeratorRepository
 {
     /// <summary>

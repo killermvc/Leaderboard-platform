@@ -9,6 +9,9 @@ using Leaderboard.Dtos;
 
 namespace Leaderboard.Controllers;
 
+/// <summary>
+/// Controller for managing API keys. Provides endpoints to generate, retrieve, revoke, and regenerate API keys for games.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
@@ -19,6 +22,10 @@ public class ApiKeyController(IApiKeyRepository apiKeyRepository, IApiKeyService
 	private readonly IGameRepository _gameRepository = gameRepository;
 	private readonly IApiKeyAuthorizationService _apiKeyAuthorizationService = apiKeyAuthorizationService;
 
+	/// <summary>
+	/// Generates a new API key for a specific game. The user must have permission to manage API keys for the game.
+	/// </summary>
+	/// <param name="request">The request containing the game ID and other details.</param>
 	// POST: api/ApiKey
 	[HttpPost]
 	public async Task<IActionResult> GenerateKey([FromBody] CreateApiKeyRequest request)
@@ -68,6 +75,10 @@ public class ApiKeyController(IApiKeyRepository apiKeyRepository, IApiKeyService
 		});
 	}
 
+	/// <summary>
+	/// Retrieves all API keys for a specific game. The user must have permission to manage API keys for the game.
+	/// </summary>
+	/// <param name="gameId">The ID of the game for which to retrieve API keys.</param>
 	// GET: api/ApiKey/game/{gameId}
 	[HttpGet("game/{gameId}")]
 	public async Task<IActionResult> GetKeysForGame(int gameId)
@@ -103,6 +114,11 @@ public class ApiKeyController(IApiKeyRepository apiKeyRepository, IApiKeyService
 		return Ok(keyDtos);
 	}
 
+	/// <summary>
+	/// Revokes an API key by its ID. The user must have permission to manage API keys for the game associated with the key.
+	/// If the key is already revoked, a BadRequest response is returned.
+	/// </summary>
+	/// <param name="id">The ID of the API key to revoke.</param>
 	// POST: api/ApiKey/{id}/revoke
 	[HttpPost("{id}/revoke")]
 	public async Task<IActionResult> RevokeKey(int id)
@@ -142,6 +158,12 @@ public class ApiKeyController(IApiKeyRepository apiKeyRepository, IApiKeyService
 		});
 	}
 
+	/// <summary>
+	/// Regenerates an API key by its ID. The user must have permission to manage API keys for the game associated with the key.
+	/// If the key is revoked, a BadRequest response is returned. The new key will have the same name unless another key in the game already uses it, in which case " - Copy
+	/// </summary>
+	/// <param name="id"></param>
+	/// <returns></returns>
 	// POST: api/ApiKey/{id}/regenerate
 	[HttpPost("{id}/regenerate")]
 	public async Task<IActionResult> RegenerateKey(int id)
@@ -199,6 +221,10 @@ public class ApiKeyController(IApiKeyRepository apiKeyRepository, IApiKeyService
 		});
 	}
 
+	/// <summary>
+	/// Checks if the current user has permission to manage API keys for a specific game.
+	/// </summary>
+	/// <param name="gameId">The ID of the game to check permissions for.</param>
 	// GET: api/ApiKey/game/{gameId}/can-manage
 	[HttpGet("game/{gameId}/can-manage")]
 	public async Task<IActionResult> CanManageKeys(int gameId)

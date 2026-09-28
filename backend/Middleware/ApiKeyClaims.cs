@@ -11,10 +11,21 @@ namespace Leaderboard.Middleware;
 /// </summary>
 public static class ApiKeyClaims
 {
+	/// <summary>
+	/// The authentication type used by <see cref="ApiKeyAuthenticationMiddleware"/>.
+	/// </summary>
 	public const string AuthenticationType = "ApiKey";
-
+	/// <summary>
+	/// The name of the claim that carries the id of the authenticating api key.
+	/// </summary>
 	public const string KeyId = "apikey:id";
+	/// <summary>
+	/// The name of the claim that carries the game the authenticating api key is scoped to.
+	/// </summary>
 	public const string GameId = "apikey:gameId";
+	/// <summary>
+	/// The name of the claim that carries the permissions granted to the authenticating api key.
+	/// </summary>
 	public const string Permissions = "apikey:permissions";
 
 	/// <summary>

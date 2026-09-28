@@ -1,7 +1,13 @@
 namespace Leaderboard.Models;
 
+/// <summary>
+/// Represents a score submitted by a user or a game client.
+/// </summary>
 public class Score
 {
+	/// <summary>
+	/// The unique identifier for this score.
+	/// </summary>
 	public int Id { get; set; }
 
 	/// <summary>
@@ -9,14 +15,27 @@ public class Score
 	/// Null for scores submitted by a game client through the api, those carry a <see cref="PlayerName"/> instead.
 	/// </summary>
 	public int? UserId { get; set; }
+	/// <summary>
+	/// The user account that submitted this score.
+	/// Null for scores submitted by a game client through the api, those carry a <see cref="PlayerName"/> instead.
+	/// </summary>
 	public User? User { get; set; }
-
+	/// <summary>
+	/// The game this score belongs to.
+	/// </summary>
 	public required Game Game { get; set; }
 	/// <summary>
 	/// The game this score belongs to.
 	/// </summary>
 	public int GameId { get; set; }
+	/// <summary>
+	/// The numeric value of the score.
+	/// </summary>
 	public int Value { get; set; }
+	/// <summary>
+	/// The date and time when this score was achieved.
+	/// This is automatically set to the current date and time when the score is created.
+	/// </summary>
 	public DateTime DateAchieved { get; set; }
 
 	/// <summary>
