@@ -27,6 +27,33 @@ public class ApiKeyControllerTests
 	}
 
 	[Fact]
+	public async Task GenerateKey_WithUnknownGame_ReturnsNotFound()
+	{
+		var gameRepository = new Mock<IGameRepository>();
+		gameRepository.Setup(item => item.GetGameByIdAsync(7)).ReturnsAsync((Game?)null);
+		var controller = CreateController(gameRepository.Object, Mock.Of<IApiKeyRepository>(), Mock.Of<IApiKeyService>(), Mock.Of<IApiKeyAuthorizationService>(), "8");
+
+		var result = await controller.GenerateKey(new CreateApiKeyRequest { Name = "Production", GameId = 7 });
+
+		Assert.IsType<NotFoundObjectResult>(result);
+	}
+
+	[Fact]
+	public async Task GenerateKey_WithoutManagePermission_ReturnsForbidden()
+	{
+		var gameRepository = new Mock<IGameRepository>();
+		var authorization = new Mock<IApiKeyAuthorizationService>();
+		gameRepository.Setup(item => item.GetGameByIdAsync(7))
+			.ReturnsAsync(new Game { Id = 7, Name = "Arcade", Description = "Classic game" });
+		authorization.Setup(item => item.CanManageKeysAsync(It.IsAny<ClaimsPrincipal>(), 7)).ReturnsAsync(false);
+		var controller = CreateController(gameRepository.Object, Mock.Of<IApiKeyRepository>(), Mock.Of<IApiKeyService>(), authorization.Object, "8");
+
+		var result = await controller.GenerateKey(new CreateApiKeyRequest { Name = "Production", GameId = 7 });
+
+		Assert.IsType<ForbidResult>(result);
+	}
+
+	[Fact]
 	public async Task GenerateKey_WithManagePermission_CreatesKey()
 	{
 		var gameRepository = new Mock<IGameRepository>();
@@ -124,6 +151,79 @@ public class ApiKeyControllerTests
 		var serialized = System.Text.Json.JsonSerializer.Serialize(listedKey);
 		Assert.DoesNotContain("plain-key", serialized);
 		Assert.DoesNotContain("hashed-key", serialized);
+	}
+
+	[Fact]
+	public async Task GetKeysForGame_WithoutManagePermission_ReturnsForbidden()
+	{
+		var gameRepository = new Mock<IGameRepository>();
+		var authorization = new Mock<IApiKeyAuthorizationService>();
+		gameRepository.Setup(item => item.GetGameByIdAsync(7))
+			.ReturnsAsync(new Game { Id = 7, Name = "Arcade", Description = "Classic game" });
+		authorization.Setup(item => item.CanManageKeysAsync(It.IsAny<ClaimsPrincipal>(), 7)).ReturnsAsync(false);
+		var controller = CreateController(gameRepository.Object, Mock.Of<IApiKeyRepository>(), Mock.Of<IApiKeyService>(), authorization.Object, "8");
+
+		var result = await controller.GetKeysForGame(7);
+
+		Assert.IsType<ForbidResult>(result);
+	}
+
+	[Fact]
+	public async Task RevokeKey_WhenAlreadyRevoked_ReturnsBadRequest()
+	{
+		var keyRepository = new Mock<IApiKeyRepository>();
+		var authorization = new Mock<IApiKeyAuthorizationService>();
+		keyRepository.Setup(item => item.GetByIdAsync(20)).ReturnsAsync(new ApiKey
+		{
+			Id = 20,
+			Name = "Production",
+			KeyHash = "hash",
+			GameId = 7,
+			UserId = 8,
+			RevokedAt = DateTime.UtcNow.AddMinutes(-1)
+		});
+		authorization.Setup(item => item.CanManageKeysAsync(It.IsAny<ClaimsPrincipal>(), 7)).ReturnsAsync(true);
+		var controller = CreateController(Mock.Of<IGameRepository>(), keyRepository.Object, Mock.Of<IApiKeyService>(), authorization.Object, "8");
+
+		var result = await controller.RevokeKey(20);
+
+		Assert.IsType<BadRequestObjectResult>(result);
+		keyRepository.Verify(item => item.UpdateAsync(It.IsAny<ApiKey>()), Times.Never);
+	}
+
+	[Fact]
+	public async Task RevokeKey_WhenMissing_ReturnsNotFound()
+	{
+		var keyRepository = new Mock<IApiKeyRepository>();
+		keyRepository.Setup(item => item.GetByIdAsync(20)).ReturnsAsync((ApiKey?)null);
+		var controller = CreateController(Mock.Of<IGameRepository>(), keyRepository.Object, Mock.Of<IApiKeyService>(), Mock.Of<IApiKeyAuthorizationService>(), "8");
+
+		var result = await controller.RevokeKey(20);
+
+		Assert.IsType<NotFoundObjectResult>(result);
+	}
+
+	[Fact]
+	public async Task RegenerateKey_WhenAlreadyRevoked_ReturnsBadRequest()
+	{
+		var keyRepository = new Mock<IApiKeyRepository>();
+		keyRepository.Setup(item => item.GetByIdAsync(20)).ReturnsAsync(new ApiKey
+		{
+			Id = 20,
+			Name = "Production",
+			KeyHash = "hash",
+			GameId = 7,
+			UserId = 8,
+			RevokedAt = DateTime.UtcNow.AddMinutes(-1)
+		});
+		var authorization = new Mock<IApiKeyAuthorizationService>();
+		authorization.Setup(item => item.CanManageKeysAsync(It.IsAny<ClaimsPrincipal>(), 7)).ReturnsAsync(true);
+		var controller = CreateController(Mock.Of<IGameRepository>(), keyRepository.Object, Mock.Of<IApiKeyService>(), authorization.Object, "8");
+
+		var result = await controller.RegenerateKey(20);
+
+		Assert.IsType<BadRequestObjectResult>(result);
+		keyRepository.Verify(item => item.RegenerateAsync(It.IsAny<ApiKey>(), It.IsAny<ApiKey>()), Times.Never);
 	}
 
 	[Fact]

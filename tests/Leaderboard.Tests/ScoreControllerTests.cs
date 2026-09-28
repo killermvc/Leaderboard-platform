@@ -94,6 +94,119 @@ public class V1ScoreControllerTests
 	}
 
 	[Fact]
+	public async Task SubmitScore_WithMatchingGameId_Succeeds()
+	{
+		var scoreRepository = new Mock<IScoreRepository>();
+		var gameRepository = new Mock<IGameRepository>();
+		var game = new Game { Id = 7, Name = "Arcade", Description = "Test game" };
+		var score = new Score { Id = 42, Game = game, PlayerName = "Ryu", Value = 100, Status = ScoreStatus.Approved };
+		gameRepository.Setup(repository => repository.GetGameByIdAsync(7)).ReturnsAsync(game);
+		scoreRepository.Setup(repository => repository.SubmitNamedScoreAsync(7, "Ryu", 100, "submission-1", null, null))
+			.ReturnsAsync(score);
+		var controller = CreateController(scoreRepository, gameRepository, ApiKeyPermissions.SubmitScores, 7);
+
+		var result = await controller.SubmitScore(new SubmitScoreRequest
+		{
+			GameId = 7,
+			Name = "Ryu",
+			Score = 100,
+			SubmissionId = "submission-1"
+		});
+
+		Assert.Equal(StatusCodes.Status201Created, Assert.IsType<ObjectResult>(result).StatusCode);
+	}
+
+	[Fact]
+	public async Task SubmitScore_WhenGameMissing_ReturnsNotFound()
+	{
+		var gameRepository = new Mock<IGameRepository>();
+		gameRepository.Setup(repository => repository.GetGameByIdAsync(7)).ReturnsAsync((Game?)null);
+		var controller = CreateController(new Mock<IScoreRepository>(), gameRepository, ApiKeyPermissions.SubmitScores, 7);
+
+		var result = await controller.SubmitScore(ValidRequest());
+
+		Assert.IsType<NotFoundObjectResult>(result);
+	}
+
+	[Fact]
+	public async Task SubmitScore_WhenGameDisallowsSubmissions_ReturnsBadRequest()
+	{
+		var gameRepository = new Mock<IGameRepository>();
+		gameRepository.Setup(repository => repository.GetGameByIdAsync(7))
+			.ReturnsAsync(new Game { Id = 7, Name = "Arcade", Description = "Test game", SubmitsAllowed = false });
+		var scoreRepository = new Mock<IScoreRepository>();
+		var controller = CreateController(scoreRepository, gameRepository, ApiKeyPermissions.SubmitScores, 7);
+
+		var result = await controller.SubmitScore(ValidRequest());
+
+		Assert.IsType<BadRequestObjectResult>(result);
+		scoreRepository.Verify(repository => repository.SubmitNamedScoreAsync(
+			It.IsAny<int>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>()), Times.Never);
+	}
+
+	[Fact]
+	public async Task SubmitScore_WhenRepositoryCannotFindGame_ReturnsNotFound()
+	{
+		var gameRepository = new Mock<IGameRepository>();
+		gameRepository.Setup(repository => repository.GetGameByIdAsync(7))
+			.ReturnsAsync(new Game { Id = 7, Name = "Arcade", Description = "Test game" });
+		var scoreRepository = new Mock<IScoreRepository>();
+		scoreRepository.Setup(repository => repository.SubmitNamedScoreAsync(7, "Ryu", 100, "submission-1", null, null))
+			.ThrowsAsync(new KeyNotFoundException("Game not found"));
+		var controller = CreateController(scoreRepository, gameRepository, ApiKeyPermissions.SubmitScores, 7);
+
+		var result = await controller.SubmitScore(ValidRequest());
+
+		Assert.IsType<NotFoundObjectResult>(result);
+	}
+
+	[Fact]
+	public async Task SubmitScore_WhenRepositoryRejectsSubmission_ReturnsBadRequest()
+	{
+		var gameRepository = new Mock<IGameRepository>();
+		gameRepository.Setup(repository => repository.GetGameByIdAsync(7))
+			.ReturnsAsync(new Game { Id = 7, Name = "Arcade", Description = "Test game" });
+		var scoreRepository = new Mock<IScoreRepository>();
+		scoreRepository.Setup(repository => repository.SubmitNamedScoreAsync(7, "Ryu", 100, "submission-1", null, null))
+			.ThrowsAsync(new InvalidOperationException("Duplicate submission"));
+		var controller = CreateController(scoreRepository, gameRepository, ApiKeyPermissions.SubmitScores, 7);
+
+		var result = await controller.SubmitScore(ValidRequest());
+
+		Assert.IsType<BadRequestObjectResult>(result);
+	}
+
+	[Fact]
+	public async Task SubmitScore_WhenRepositoryFailsUnexpectedly_ReturnsInternalServerError()
+	{
+		var gameRepository = new Mock<IGameRepository>();
+		gameRepository.Setup(repository => repository.GetGameByIdAsync(7))
+			.ReturnsAsync(new Game { Id = 7, Name = "Arcade", Description = "Test game" });
+		var scoreRepository = new Mock<IScoreRepository>();
+		scoreRepository.Setup(repository => repository.SubmitNamedScoreAsync(7, "Ryu", 100, "submission-1", null, null))
+			.ThrowsAsync(new Exception("database failure"));
+		var controller = CreateController(scoreRepository, gameRepository, ApiKeyPermissions.SubmitScores, 7);
+
+		var result = await controller.SubmitScore(ValidRequest());
+
+		Assert.Equal(StatusCodes.Status500InternalServerError, Assert.IsType<ObjectResult>(result).StatusCode);
+	}
+
+	[Fact]
+	public async Task SubmitScore_WithJwtOnlyClaims_ReturnsUnauthorized()
+	{
+		var scoreRepository = new Mock<IScoreRepository>();
+		var gameRepository = new Mock<IGameRepository>();
+		var controller = CreateController(scoreRepository, gameRepository, ApiKeyPermissions.None, 7, authenticated: false);
+		controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(
+			[new Claim(ClaimTypes.Name, "8")], "Bearer"));
+
+		var result = await controller.SubmitScore(ValidRequest());
+
+		Assert.IsType<UnauthorizedObjectResult>(result);
+	}
+
+	[Fact]
 	public async Task GetScoreByPlayerName_WithReadPermission_ReturnsBestScore()
 	{
 		var scoreRepository = new Mock<IScoreRepository>();
@@ -192,6 +305,23 @@ public class V1ScoreControllerTests
 		Assert.Contains(errors, error => error.MemberNames.Contains(nameof(SubmitScoreRequest.SubmissionId)));
 	}
 
+	[Fact]
+	public void SubmitScoreRequest_RejectsOversizedNameAndSubmissionId()
+	{
+		var request = new SubmitScoreRequest
+		{
+			Name = new string('n', 65),
+			Score = 100,
+			SubmissionId = new string('s', 129)
+		};
+		var validationContext = new ValidationContext(request);
+		var errors = new List<ValidationResult>();
+
+		Assert.False(Validator.TryValidateObject(request, validationContext, errors, validateAllProperties: true));
+		Assert.Contains(errors, error => error.MemberNames.Contains(nameof(SubmitScoreRequest.Name)));
+		Assert.Contains(errors, error => error.MemberNames.Contains(nameof(SubmitScoreRequest.SubmissionId)));
+	}
+
 	private static ScoreController CreateController(
 		Mock<IScoreRepository> scoreRepository,
 		Mock<IGameRepository> gameRepository,
@@ -223,4 +353,11 @@ public class V1ScoreControllerTests
 
 		return controller;
 	}
+
+	private static SubmitScoreRequest ValidRequest() => new()
+	{
+		Name = "Ryu",
+		Score = 100,
+		SubmissionId = "submission-1"
+	};
 }
