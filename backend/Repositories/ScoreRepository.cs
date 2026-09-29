@@ -89,7 +89,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// <param name="gameId">The ID of the game for which the score is being submitted.</param>
 	/// <param name="playerName">The name given to the player by the game client.</param>
 	/// <param name="scoreValue">The score value to be submitted.</param>
-	/// <param name="submissionId">Client-generated identifier that makes retries return the original score.</param>
+	/// <param name="submissionId">Client-generated identifier that must be unique for the game.</param>
 	/// <param name="title">Optional title of the score post.</param>
 	/// <param name="description">Optional description of the score post.</param>
 	/// <returns>The created score, approved and with its generated id.</returns>
@@ -104,7 +104,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.FirstOrDefaultAsync(s => s.GameId == gameId && s.SubmissionId == submissionId);
 		if (existingScore is not null)
 		{
-			return existingScore;
+			throw new InvalidOperationException($"Submission ID '{submissionId}' has already been used for this game.");
 		}
 
 		string trimmedName = playerName.Trim();
@@ -130,15 +130,14 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 		catch (DbUpdateException)
 		{
 			_context.Entry(score).State = EntityState.Detached;
-			Score? concurrentScore = await _context.Scores
-				.Include(s => s.Game)
-				.FirstOrDefaultAsync(s => s.GameId == gameId && s.SubmissionId == submissionId);
-			if (concurrentScore is null)
+			bool submissionExists = await _context.Scores
+				.AnyAsync(s => s.GameId == gameId && s.SubmissionId == submissionId);
+			if (!submissionExists)
 			{
 				throw;
 			}
 
-			return concurrentScore;
+			throw new InvalidOperationException($"Submission ID '{submissionId}' has already been used for this game.");
 		}
 
 		// Game client scores are approved on submission, so they go straight to the leaderboard

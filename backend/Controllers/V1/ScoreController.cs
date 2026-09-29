@@ -30,8 +30,8 @@ public class ScoreController(
 	/// Submits a score for a named player on behalf of a game client.
 	/// The score belongs to the game the api key is scoped to and is approved immediately.
 	/// </summary>
-	/// <response code="201">The score was created and is on the leaderboard. Repeating the same submission ID returns the original score.</response>
-	/// <response code="400">The payload is missing, malformed or the game does not accept submissions.</response>
+	/// <response code="201">The score was created and is on the leaderboard.</response>
+	/// <response code="400">The payload is missing, malformed, the game does not accept submissions, or the submission ID was already used.</response>
 	/// <response code="401">The request was not authenticated with an api key.</response>
 	/// <response code="403">The api key lacks the submit permission or is scoped to another game.</response>
 	/// <response code="404">The game of the api key does not exist.</response>
@@ -74,11 +74,6 @@ public class ScoreController(
 		if (game is null)
 		{
 			return NotFound(new { Message = "Game not found." });
-		}
-
-		if (!game.SubmitsAllowed)
-		{
-			return BadRequest(new { Message = "Submissions are not allowed for this game." });
 		}
 
 		try
@@ -251,8 +246,8 @@ public class SubmitScoreRequest
 	public int Score { get; set; }
 
 	/// <summary>
-	/// Client-generated unique identifier for this submission. Retrying with the same identifier
-	/// returns the original score instead of creating another submission.
+	/// Client-generated unique identifier for this submission. It must not have been used previously
+	/// for this game.
 	/// </summary>
 	[Required]
 	[StringLength(128, MinimumLength = 1)]

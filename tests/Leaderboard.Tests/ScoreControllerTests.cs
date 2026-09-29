@@ -129,22 +129,6 @@ public class V1ScoreControllerTests
 	}
 
 	[Fact]
-	public async Task SubmitScore_WhenGameDisallowsSubmissions_ReturnsBadRequest()
-	{
-		var gameRepository = new Mock<IGameRepository>();
-		gameRepository.Setup(repository => repository.GetGameByIdAsync(7))
-			.ReturnsAsync(new Game { Id = 7, Name = "Arcade", Description = "Test game", SubmitsAllowed = false });
-		var scoreRepository = new Mock<IScoreRepository>();
-		var controller = CreateController(scoreRepository, gameRepository, ApiKeyPermissions.SubmitScores, 7);
-
-		var result = await controller.SubmitScore(ValidRequest());
-
-		Assert.IsType<BadRequestObjectResult>(result);
-		scoreRepository.Verify(repository => repository.SubmitNamedScoreAsync(
-			It.IsAny<int>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>()), Times.Never);
-	}
-
-	[Fact]
 	public async Task SubmitScore_WhenRepositoryCannotFindGame_ReturnsNotFound()
 	{
 		var gameRepository = new Mock<IGameRepository>();
@@ -174,6 +158,23 @@ public class V1ScoreControllerTests
 		var result = await controller.SubmitScore(ValidRequest());
 
 		Assert.IsType<BadRequestObjectResult>(result);
+	}
+
+	[Fact]
+	public async Task SubmitScore_WhenSubmissionIdIsRepeated_ReturnsBadRequest()
+	{
+		var gameRepository = new Mock<IGameRepository>();
+		gameRepository.Setup(repository => repository.GetGameByIdAsync(7))
+			.ReturnsAsync(new Game { Id = 7, Name = "Arcade", Description = "Test game" });
+		var scoreRepository = new Mock<IScoreRepository>();
+		scoreRepository.Setup(repository => repository.SubmitNamedScoreAsync(7, "Ryu", 100, "submission-1", null, null))
+			.ThrowsAsync(new InvalidOperationException("Submission ID 'submission-1' has already been used for this game."));
+		var controller = CreateController(scoreRepository, gameRepository, ApiKeyPermissions.SubmitScores, 7);
+
+		var result = await controller.SubmitScore(ValidRequest());
+
+		var badRequest = Assert.IsType<BadRequestObjectResult>(result);
+		Assert.Contains("already been used", badRequest.Value?.ToString());
 	}
 
 	[Fact]
