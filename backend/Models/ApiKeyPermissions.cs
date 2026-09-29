@@ -22,5 +22,9 @@ public enum ApiKeyPermissions
 	/// <summary>
 	/// Permission to read leaderboard data.
 	/// </summary>
-    ReadLeaderboard = 1 << 2
+    ReadLeaderboard = 1 << 2,
+	/// <summary>
+	/// Permission to delete scores submitted by a game client.
+	/// </summary>
+	DeleteScores = 1 << 3
 }

@@ -73,6 +73,10 @@
 						<input type="checkbox" [checked]="permReadLeaderboard()" (change)="permReadLeaderboard.set(!!$any($event.target).checked)" />
 						Read leaderboard
 					</label>
+					<label class="checkbox-label">
+						<input type="checkbox" [checked]="permDeleteScores()" (change)="permDeleteScores.set(!!$any($event.target).checked)" />
+						Delete scores
+					</label>
 				</fieldset>
 
 				<div class="form-group">

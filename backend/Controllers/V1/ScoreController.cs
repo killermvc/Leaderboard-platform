@@ -108,6 +108,48 @@ public class ScoreController(
 	}
 
 	/// <summary>
+	/// Deletes all scores submitted by a named player for the game.
+	/// </summary>
+	/// <response code="204">The score was deleted.</response>
+	/// <response code="401">The request was not authenticated with an api key.</response>
+	/// <response code="403">The api key lacks the delete permission or is scoped to another game.</response>
+	/// <response code="404">No score exists for the player in the requested game.</response>
+	/// <response code="500">An unexpected server error occurred.</response>
+	[ProducesResponseType(StatusCodes.Status204NoContent)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	[ProducesResponseType(StatusCodes.Status403Forbidden)]
+	[ProducesResponseType(StatusCodes.Status404NotFound)]
+	[ProducesResponseType(StatusCodes.Status500InternalServerError)]
+	[HttpDelete("game/{gameId}/player/{playerName}")]
+	[Authorize]
+	public async Task<IActionResult> DeleteScore(int gameId, string playerName)
+	{
+		if (!TryAuthorizeGameRead(gameId, ApiKeyPermissions.DeleteScores, out IActionResult? authorizationResult))
+		{
+			return authorizationResult!;
+		}
+
+		try
+		{
+			await _scoreRepository.DeleteNamedScoresAsync(gameId, playerName);
+			return NoContent();
+		}
+		catch (KeyNotFoundException ex)
+		{
+			return NotFound(new { Message = ex.Message });
+		}
+		catch (InvalidOperationException ex)
+		{
+			return BadRequest(new { Message = ex.Message });
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Error deleting scores for player {PlayerName} in game {GameId}.", playerName, gameId);
+			return StatusCode(500, new { Message = "An error occurred while deleting the score." });
+		}
+	}
+
+	/// <summary>
 	/// Gets the latest approved score submitted by a named player for the game's api key.
 	/// </summary>
 	/// <remarks>

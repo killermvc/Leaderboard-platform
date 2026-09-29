@@ -32,6 +32,7 @@ export const ApiKeyPermission = {
   SubmitScores: 1 << 0,
   ReadScores: 1 << 1,
   ReadLeaderboard: 1 << 2,
+  DeleteScores: 1 << 3,
 } as const;
 
 @Injectable({

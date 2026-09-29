@@ -166,6 +166,27 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.FirstOrDefaultAsync(s => s.Id == id);
 	}
 
+	/// <summary>
+	/// Deletes all named scores for a player in the requested game.
+	/// </summary>
+	public async Task DeleteNamedScoresAsync(int gameId, string playerName)
+	{
+		string normalizedName = NormalizePlayerName(playerName);
+		List<Score> scores = await _context.Scores
+			.Where(s => s.GameId == gameId
+				&& s.PlayerName != null
+				&& s.PlayerName.ToLower() == normalizedName)
+			.ToListAsync();
+		if (scores.Count == 0)
+		{
+			throw new KeyNotFoundException($"No score found for player '{playerName}'.");
+		}
+
+		_context.Scores.RemoveRange(scores);
+		await _context.SaveChangesAsync();
+		await _redisDb.KeyDeleteAsync(GetLeaderboardKey(gameId));
+	}
+
 	/// <summary>Gets the latest approved score for a named player in a game.</summary>
 	/// <param name="gameId">The ID of the game.</param>
 	/// <param name="playerName">The player's name.</param>

@@ -38,6 +38,7 @@ export class ApiKeysComponent implements OnInit {
   permSubmitScores = signal(true);
   permReadScores = signal(false);
   permReadLeaderboard = signal(false);
+  permDeleteScores = signal(false);
   generating = signal(false);
   generateError = signal<string | null>(null);
 
@@ -128,6 +129,7 @@ export class ApiKeysComponent implements OnInit {
     if (this.permSubmitScores()) permissions |= ApiKeyPermission.SubmitScores;
     if (this.permReadScores()) permissions |= ApiKeyPermission.ReadScores;
     if (this.permReadLeaderboard()) permissions |= ApiKeyPermission.ReadLeaderboard;
+    if (this.permDeleteScores()) permissions |= ApiKeyPermission.DeleteScores;
 
     const request: EditApiKeyRequest = {
       Name: name,

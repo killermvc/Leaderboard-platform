@@ -55,6 +55,42 @@ public class V1ScoreControllerTests
 	}
 
 	[Fact]
+	public async Task DeleteScore_WithPermission_DeletesPlayerScores()
+	{
+		var scoreRepository = new Mock<IScoreRepository>();
+		var controller = CreateController(scoreRepository, new Mock<IGameRepository>(), ApiKeyPermissions.DeleteScores, 7);
+
+		var result = await controller.DeleteScore(7, "Ryu");
+
+		Assert.IsType<NoContentResult>(result);
+		scoreRepository.Verify(repository => repository.DeleteNamedScoresAsync(7, "Ryu"), Times.Once);
+	}
+
+	[Fact]
+	public async Task DeleteScore_WithoutPermission_ReturnsForbidden()
+	{
+		var scoreRepository = new Mock<IScoreRepository>();
+		var controller = CreateController(scoreRepository, new Mock<IGameRepository>(), ApiKeyPermissions.ReadScores, 7);
+
+		var result = await controller.DeleteScore(7, "Ryu");
+
+		Assert.IsType<ForbidResult>(result);
+		scoreRepository.Verify(repository => repository.DeleteNamedScoresAsync(It.IsAny<int>(), It.IsAny<string>()), Times.Never);
+	}
+
+	[Fact]
+	public async Task DeleteScore_ForDifferentGame_ReturnsForbidden()
+	{
+		var scoreRepository = new Mock<IScoreRepository>();
+		var controller = CreateController(scoreRepository, new Mock<IGameRepository>(), ApiKeyPermissions.DeleteScores, 7);
+
+		var result = await controller.DeleteScore(8, "Ryu");
+
+		Assert.IsType<ForbidResult>(result);
+		scoreRepository.Verify(repository => repository.DeleteNamedScoresAsync(It.IsAny<int>(), It.IsAny<string>()), Times.Never);
+	}
+
+	[Fact]
 	public async Task SubmitScore_WithoutApiKey_ReturnsUnauthorized()
 	{
 		var scoreRepository = new Mock<IScoreRepository>();
