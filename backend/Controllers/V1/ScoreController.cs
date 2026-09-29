@@ -258,7 +258,7 @@ public class ScoreController(
 		Id = s.Id,
 		User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = s.User.Username },
 		PlayerName = s.PlayerName,
-		Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name },
+		Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed},
 		Value = s.Value,
 		DateAchieved = s.DateAchieved,
 		Title = s.Title,

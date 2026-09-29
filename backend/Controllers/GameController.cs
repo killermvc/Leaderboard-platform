@@ -32,7 +32,7 @@ namespace Leaderboard.Controllers
 		{
 			var game = new Game { Name = gameDto.Name, Description = gameDto.Description, ImageUrl = gameDto.ImageUrl };
 			await _gameRepository.AddAsync(game);
-			var resultDto = new GameDto { Id = game.Id, Name = game.Name, Description = game.Description, ImageUrl = game.ImageUrl };
+			var resultDto = new GameDto { Id = game.Id, Name = game.Name, Description = game.Description, ImageUrl = game.ImageUrl, IsSubmitAllowed = game.SubmitsAllowed };
 			return CreatedAtAction("GetGame", new { id = game.Id }, resultDto);
 		}
 
@@ -47,7 +47,7 @@ namespace Leaderboard.Controllers
 			{
 				return NotFound();
 			}
-			return new GameDto { Id = game.Id, Name = game.Name, Description = game.Description, ImageUrl = game.ImageUrl };
+			return new GameDto { Id = game.Id, Name = game.Name, Description = game.Description, ImageUrl = game.ImageUrl, IsSubmitAllowed = game.SubmitsAllowed };
 		}
 
 		/// <summary>
@@ -65,7 +65,8 @@ namespace Leaderboard.Controllers
 					Id = ((Game)g).Id,
 					Name = ((Game)g).Name,
 					Description = ((Game)g).Description,
-					ImageUrl = ((Game)g).ImageUrl
+					ImageUrl = ((Game)g).ImageUrl,
+					IsSubmitAllowed = ((Game)g).SubmitsAllowed
 				});
 				return Ok(gameDtos);
 			}
@@ -88,7 +89,8 @@ namespace Leaderboard.Controllers
 				Id = g.Id,
 				Name = g.Name,
 				Description = g.Description,
-				ImageUrl = g.ImageUrl
+				ImageUrl = g.ImageUrl,
+				IsSubmitAllowed = g.SubmitsAllowed
 			});
 
 			return Ok(gameDtos);

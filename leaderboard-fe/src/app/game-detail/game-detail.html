@@ -70,14 +70,15 @@
         }
       </section>
 
-      <!-- Submit Score Panel -->
-      <section class="panel submit-panel">
-        <div class="panel-header">
-          <h2>🎮 Submit Score</h2>
-        </div>
+      @if (gameData.isSubmitAllowed) {
+        <!-- Submit Score Panel -->
+        <section class="panel submit-panel">
+          <div class="panel-header">
+            <h2>🎮 Submit Score</h2>
+          </div>
 
-        @if (isLoggedIn()) {
-          <form [formGroup]="scoreForm" (ngSubmit)="submitScore()" class="score-form">
+          @if (isLoggedIn()) {
+            <form [formGroup]="scoreForm" (ngSubmit)="submitScore()" class="score-form">
             <div class="form-group">
               <label for="score">Your Score</label>
               <input
@@ -129,15 +130,16 @@
                 Submit Score
               }
             </button>
-          </form>
-        } @else {
-          <div class="login-prompt">
-            <p>You need to be logged in to submit a score.</p>
-            <a routerLink="/auth/login" class="btn-secondary">Login</a>
-            <a routerLink="/auth/register" class="btn-link">or Register</a>
-          </div>
-        }
-      </section>
+            </form>
+          } @else {
+            <div class="login-prompt">
+              <p>You need to be logged in to submit a score.</p>
+              <a routerLink="/auth/login" class="btn-secondary">Login</a>
+              <a routerLink="/auth/register" class="btn-link">or Register</a>
+            </div>
+          }
+        </section>
+      }
     </div>
   }
 </div>

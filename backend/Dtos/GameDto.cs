@@ -21,4 +21,10 @@ public class GameDto
 	/// The URL to an image representing the game. This can be used for display purposes in the UI.
 	/// </summary>
     public string? ImageUrl { get; set; }
+	/// <summary>
+	/// Indicates whether the game is currently accepting score submissions.
+	/// If false, users will not be able to submit scores for this game.
+	/// This doesn't affect api key submissions.
+	/// </summary>
+	public required bool IsSubmitAllowed {get; set;} = true;
 }

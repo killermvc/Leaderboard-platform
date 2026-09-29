@@ -8,6 +8,7 @@ export interface Game {
   name: string;
   description: string;
   imageUrl?: string;
+  isSubmitAllowed: boolean;
 }
 
 @Injectable({
