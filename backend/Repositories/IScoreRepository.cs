@@ -24,7 +24,7 @@ public interface IScoreRepository
 	/// </summary>
 	public Task<Score?> GetByIdAsync(int id);
 	/// <summary>
-	/// Gets the best named score submitted for a game by a player.
+	/// Gets the latest named score submitted for a game by a player.
 	/// </summary>
 	public Task<Score?> GetBestNamedScoreByGameAsync(int gameId, string playerName);
 	/// <summary>

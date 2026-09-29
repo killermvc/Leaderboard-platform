@@ -108,14 +108,14 @@ public class ScoreController(
 	}
 
 	/// <summary>
-	/// Gets the highest approved score submitted by a named player for the game's api key.
+	/// Gets the latest approved score submitted by a named player for the game's api key.
 	/// </summary>
 	/// <remarks>
 	/// Send the key in the X-API-Key header. Clients that cannot set headers may use the apiKey
 	/// or api_key query parameter instead. The key must have ReadScores permission and be scoped
 	/// to the gameId in the route.
 	/// </remarks>
-	/// <response code="200">The player's highest approved score.</response>
+	/// <response code="200">The player's latest approved score.</response>
 	/// <response code="401">The API key is missing, invalid, revoked, or expired.</response>
 	/// <response code="403">The key lacks ReadScores permission or is scoped to another game.</response>
 	/// <response code="404">No approved score exists for the player, or the game does not exist.</response>
@@ -255,7 +255,7 @@ public class SubmitScoreRequest
 
 	/// <summary>
 	/// The name of the player. The score is not tied to a user account, so this name is how the
-	/// player shows up on the leaderboard. Same name, same leaderboard entry, best score counts.
+	/// player shows up on the leaderboard. Same name, same leaderboard entry, latest score counts.
 	/// </summary>
 	[Required]
 	[RegularExpression(@".*\S.*", ErrorMessage = "Name cannot be empty or whitespace.")]

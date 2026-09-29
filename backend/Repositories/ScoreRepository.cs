@@ -83,8 +83,8 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// <summary>
 	/// Submits a score on behalf of a player that only has a name, as game clients do through the api.
 	/// The score is not tied to a user account and is approved right away, so it lands on the
-	/// leaderboard of the game immediately. A score that is not the player's best only keeps their
-	/// entry as is, it never lowers it.
+	/// leaderboard of the game immediately. The latest submission replaces the player's current
+	/// leaderboard value, even when it is lower than the previous submission.
 	/// </summary>
 	/// <param name="gameId">The ID of the game for which the score is being submitted.</param>
 	/// <param name="playerName">The name given to the player by the game client.</param>
@@ -145,14 +145,8 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 		await EnsureLeaderboardCachedAsync(leaderboardKey, gameId);
 
 		string member = GetPlayerNameMember(trimmedName);
-		int bestValue = await GetBestApprovedNamedScoreAsync(gameId, trimmedName) ?? scoreValue;
-
-		// ZADD overwrites the member, so only write when the player actually improved
-		var currentValue = await _redisDb.SortedSetScoreAsync(leaderboardKey, member);
-		if (!currentValue.HasValue || bestValue > currentValue.Value)
-		{
-			await _redisDb.SortedSetAddAsync(leaderboardKey, member, bestValue);
-		}
+		// ZADD overwrites the member so the latest submission becomes the player's current score.
+		await _redisDb.SortedSetAddAsync(leaderboardKey, member, scoreValue);
 
 		return score;
 	}
@@ -172,10 +166,10 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.FirstOrDefaultAsync(s => s.Id == id);
 	}
 
-	/// <summary>Gets the highest approved score for a named player in a game.</summary>
+	/// <summary>Gets the latest approved score for a named player in a game.</summary>
 	/// <param name="gameId">The ID of the game.</param>
 	/// <param name="playerName">The player's name.</param>
-	/// <returns>The best approved score, or null when none exists.</returns>
+	/// <returns>The latest approved score, or null when none exists.</returns>
 	public async Task<Score?> GetBestNamedScoreByGameAsync(int gameId, string playerName)
 	{
 		string normalizedName = NormalizePlayerName(playerName);
@@ -187,7 +181,8 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 				&& s.Status == ScoreStatus.Approved
 				&& s.PlayerName != null
 				&& s.PlayerName.ToLower() == normalizedName)
-			.OrderByDescending(s => s.Value)
+			.OrderByDescending(s => s.DateAchieved)
+			.ThenByDescending(s => s.Id)
 			.FirstOrDefaultAsync();
 	}
 
@@ -247,25 +242,9 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	}
 
 	/// <summary>
-	/// Gets the best approved score a named player has in a game, or null when they have none.
-	/// The comparison is case insensitive so "Bob" and "bob" are treated as the same player.
-	/// </summary>
-	private async Task<int?> GetBestApprovedNamedScoreAsync(int gameId, string playerName)
-	{
-		string normalizedName = NormalizePlayerName(playerName);
-
-		return await _context.Scores
-			.Where(s => s.Game.Id == gameId
-				&& s.Status == ScoreStatus.Approved
-				&& s.PlayerName != null
-				&& s.PlayerName.ToLower() == normalizedName)
-			.MaxAsync(s => (int?)s.Value);
-	}
-
-	/// <summary>
 	/// Rebuilds the leaderboard for a given game in Redis from the SQL database.
-	/// Only includes approved scores, keeping the best one per player where a player is either a
-	/// user account or a name given by a game client.
+	/// Only includes approved scores, keeping the best one per user account and the latest one per
+	/// name given by a game client.
 	/// </summary>
 	/// <param name="gameId">The ID of the game.</param>
 	private async Task UpdateRedisDbForGame(int gameId)
@@ -273,10 +252,11 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 		var approvedScores = await _context.Scores
 			.AsNoTracking()
 			.Where(s => s.Game.Id == gameId && s.Status == ScoreStatus.Approved)
-			.Select(s => new { s.UserId, s.PlayerName, s.Value })
+			.Select(s => new { s.Id, s.UserId, s.PlayerName, s.Value, s.DateAchieved })
 			.ToListAsync();
 
 		var bestPerPlayer = new Dictionary<string, int>(StringComparer.Ordinal);
+		var latestNamedScore = new Dictionary<string, (DateTime DateAchieved, int Id)>(StringComparer.Ordinal);
 		foreach (var approvedScore in approvedScores)
 		{
 			string? member = approvedScore.UserId.HasValue
@@ -291,9 +271,19 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 				continue;
 			}
 
-			if (!bestPerPlayer.TryGetValue(member, out int currentBest) || approvedScore.Value > currentBest)
+			if (approvedScore.UserId.HasValue)
+			{
+				if (!bestPerPlayer.TryGetValue(member, out int currentBest) || approvedScore.Value > currentBest)
+				{
+					bestPerPlayer[member] = approvedScore.Value;
+				}
+			}
+			else if (!latestNamedScore.TryGetValue(member, out var currentLatest)
+				|| approvedScore.DateAchieved > currentLatest.DateAchieved
+				|| approvedScore.DateAchieved == currentLatest.DateAchieved && approvedScore.Id > currentLatest.Id)
 			{
 				bestPerPlayer[member] = approvedScore.Value;
+				latestNamedScore[member] = (approvedScore.DateAchieved, approvedScore.Id);
 			}
 		}
 
