@@ -19,6 +19,37 @@
       <label for="imageUrl">Image URL</label>
       <input id="imageUrl" type="url" formControlName="imageUrl" maxlength="500" />
 
+      <label for="owner-search">Game owner <span class="optional">(optional)</span></label>
+      @if (selectedOwner(); as owner) {
+        <div class="selected-owner">
+          <span>{{ owner.username }}</span>
+          <button type="button" class="clear-owner" (click)="clearOwner()">Remove</button>
+        </div>
+      } @else {
+        <input
+          id="owner-search"
+          type="search"
+          [ngModel]="ownerSearch()"
+          [ngModelOptions]="{ standalone: true }"
+          (ngModelChange)="ownerSearch.set($event)"
+          (input)="searchOwners()"
+          placeholder="Search by username"
+        />
+        @if (searchingOwners()) {
+          <p class="search-status">Searching...</p>
+        }
+        @if (ownerResults().length > 0) {
+          <ul class="owner-results">
+            @for (user of ownerResults(); track user.id) {
+              <li>
+                <span>{{ user.username }}</span>
+                <button type="button" (click)="chooseOwner(user)">Select</button>
+              </li>
+            }
+          </ul>
+        }
+      }
+
       @if (error()) {
         <p class="form-error" role="alert">{{ error() }}</p>
       }

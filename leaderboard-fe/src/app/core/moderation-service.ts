@@ -102,16 +102,12 @@ export class ModerationService {
 
   // ==================== Moderator Management ====================
 
-  /**
-   * Add a user as a moderator for a game (Admin only)
-   */
+  /** Add a user as a moderator for a game. */
   addGameModerator(gameId: number, userId: number): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.baseUrl}/games/${gameId}/moderators/${userId}`, {});
   }
 
-  /**
-   * Remove a user as a moderator from a game (Admin only)
-   */
+  /** Remove a user as a moderator from a game. */
   removeGameModerator(gameId: number, userId: number): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(`${this.baseUrl}/games/${gameId}/moderators/${userId}`);
   }

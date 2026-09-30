@@ -14,6 +14,7 @@ import { GameModeratorsComponent } from './game-moderators/game-moderators';
 import { ScorePostComponent } from './score-post/score-post';
 import { ApiKeysComponent } from './api-keys/api-keys';
 import { NewGame } from './new-game/new-game';
+import { GameConfigure } from './game-configure/game-configure';
 
 export const routes: Routes = [
 	  {
@@ -43,6 +44,10 @@ export const routes: Routes = [
 	  {
 		path: 'games/:id/moderators',
 		component: GameModeratorsComponent
+	  },
+	  {
+		path: 'games/:id/configure',
+		component: GameConfigure
 	  },
 	  {
 		path: 'games/:id/pending-scores',

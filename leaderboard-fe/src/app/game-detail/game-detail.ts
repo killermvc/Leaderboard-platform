@@ -38,6 +38,11 @@ export class GameDetail implements OnInit {
 
   isLoggedIn = computed(() => this.authService.isAuthenticated());
   isAdmin = computed(() => this.authService.hasRole('Admin'));
+  canConfigure = computed(() => {
+    const currentGame = this.game();
+    const currentUserId = Number(this.authService.getUserIdFromToken());
+    return this.isAdmin() || (!!currentGame?.ownerId && currentGame.ownerId === currentUserId);
+  });
 
   scoreForm = this.fb.group({
     score: [0, [Validators.required, Validators.min(0)]],
@@ -181,6 +186,13 @@ export class GameDetail implements OnInit {
     const gameId = this.game()?.id;
     if (gameId) {
       this.router.navigate(['/games', gameId, 'api-keys']);
+    }
+  }
+
+  goToConfigure() {
+    const gameId = this.game()?.id;
+    if (gameId) {
+      this.router.navigate(['/games', gameId, 'configure']);
     }
   }
 

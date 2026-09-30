@@ -23,6 +23,9 @@
         }
         <!-- Admin/Moderator Actions -->
         <div class="admin-actions">
+          @if (canConfigure()) {
+            <button class="btn-secondary" (click)="goToConfigure()">⚙ Configure Game</button>
+          }
           @if (isAdmin()) {
             <button class="btn-secondary" (click)="goToModerators()">🛡️ Manage Moderators</button>
           }

@@ -8,6 +8,7 @@ export interface Game {
   name: string;
   description: string;
   imageUrl?: string;
+  ownerId?: number | null;
   isSubmitAllowed: boolean;
 }
 
@@ -26,11 +27,12 @@ export class GameService {
    * @param imageUrl The URL of the game's image
    * @returns Observable with the created game
    */
-  createGame(name: string, description: string = '', imageUrl: string = ''): Observable<Game> {
+  createGame(name: string, description: string = '', imageUrl: string = '', ownerId: number | null = null): Observable<Game> {
     const body = {
       Name: name,
       Description: description,
       ImageUrl: imageUrl,
+      OwnerId: ownerId,
       IsSubmitAllowed: true,
     };
     return this.http.post<Game>(this.baseUrl, body);
@@ -43,6 +45,16 @@ export class GameService {
    */
   getGameById(id: number): Observable<Game> {
     return this.http.get<Game>(`${this.baseUrl}/${id}`);
+  }
+
+  updateGame(id: number, game: Pick<Game, 'name' | 'description' | 'imageUrl' | 'isSubmitAllowed'> & { ownerId?: number | null }): Observable<Game> {
+    return this.http.put<Game>(`${this.baseUrl}/${id}`, {
+      Name: game.name,
+      Description: game.description,
+      ImageUrl: game.imageUrl,
+      OwnerId: game.ownerId,
+      IsSubmitAllowed: game.isSubmitAllowed,
+    });
   }
 
   /**

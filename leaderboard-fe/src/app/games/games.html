@@ -4,7 +4,7 @@
     @if (authService.hasRole('Admin')) {
       <button (click)="routeToNewGame()">
         <ng-icon name="octPlus" size="24px"></ng-icon>
-        New game
+        <span class="new-game-label">New game</span>
       </button>
     }
   </div>

@@ -1,0 +1,162 @@
+<main class="configure-shell">
+  <button class="back-btn" type="button" (click)="goBack()">← Back to Game</button>
+
+  @if (loading()) {
+    <section class="state-panel"><p>Loading game configuration...</p></section>
+  } @else if (error() && !game()) {
+    <section class="state-panel error-panel">
+      <p>{{ error() }}</p>
+      <button class="btn-primary" type="button" routerLink="/games">Go to Games</button>
+    </section>
+  } @else if (game(); as gameData) {
+    <header class="page-header">
+      <p class="eyebrow">Game owner workspace</p>
+      <h1>Configure {{ gameData.name }}</h1>
+      <p>Keep the game identity current and choose who can review score submissions.</p>
+    </header>
+
+    @if (error()) {
+      <div class="inline-message error-message">{{ error() }}</div>
+    }
+    @if (success()) {
+      <div class="inline-message success-message">{{ success() }}</div>
+    }
+
+    <section class="config-grid">
+      <form class="panel settings-panel" [formGroup]="gameForm" (ngSubmit)="saveGame()">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Game profile</p>
+            <h2>Settings</h2>
+          </div>
+          <span class="status-chip" [class.closed]="!gameForm.controls.isSubmitAllowed.value">
+            {{ gameForm.controls.isSubmitAllowed.value ? 'Open for submissions' : 'Submissions closed' }}
+          </span>
+        </div>
+
+        <label for="game-name">Name</label>
+        <input id="game-name" type="text" formControlName="name" />
+        @if (gameForm.controls.name.invalid && gameForm.controls.name.touched) {
+          <span class="field-error">A name is required.</span>
+        }
+
+        <label for="game-description">Description</label>
+        <textarea id="game-description" rows="6" formControlName="description"></textarea>
+
+        <label for="game-image">Image URL</label>
+        <input id="game-image" type="url" formControlName="imageUrl" placeholder="https://..." />
+
+        @if (isAdmin()) {
+          <label for="owner-search">Game owner</label>
+          @if (selectedOwner(); as owner) {
+            <div class="selected-owner">
+              <span>{{ owner.username }}</span>
+              <button class="text-action" type="button" (click)="clearOwner()">Remove</button>
+            </div>
+          } @else {
+            <input
+              id="owner-search"
+              type="search"
+              [ngModel]="ownerSearch()"
+              [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="ownerSearch.set($event)"
+              (input)="searchOwners()"
+              placeholder="Search by username"
+            />
+            @if (searchingOwners()) {
+              <p class="muted-text">Searching...</p>
+            }
+            @if (ownerResults().length > 0) {
+              <ul class="search-results">
+                @for (user of ownerResults(); track user.id) {
+                  <li>
+                    <span>{{ user.username }}</span>
+                    <button class="text-action" type="button" (click)="chooseOwner(user)">Select</button>
+                  </li>
+                }
+              </ul>
+            }
+          }
+        }
+
+        <label class="toggle-row" for="submits-allowed">
+          <input id="submits-allowed" type="checkbox" formControlName="isSubmitAllowed" />
+          <span>
+            <strong>Allow manual submissions</strong>
+            <small>Players can submit scores from the game page.</small>
+          </span>
+        </label>
+
+        <div class="form-actions">
+          <button class="btn-secondary" type="button" (click)="goBack()">Cancel</button>
+          <button class="btn-primary" type="submit" [disabled]="gameForm.invalid || saving()">
+            {{ saving() ? 'Saving...' : 'Save changes' }}
+          </button>
+        </div>
+      </form>
+
+      <div class="moderator-column">
+        <section class="panel add-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Review team</p>
+              <h2>Add moderator</h2>
+            </div>
+          </div>
+          <p class="panel-copy">Search for a player and give them permission to approve or reject submissions for this game.</p>
+          <label class="sr-only" for="moderator-search">Search users</label>
+          <input
+            id="moderator-search"
+            type="search"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
+            (input)="searchUsers()"
+            placeholder="Search by username"
+          />
+          @if (searching()) {
+            <p class="muted-text">Searching...</p>
+          }
+          @if (searchResults().length > 0) {
+            <ul class="search-results">
+              @for (user of searchResults(); track user.id) {
+                <li>
+                  <span>{{ user.username }}</span>
+                  <button class="text-action" type="button" (click)="addModerator(user.id)" [disabled]="addingUserId() === user.id">
+                    {{ addingUserId() === user.id ? 'Adding...' : 'Add' }}
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        <section class="panel moderators-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Assigned access</p>
+              <h2>Moderators</h2>
+            </div>
+            <span class="count-chip">{{ moderators().length }}</span>
+          </div>
+          @if (moderators().length === 0) {
+            <p class="muted-text">No game-specific moderators yet.</p>
+          } @else {
+            <ul class="moderator-list">
+              @for (moderator of moderators(); track moderator.userId) {
+                <li>
+                  <div>
+                    <a [routerLink]="['/user', moderator.userId]">{{ moderator.user.username }}</a>
+                    <small>Added {{ formatDate(moderator.assignedAt) }}</small>
+                  </div>
+                  <button class="remove-action" type="button" (click)="removeModerator(moderator.userId)" [disabled]="removingUserId() === moderator.userId">
+                    {{ removingUserId() === moderator.userId ? 'Removing...' : 'Remove' }}
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+      </div>
+    </section>
+  }
+</main>
