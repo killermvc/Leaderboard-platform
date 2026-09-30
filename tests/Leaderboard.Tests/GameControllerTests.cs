@@ -53,7 +53,7 @@ public class GameControllerTests
 			.Returns(Task.CompletedTask);
 		var controller = new GameController(repository.Object);
 
-		var result = await controller.PostGame(new GameDto { Name = "Arcade", Description = "Classic game" });
+		var result = await controller.PostGame(new GameDto { Name = "Arcade", Description = "Classic game" , IsSubmitAllowed = true});
 
 		var created = Assert.IsType<CreatedAtActionResult>(result.Result);
 		var dto = Assert.IsType<GameDto>(created.Value);
