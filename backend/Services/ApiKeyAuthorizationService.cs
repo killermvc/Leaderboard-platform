@@ -27,6 +27,6 @@ public class ApiKeyAuthorizationService(IGameModeratorRepository gameModeratorRe
 			return false;
 		}
 
-		return await _gameModeratorRepository.CanModerateGameAsync(gameId, userId);
+		return await _gameModeratorRepository.CanManageGameAsync(gameId, userId);
 	}
 }

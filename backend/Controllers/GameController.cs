@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 using Leaderboard.Models;
 using Leaderboard.Repositories;
@@ -18,9 +19,10 @@ namespace Leaderboard.Controllers
 	/// </summary>
     [Route("api/[controller]")]
     [ApiController]
-    public class GameController(IGameRepository gameRepository) : ControllerBase
+		public class GameController(IGameRepository gameRepository, IUserRepository userRepository) : ControllerBase
     {
 		private readonly IGameRepository _gameRepository = gameRepository;
+		private readonly IUserRepository _userRepository = userRepository;
 
 		/// <summary>
 		/// Creates a new game in the system. Only accessible by users with the "Admin" role.
@@ -30,10 +32,57 @@ namespace Leaderboard.Controllers
 		[Authorize(Roles = "Admin")]
 		public async Task<ActionResult<GameDto>> PostGame(GameDto gameDto)
 		{
-			var game = new Game { Name = gameDto.Name, Description = gameDto.Description, ImageUrl = gameDto.ImageUrl };
+			if (gameDto.OwnerId.HasValue && await _userRepository.GetUserByIdAsync(gameDto.OwnerId.Value) == null)
+			{
+				return BadRequest("Owner not found.");
+			}
+
+			var game = new Game
+			{
+				Name = gameDto.Name,
+				Description = gameDto.Description,
+				ImageUrl = gameDto.ImageUrl,
+				OwnerId = gameDto.OwnerId,
+				SubmitsAllowed = gameDto.IsSubmitAllowed
+			};
 			await _gameRepository.AddAsync(game);
-			var resultDto = new GameDto { Id = game.Id, Name = game.Name, Description = game.Description, ImageUrl = game.ImageUrl, IsSubmitAllowed = game.SubmitsAllowed };
+			var resultDto = ToDto(game);
 			return CreatedAtAction("GetGame", new { id = game.Id }, resultDto);
+		}
+
+		/// <summary>
+		/// Updates a game. Administrators and the game's owner can manage it.
+		/// </summary>
+		[HttpPut("{id}")]
+		[Authorize]
+		public async Task<ActionResult<GameDto>> UpdateGame(int id, GameDto gameDto)
+		{
+			var game = await _gameRepository.GetGameByIdAsync(id);
+			if (game == null)
+			{
+				return NotFound();
+			}
+
+			if (!CanManageGame(game))
+			{
+				return Forbid();
+			}
+
+			game.Name = gameDto.Name;
+			game.Description = gameDto.Description;
+			game.ImageUrl = gameDto.ImageUrl;
+			game.SubmitsAllowed = gameDto.IsSubmitAllowed;
+			if (User.IsInRole("Admin") && gameDto.OwnerId != game.OwnerId)
+			{
+				if (gameDto.OwnerId.HasValue && await _userRepository.GetUserByIdAsync(gameDto.OwnerId.Value) == null)
+				{
+					return BadRequest("Owner not found.");
+				}
+
+				game.OwnerId = gameDto.OwnerId;
+			}
+			await _gameRepository.UpdateAsync(game);
+			return Ok(ToDto(game));
 		}
 
 		/// <summary>
@@ -47,7 +96,7 @@ namespace Leaderboard.Controllers
 			{
 				return NotFound();
 			}
-			return new GameDto { Id = game.Id, Name = game.Name, Description = game.Description, ImageUrl = game.ImageUrl, IsSubmitAllowed = game.SubmitsAllowed };
+			return ToDto(game);
 		}
 
 		/// <summary>
@@ -66,6 +115,7 @@ namespace Leaderboard.Controllers
 					Name = ((Game)g).Name,
 					Description = ((Game)g).Description,
 					ImageUrl = ((Game)g).ImageUrl,
+					OwnerId = ((Game)g).OwnerId,
 					IsSubmitAllowed = ((Game)g).SubmitsAllowed
 				});
 				return Ok(gameDtos);
@@ -90,11 +140,31 @@ namespace Leaderboard.Controllers
 				Name = g.Name,
 				Description = g.Description,
 				ImageUrl = g.ImageUrl,
+				OwnerId = g.OwnerId,
 				IsSubmitAllowed = g.SubmitsAllowed
 			});
 
 			return Ok(gameDtos);
 		}
 
+		private bool CanManageGame(Game game)
+		{
+			if (User.IsInRole("Admin"))
+			{
+				return true;
+			}
+
+			return int.TryParse(User.FindFirstValue(ClaimTypes.Name), out var userId) && game.OwnerId == userId;
+		}
+
+		private static GameDto ToDto(Game game) => new()
+		{
+			Id = game.Id,
+			Name = game.Name,
+			Description = game.Description,
+			ImageUrl = game.ImageUrl,
+			OwnerId = game.OwnerId,
+			IsSubmitAllowed = game.SubmitsAllowed
+		};
 	}
 }

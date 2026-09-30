@@ -24,6 +24,14 @@ public class Game
 	/// </summary>
 	public string? ImageUrl {get; set;}
 	/// <summary>
+	/// The optional user who owns and manages this game.
+	/// </summary>
+	public int? OwnerId { get; set; }
+	/// <summary>
+	/// The optional owner navigation property.
+	/// </summary>
+	public User? Owner { get; set; }
+	/// <summary>
 	/// Wether or not the game is currently accepting score submissions.
 	///</summary>
 	public bool SubmitsAllowed {get; set;} = true;

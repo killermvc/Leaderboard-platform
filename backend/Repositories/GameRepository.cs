@@ -20,6 +20,15 @@ public class GameRepository(AppDbContext context) : IGameRepository
 		await _context.SaveChangesAsync();
 	}
 
+	/// <summary>
+	/// Updates an existing game in the database.
+	/// </summary>
+	public async Task UpdateAsync(Game game)
+	{
+		_context.Games.Update(game);
+		await _context.SaveChangesAsync();
+	}
+
 
 	/// <summary>
 	/// Retrieves a game by its ID from the database.
@@ -28,7 +37,7 @@ public class GameRepository(AppDbContext context) : IGameRepository
 	/// <returns>The game with the specified ID, or null if not found.</returns>
 	public async Task<Game?> GetGameByIdAsync(int id)
 	{
-		return await _context.Games.FirstOrDefaultAsync(g => g.Id == id);
+		return await _context.Games.Include(g => g.Owner).FirstOrDefaultAsync(g => g.Id == id);
 	}
 
 	/// <summary>
@@ -47,7 +56,7 @@ public class GameRepository(AppDbContext context) : IGameRepository
 	/// <returns>A list of all games in the database.</returns>
 	public async Task<List<Game>> GetAllGamesAsync()
 	{
-		return await _context.Games.ToListAsync();
+		return await _context.Games.Include(g => g.Owner).ToListAsync();
 	}
 
 	/// <summary>

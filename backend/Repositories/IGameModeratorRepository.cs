@@ -43,4 +43,9 @@ public interface IGameModeratorRepository
     /// (when the game has no specific moderators).
     /// </summary>
     Task<bool> CanModerateGameAsync(int gameId, int userId);
+
+    /// <summary>
+    /// Checks whether a user owns or administers a game.
+    /// </summary>
+    Task<bool> CanManageGameAsync(int gameId, int userId);
 }

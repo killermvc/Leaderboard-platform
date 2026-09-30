@@ -221,10 +221,10 @@ public class ModerationController(
     }
 
     /// <summary>
-    /// Adds a moderator to a game. Only admins can do this.
+    /// Adds a moderator to a game. Administrators and the game owner can do this.
     /// </summary>
     [HttpPost("games/{gameId}/moderators/{userId}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public async Task<IActionResult> AddGameModerator(int gameId, int userId)
     {
         try
@@ -233,6 +233,11 @@ public class ModerationController(
             if (game == null)
             {
                 return NotFound("Game not found.");
+            }
+
+            if (!await CanManageGameAsync(gameId))
+            {
+                return Forbid();
             }
 
             var user = await _userRepository.GetUserByIdAsync(userId);
@@ -256,14 +261,19 @@ public class ModerationController(
     }
 
     /// <summary>
-    /// Removes a moderator from a game. Only admins can do this.
+    /// Removes a moderator from a game. Administrators and the game owner can do this.
     /// </summary>
     [HttpDelete("games/{gameId}/moderators/{userId}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public async Task<IActionResult> RemoveGameModerator(int gameId, int userId)
     {
         try
         {
+            if (!await CanManageGameAsync(gameId))
+            {
+                return Forbid();
+            }
+
             await _gameModeratorRepository.RemoveModeratorAsync(gameId, userId);
             return Ok(new { Message = "Moderator removed successfully." });
         }
@@ -390,6 +400,17 @@ public class ModerationController(
         ReviewedAt = s.ReviewedAt,
         RejectionReason = s.RejectionReason
     };
+
+    private async Task<bool> CanManageGameAsync(int gameId)
+    {
+        if (User.IsInRole("Admin"))
+        {
+            return true;
+        }
+
+        return int.TryParse(User.Identity?.Name, out var userId)
+            && await _gameModeratorRepository.CanManageGameAsync(gameId, userId);
+    }
 }
 
 /// <summary>Request payload for rejecting a score.</summary>

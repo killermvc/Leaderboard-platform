@@ -4,6 +4,7 @@ using Leaderboard.Models;
 using Leaderboard.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using Moq;
 using Xunit;
 
@@ -22,7 +23,7 @@ public class GameControllerTests
 			Description = "Classic game",
 			ImageUrl = "https://example.test/arcade.png"
 		});
-		var controller = new GameController(repository.Object);
+		var controller = new GameController(repository.Object, Mock.Of<IUserRepository>());
 
 		var result = await controller.GetGame(7);
 
@@ -37,7 +38,7 @@ public class GameControllerTests
 	{
 		var repository = new Mock<IGameRepository>();
 		repository.Setup(item => item.GetGameByIdAsync(7)).ReturnsAsync((Game?)null);
-		var controller = new GameController(repository.Object);
+		var controller = new GameController(repository.Object, Mock.Of<IUserRepository>());
 
 		var result = await controller.GetGame(7);
 
@@ -51,7 +52,7 @@ public class GameControllerTests
 		repository.Setup(item => item.AddAsync(It.IsAny<Game>()))
 			.Callback<Game>(game => game.Id = 12)
 			.Returns(Task.CompletedTask);
-		var controller = new GameController(repository.Object);
+		var controller = new GameController(repository.Object, Mock.Of<IUserRepository>());
 
 		var result = await controller.PostGame(new GameDto { Name = "Arcade", Description = "Classic game" , IsSubmitAllowed = true});
 
@@ -60,5 +61,68 @@ public class GameControllerTests
 		Assert.Equal(12, dto.Id);
 		Assert.Equal("Arcade", dto.Name);
 		repository.Verify(item => item.AddAsync(It.Is<Game>(game => game.Name == "Arcade")), Times.Once);
+	}
+
+	[Fact]
+	public async Task UpdateGame_WhenCurrentUserIsOwner_UpdatesSubmissionSetting()
+	{
+		var repository = new Mock<IGameRepository>();
+		repository.Setup(item => item.GetGameByIdAsync(7)).ReturnsAsync(new Game
+		{
+			Id = 7,
+			Name = "Arcade",
+			Description = "Classic game",
+			OwnerId = 8,
+			SubmitsAllowed = true
+		});
+		var controller = new GameController(repository.Object, Mock.Of<IUserRepository>());
+		controller.ControllerContext = new ControllerContext
+		{
+			HttpContext = new DefaultHttpContext
+			{
+				User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.Name, "8")], "test"))
+			}
+		};
+
+		var result = await controller.UpdateGame(7, new GameDto
+		{
+			Name = "Arcade",
+			Description = "Classic game",
+			IsSubmitAllowed = false
+		});
+
+		Assert.IsType<OkObjectResult>(result.Result);
+		repository.Verify(item => item.UpdateAsync(It.Is<Game>(game => !game.SubmitsAllowed)), Times.Once);
+	}
+
+	[Fact]
+	public async Task UpdateGame_WhenCurrentUserIsNotOwner_ReturnsForbid()
+	{
+		var repository = new Mock<IGameRepository>();
+		repository.Setup(item => item.GetGameByIdAsync(7)).ReturnsAsync(new Game
+		{
+			Id = 7,
+			Name = "Arcade",
+			Description = "Classic game",
+			OwnerId = 8
+		});
+		var controller = new GameController(repository.Object, Mock.Of<IUserRepository>());
+		controller.ControllerContext = new ControllerContext
+		{
+			HttpContext = new DefaultHttpContext
+			{
+				User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.Name, "9")], "test"))
+			}
+		};
+
+		var result = await controller.UpdateGame(7, new GameDto
+		{
+			Name = "Arcade",
+			Description = "Classic game",
+			IsSubmitAllowed = false
+		});
+
+		Assert.IsType<ForbidResult>(result.Result);
+		repository.Verify(item => item.UpdateAsync(It.IsAny<Game>()), Times.Never);
 	}
 }

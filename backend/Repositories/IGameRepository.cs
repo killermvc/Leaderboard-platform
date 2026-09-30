@@ -13,6 +13,10 @@ public interface IGameRepository
 	/// <param name="game">The game to add.</param>
 	public Task AddAsync(Game game);
 	/// <summary>
+	/// Updates an existing game.
+	/// </summary>
+	public Task UpdateAsync(Game game);
+	/// <summary>
 	/// Retrieves a game by its ID from the database.
 	/// </summary>
 	/// <param name="id">The ID of the game to retrieve.</param>

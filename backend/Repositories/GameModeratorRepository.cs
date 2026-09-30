@@ -102,6 +102,11 @@ public class GameModeratorRepository(AppDbContext context) : IGameModeratorRepos
     /// </summary>
     public async Task<bool> CanModerateGameAsync(int gameId, int userId)
     {
+        if (await IsGameOwnerAsync(gameId, userId))
+        {
+            return true;
+        }
+
         // First, check if the user is a game-specific moderator
         if (await IsModeratorAsync(gameId, userId))
         {
@@ -118,5 +123,23 @@ public class GameModeratorRepository(AppDbContext context) : IGameModeratorRepos
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Checks whether a user owns the specified game.
+    /// </summary>
+    public async Task<bool> IsGameOwnerAsync(int gameId, int userId)
+    {
+        return await _context.Games.AnyAsync(game => game.Id == gameId && game.OwnerId == userId);
+    }
+
+    /// <summary>
+    /// Checks whether a user can manage a game as its owner or an administrator.
+    /// </summary>
+    public async Task<bool> CanManageGameAsync(int gameId, int userId)
+    {
+        return await IsGameOwnerAsync(gameId, userId) || await _context.UserRoles
+            .Include(userRole => userRole.Role)
+            .AnyAsync(userRole => userRole.UserId == userId && userRole.Role.Name == "Admin");
     }
 }

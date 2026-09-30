@@ -28,6 +28,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
 		modelBuilder.Entity<Game>().HasIndex(g => g.Name).IsUnique();
 
+		modelBuilder.Entity<Game>()
+			.HasOne(g => g.Owner)
+			.WithMany()
+			.HasForeignKey(g => g.OwnerId)
+			.OnDelete(DeleteBehavior.SetNull);
+
 		modelBuilder.Entity<ApiKey>()
 			.Property(key => key.KeyHash)
 			.HasMaxLength(64)
