@@ -42,17 +42,20 @@
 }
 
 .header-spacer {
-	flex-grow: 1;
+	display: none;
 }
 
 .header-search {
 	display: flex;
+	flex: 1 1 auto;
 	align-items: center;
 	gap: 8px;
 	margin-left: 8px;
+	min-width: 0;
 }
 
 .header-search input[type="search"] {
+	flex: 1 1 auto;
 	padding: 0.4rem 0.75rem;
 	color: #e2f3ff;
 	min-height: 0;

@@ -9,9 +9,27 @@
     }
   </div>
 
-  @if (searchQuery()) {
-    <p>Showing results for: <strong>{{ searchQuery() }}</strong></p>
-  }
+  <div class="games-filters">
+    <label for="game-name">Game name</label>
+    <input
+      id="game-name"
+      type="search"
+      [value]="searchQuery()"
+      (input)="setSearchQuery($event)"
+      placeholder="Search games"
+    />
+
+    @if (authService.isAuthenticated()) {
+      <label class="submitted-filter">
+        <input
+          type="checkbox"
+          [checked]="showSubmittedOnly()"
+          (change)="toggleSubmittedOnly()"
+        />
+        Games I submitted scores to
+      </label>
+    }
+  </div>
 
   <div class="games-grid">
     @for (game of filteredGames(); track game.id) {

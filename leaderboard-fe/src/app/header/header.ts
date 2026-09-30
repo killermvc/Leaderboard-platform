@@ -52,9 +52,6 @@ export class Header {
 	routeToGames() {
 		this.router.navigate(['/games'])
 	}
-	routeToMyGames() {
-		this.router.navigate(['/mygames'])
-	}
 	routeToMySubmissions() {
 		this.router.navigate(['/my-submissions'])
 	}

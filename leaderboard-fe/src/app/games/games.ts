@@ -24,9 +24,10 @@ export class Games implements OnInit {
 
   games = signal<Game[]>([]);
   searchQuery = signal<string>('');
+  showSubmittedOnly = signal(false);
 
   filteredGames = computed(() => {
-    const query = this.searchQuery().toLowerCase();
+    const query = this.searchQuery().trim().toLowerCase();
     const allGames = this.games();
     if (!query) return allGames;
     return allGames.filter(g => g.name.toLowerCase().includes(query));
@@ -46,11 +47,29 @@ export class Games implements OnInit {
   }
 
   loadGames() {
-    // Fetching a reasonable number of games. Pagination could be added later.
-    this.gameService.getAllGames(100, 0).subscribe({
+    const userId = this.authService.getUserIdFromToken();
+    if (this.showSubmittedOnly() && !userId) {
+      this.games.set([]);
+      return;
+    }
+
+    const gamesRequest = this.showSubmittedOnly()
+      ? this.gameService.getGamesByPlayer(Number(userId))
+      : this.gameService.getAllGames(100, 0);
+
+    gamesRequest.subscribe({
       next: (data) => this.games.set(data),
       error: (err) => console.error('Failed to load games', err)
     });
+  }
+
+  setSearchQuery(event: Event) {
+    this.searchQuery.set((event.target as HTMLInputElement).value);
+  }
+
+  toggleSubmittedOnly() {
+    this.showSubmittedOnly.update(showSubmittedOnly => !showSubmittedOnly);
+    this.loadGames();
   }
 
   viewGame(gameId: number) {

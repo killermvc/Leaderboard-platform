@@ -5,7 +5,6 @@ import { LoginPage } from './auth/login-page/login-page';
 import { AccountSettings } from './auth/account-settings/account-settings';
 import { HomePage } from './home-page/home-page';
 import { Games } from './games/games';
-import { MyGames } from './my-games/my-games';
 import { GameDetail } from './game-detail/game-detail';
 import { SearchResults } from './search-results/search-results';
 import { UserProfileComponent } from './user-profile/user-profile';
@@ -56,10 +55,6 @@ export const routes: Routes = [
 	  {
 		path: 'games/:id',
 		component: GameDetail
-	  },
-	  {
-		path: 'mygames',
-		component: MyGames
 	  },
 	  {
 		path: 'my-submissions',
