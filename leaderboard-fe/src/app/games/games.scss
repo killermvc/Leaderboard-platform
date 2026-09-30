@@ -4,8 +4,22 @@
   margin: 0 auto;
 
   h2 {
-    margin-bottom: 20px;
+    margin: 0;
     color: #333;
+  }
+
+  .games-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
   }
 
   .games-grid {

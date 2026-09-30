@@ -1,5 +1,13 @@
 <div class="games-container">
-  <h2>All Games</h2>
+  <div class="games-header">
+    <h2>All Games</h2>
+    @if (authService.hasRole('Admin')) {
+      <button (click)="routeToNewGame()">
+        <ng-icon name="octPlus" size="24px"></ng-icon>
+        New game
+      </button>
+    }
+  </div>
 
   @if (searchQuery()) {
     <p>Showing results for: <strong>{{ searchQuery() }}</strong></p>

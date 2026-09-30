@@ -4,11 +4,15 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { GameService, Game } from '../core/game-service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { GameCard } from '../game-card/game-card';
+import { AuthService } from '../core/auth-service';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { octPlus } from '@ng-icons/octicons';
 
 @Component({
   selector: 'app-games',
   standalone: true,
-  imports: [CommonModule, GameCard],
+  imports: [CommonModule, GameCard, NgIcon],
+  providers: [provideIcons({ octPlus })],
   templateUrl: './games.html',
   styleUrl: './games.scss',
 })
@@ -16,6 +20,7 @@ export class Games implements OnInit {
   private gameService = inject(GameService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  public authService = inject(AuthService);
 
   games = signal<Game[]>([]);
   searchQuery = signal<string>('');
@@ -50,5 +55,9 @@ export class Games implements OnInit {
 
   viewGame(gameId: number) {
     this.router.navigate(['/games', gameId]);
+  }
+
+  routeToNewGame() {
+    this.router.navigate(['/games/new']);
   }
 }

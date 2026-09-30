@@ -2,13 +2,13 @@ import { Component, inject, signal } from '@angular/core';
 import { AuthService } from '../core/auth-service';
 import { Router } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { octSearch, octFeedPerson, octPlus} from '@ng-icons/octicons';
+import { octSearch, octFeedPerson } from '@ng-icons/octicons';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-header',
   imports: [ NgIcon],
-  providers: [provideIcons({ octSearch, octFeedPerson, octPlus })],
+	providers: [provideIcons({ octSearch, octFeedPerson })],
   templateUrl: './header.html',
   styleUrls: ['./header.scss'],
 })
@@ -60,8 +60,5 @@ export class Header {
 	}
 	routeToModeration() {
 		this.router.navigate(['/moderation/pending'])
-	}
-	routeToNewGame() {
-		this.router.navigate(['/games/new'])
 	}
 }

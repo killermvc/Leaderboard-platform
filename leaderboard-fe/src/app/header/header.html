@@ -2,7 +2,6 @@
 	<button (click)="routeToHome()">Home</button>
 	<button (click)="routeToGames()">Games</button>
 	<button (click)="routeToMyGames()">My Games</button>
-	<button>Tops</button>
 	<div class = "header-spacer"></div>
 	<form class="header-search" (submit)="$event.preventDefault(); onSearch(searchInput.value)">
 		<input #searchInput type="search" placeholder="Search game or user" aria-label="Search" />
@@ -12,12 +11,6 @@
 	</form>
 	@if (authService.isAuthenticated()) {
 		<button (click)="routeToMySubmissions()">My Submissions</button>
-		@if(authService.hasRole('Admin')) {
-			<button (click)="routeToNewGame()">
-				<ng-icon name="octPlus" size="24px"></ng-icon>
-				New game
-			</button>
-		}
 		<button (click)="routeToProfile()">
 			<ng-icon name="octFeedPerson" size="24px"></ng-icon>
 			<span class="username">  {{ username() ?? 'Account' }}</span>
