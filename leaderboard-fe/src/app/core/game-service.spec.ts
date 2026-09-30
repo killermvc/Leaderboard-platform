@@ -26,7 +26,7 @@ describe('GameService', () => {
   });
 
   it('should create a new game', () => {
-    const mockGame: Game = { id: 1, name: 'Test Game' };
+    const mockGame: Game = { id: 1, name: 'Test Game', description: '', isSubmitAllowed: true };
 
     service.createGame('Test Game').subscribe(game => {
       expect(game).toEqual(mockGame);
@@ -34,12 +34,17 @@ describe('GameService', () => {
 
     const req = httpMock.expectOne(baseUrl);
     expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ Name: 'Test Game' });
+    expect(req.request.body).toEqual({
+      Name: 'Test Game',
+      Description: '',
+      ImageUrl: '',
+      IsSubmitAllowed: true,
+    });
     req.flush(mockGame);
   });
 
   it('should get a game by id', () => {
-    const mockGame: Game = { id: 1, name: 'Test Game' };
+    const mockGame: Game = { id: 1, name: 'Test Game', description: '', isSubmitAllowed: true };
 
     service.getGameById(1).subscribe(game => {
       expect(game).toEqual(mockGame);
@@ -52,8 +57,8 @@ describe('GameService', () => {
 
   it('should get all games with pagination', () => {
     const mockGames: Game[] = [
-      { id: 1, name: 'Game 1' },
-      { id: 2, name: 'Game 2' }
+      { id: 1, name: 'Game 1', description: '', isSubmitAllowed: true },
+      { id: 2, name: 'Game 2', description: '', isSubmitAllowed: true }
     ];
 
     service.getAllGames(10, 0).subscribe(games => {
@@ -68,8 +73,8 @@ describe('GameService', () => {
 
   it('should get games by player', () => {
     const mockGames: Game[] = [
-      { id: 1, name: 'Game 1' },
-      { id: 2, name: 'Game 2' }
+      { id: 1, name: 'Game 1', description: '', isSubmitAllowed: true },
+      { id: 2, name: 'Game 2', description: '', isSubmitAllowed: true }
     ];
     const playerId = 123;
 

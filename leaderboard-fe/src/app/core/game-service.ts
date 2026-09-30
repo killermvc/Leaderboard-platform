@@ -27,7 +27,12 @@ export class GameService {
    * @returns Observable with the created game
    */
   createGame(name: string, description: string = '', imageUrl: string = ''): Observable<Game> {
-    const body = { Name: name, Description: description, ImageUrl: imageUrl };
+    const body = {
+      Name: name,
+      Description: description,
+      ImageUrl: imageUrl,
+      IsSubmitAllowed: true,
+    };
     return this.http.post<Game>(this.baseUrl, body);
   }
 

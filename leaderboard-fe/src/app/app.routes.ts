@@ -14,6 +14,7 @@ import { MySubmissionsComponent } from './my-submissions/my-submissions';
 import { GameModeratorsComponent } from './game-moderators/game-moderators';
 import { ScorePostComponent } from './score-post/score-post';
 import { ApiKeysComponent } from './api-keys/api-keys';
+import { NewGame } from './new-game/new-game';
 
 export const routes: Routes = [
 	  {
@@ -35,6 +36,10 @@ export const routes: Routes = [
 	  {
 		path: 'games',
 		component: Games
+	  },
+	  {
+		path: 'games/new',
+		component: NewGame
 	  },
 	  {
 		path: 'games/:id/moderators',

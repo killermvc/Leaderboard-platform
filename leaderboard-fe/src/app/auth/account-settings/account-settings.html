@@ -96,13 +96,6 @@
           <div class="error-message">{{ passwordError() }}</div>
         }
 
-        <!-- Diagnostic info (removed after debugging) -->
-        <div class="debug-info" aria-hidden="true">
-          <p>Form valid: {{ passwordForm.valid }}</p>
-          <p>Form status: {{ passwordForm.status }}</p>
-          <p>Has mismatch error: {{ passwordForm.hasError('passwordMismatch') }}</p>
-        </div>
-
         <button
           type="submit"
           [disabled]="!passwordForm.valid || passwordSubmitting()"

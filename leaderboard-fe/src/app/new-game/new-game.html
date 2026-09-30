@@ -1,0 +1,34 @@
+<main class="new-game-container">
+  <section class="new-game-panel">
+    <header>
+      <p class="eyebrow">Game management</p>
+      <h1>Create a new game</h1>
+      <p class="lede">Add a game to the leaderboard and start collecting scores.</p>
+    </header>
+
+    <form [formGroup]="gameForm" (ngSubmit)="submit()" novalidate>
+      <label for="name">Name</label>
+      <input id="name" type="text" formControlName="name" required maxlength="100" />
+      @if (gameForm.controls.name.touched && gameForm.controls.name.hasError('required')) {
+        <p class="field-error">A game name is required.</p>
+      }
+
+      <label for="description">Description</label>
+      <textarea id="description" formControlName="description" rows="5" maxlength="1000"></textarea>
+
+      <label for="imageUrl">Image URL</label>
+      <input id="imageUrl" type="url" formControlName="imageUrl" maxlength="500" />
+
+      @if (error()) {
+        <p class="form-error" role="alert">{{ error() }}</p>
+      }
+
+      <div class="form-actions">
+        <button type="button" (click)="cancel()" [disabled]="submitting()">Cancel</button>
+        <button type="submit" [disabled]="submitting()">
+          {{ submitting() ? 'Creating...' : 'Create game' }}
+        </button>
+      </div>
+    </form>
+  </section>
+</main>
