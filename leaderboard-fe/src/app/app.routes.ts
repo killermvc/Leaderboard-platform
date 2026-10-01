@@ -22,7 +22,15 @@ export const routes: Routes = [
 		component: RegisterPage
 	  },
 	  {
+		path: 'auth/register/:step',
+		component: RegisterPage
+	  },
+	  {
 		path: 'auth/login',
+		component: LoginPage
+	  },
+	  {
+		path: 'auth/login/:step',
 		component: LoginPage
 	  },
 	  {

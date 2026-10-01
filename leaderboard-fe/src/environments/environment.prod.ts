@@ -1,5 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: '/api/auth',
-  scoreApiUrl: '/api/score'
+  apiUrl: 'https://your-api-host/api/auth',
+  scoreApiUrl: 'https://your-api-host/api/score',
+  clerkPublishableKey: ''
 };

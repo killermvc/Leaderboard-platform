@@ -5,18 +5,6 @@
 			<h1>Sign in to keep competing</h1>
 			<p class="lede">Connect your account to record scores and view your rankings.</p>
 		</header>
-		<form class="auth-form">
-			<label for="username">Username</label>
-			<input type="text" id="username" required />
-
-			<label for="password">Password</label>
-			<input type="password" id="password" required />
-
-			<button type="button" (click)="handleSubmit()">Sign in</button>
-		</form>
-		<p class="alt-link">
-			Don't have an account?
-			<a routerLink="/auth/register">Register here</a>
-		</p>
+		<clerk-sign-in [props]="{ routing: 'path', path: '/auth/login', signUpUrl: '/auth/register' }" />
 	</div>
 </section>

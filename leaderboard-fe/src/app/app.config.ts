@@ -1,17 +1,22 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideClerk } from 'ngx-clerk';
+import { environment } from '../environments/environment';
 
 import { routes } from './app.routes';
-import { AuthInterceptorClass } from './core/auth-interceptor';
+import { clerkAuthInterceptor } from './core/auth-interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-  provideHttpClient(withInterceptorsFromDi()),
-  { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptorClass, multi: true }
+    provideClerk({
+      publishableKey: environment.clerkPublishableKey,
+      signInUrl: '/auth/login',
+      signUpUrl: '/auth/register',
+    }),
+    provideHttpClient(withInterceptors([clerkAuthInterceptor]))
   ]
 };

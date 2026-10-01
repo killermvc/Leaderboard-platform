@@ -4,7 +4,7 @@ A real-time leaderboard platform with an ASP.NET Core 9.0 backend and Angular 21
 
 ## Features
 
-- **Authentication & Users** — Registration, login, JWT-based auth, profile management
+- **Authentication & Users** — Clerk-managed registration/login, local role and profile mapping
 - **Game Management** — Create and browse games (admin-only creation)
 - **Score Submission** — Submit scores with moderator approval workflow
 - **Game Client Scores** — API-key endpoint for name-only players, approved on submission
@@ -25,7 +25,7 @@ A real-time leaderboard platform with an ASP.NET Core 9.0 backend and Angular 21
 | Frontend | Angular 21 (Standalone Components, Signals) |
 | Database | MySQL 8.0 (EF Core + Pomelo) |
 | Cache | Redis (StackExchange.Redis) |
-| Auth | JWT Bearer + API Keys + BCrypt |
+| Auth | Clerk JWT Bearer + API Keys |
 | API Docs | Scalar + OpenAPI |
 
 ## Prerequisites
@@ -73,6 +73,10 @@ A real-time leaderboard platform with an ASP.NET Core 9.0 backend and Angular 21
    npm install
    ```
 
+  Set `clerkPublishableKey` in the active Angular environment file to the publishable key from Clerk.
+
+  The Angular client uses the community-maintained [`ngx-clerk`](https://github.com/anagstef/ngx-clerk) adapter for Clerk UI, session state, and tokens. It is compatible with Angular 20+ but is not an official Clerk package.
+
 2. **Start the dev server:**
 
    ```bash
@@ -92,6 +96,7 @@ Key settings in `backend/appsettings.json`:
 | `Jwt:Key` | HMAC-SHA256 signing key | _(hardcoded — change for production)_ |
 | `Jwt:Issuer` | JWT issuer | `YourIssuer` |
 | `Jwt:Audience` | JWT audience | `YourAudience` |
+| `Clerk:Issuer` | Clerk token issuer; enables Clerk authentication when non-empty | _(empty)_ |
 | `Cors:Origins` | Comma-separated allowed origins | `http://localhost:4200` |
 
 ## API Endpoints

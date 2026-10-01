@@ -1,8 +1,9 @@
-import { Injectable } from '@angular/core';
+import { effect, Injectable, signal } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of, BehaviorSubject } from 'rxjs';
-import { map, catchError, tap } from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { ClerkService } from 'ngx-clerk';
 
 @Injectable({
 	providedIn: 'root',
@@ -10,16 +11,41 @@ import { environment } from '../../environments/environment';
 export class AuthService {
 	private readonly apiUrl = environment.apiUrl;
 	private readonly tokenKey = 'lb_token';
+	private currentUserId: number | null = null;
+	private token: string | null = null;
+	private readonly roles = signal<string[]>([]);
 
 	/** Holds the current username when available */
 	public username$ = new BehaviorSubject<string | null>(null);
 
-	constructor(private http: HttpClient) {}
+	constructor(private http: HttpClient, private clerk: ClerkService) {
+		effect(() => {
+			const isLoaded = this.clerk.isLoaded();
+			const isSignedIn = this.clerk.isSignedIn();
+			void this.refreshToken();
+			if (isLoaded && isSignedIn) {
+				this.getCurrentUser().subscribe();
+			}
+		});
+	}
+
+	private async refreshToken(): Promise<void> {
+		const token = await this.clerk.getToken();
+		if (this.clerk.isSignedIn()) {
+			this.token = token;
+			if (token) localStorage.setItem(this.tokenKey, token);
+		} else {
+			this.token = null;
+			localStorage.removeItem(this.tokenKey);
+		}
+	}
 
 	/** Fetch the currently authenticated user's basic info */
-	getCurrentUser(): Observable<{ id: number; username: string } | null> {
-		return this.http.get<{ id: number; username: string }>(`${this.apiUrl}/me`).pipe(
+	getCurrentUser(): Observable<{ id: number; username: string; roles: string[] } | null> {
+		return this.http.get<{ id: number; username: string; roles: string[] }>(`${this.apiUrl}/me`).pipe(
 			tap((u) => {
+				this.currentUserId = u?.id ?? null;
+				this.roles.set(u?.roles ?? []);
 				if (u && u.username) {
 					this.username$.next(u.username);
 				}
@@ -33,29 +59,12 @@ export class AuthService {
 		return this.username$.value;
 	}
 
-	register(userName: string, password: string): Observable<boolean> {
-		const body = { UserName: userName, Password: password };
-		return this.http.post<any>(`${this.apiUrl}/register`, body).pipe(
-			map(() => true),
-			catchError((err) => of(false))
-		);
-	}
-
-	login(userName: string, password: string): Observable<boolean> {
-		const body = { UserName: userName, Password: password };
-		return this.http.post<{ token: string, Message: string }>(`${this.apiUrl}/login`, body).pipe(
-			map(res => {
-				if (res && res.token) {
-					this.setToken(res.token);
-					return true;
-				}
-				return false;
-			}),
-			catchError(() => of(false))
-		);
-	}
-
 	logout(): void {
+		void this.clerk.signOut();
+		this.currentUserId = null;
+		this.roles.set([]);
+		this.username$.next(null);
+		this.token = null;
 		localStorage.removeItem(this.tokenKey);
 	}
 
@@ -82,20 +91,11 @@ export class AuthService {
 	}
 
 	getToken(): string | null {
-		return localStorage.getItem(this.tokenKey);
+		return this.token ?? localStorage.getItem(this.tokenKey);
 	}
 
 	isAuthenticated(): boolean {
-		const token = this.getToken();
-		if (!token) return false;
-		const payload = this.decodeTokenPayload(token);
-		if (!payload) return false;
-		if (payload.exp) {
-			const exp = Number(payload.exp);
-			// exp is in seconds since epoch
-			return Date.now() < exp * 1000;
-		}
-		return true;
+		return this.clerk.isLoaded() && this.clerk.isSignedIn();
 	}
 
 	getAuthHeaders(): { headers: HttpHeaders } | {} {
@@ -105,6 +105,7 @@ export class AuthService {
 	}
 
 	getUserIdFromToken(): string | null {
+		if (this.currentUserId !== null) return this.currentUserId.toString();
 		const token = this.getToken();
 		const payload = token && this.decodeTokenPayload(token);
 		if (!payload) return null;
@@ -113,27 +114,11 @@ export class AuthService {
 	}
 
 	hasRole(role: string): boolean {
-		const token = this.getToken();
-		const payload = token && this.decodeTokenPayload(token);
-		if (!payload) return false;
-		const rolesRaw = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
-		// If user has multiple roles, it's an array. If only one role, it's a string.
-		const roles = Array.isArray(rolesRaw) ? rolesRaw : (rolesRaw ? [rolesRaw] : []);
-		return roles.includes(role);
+		return this.roles().includes(role);
 	}
 
 	hasAnyRole(rolesToCheck: string[]): boolean {
-		const token = this.getToken();
-		const payload = token && this.decodeTokenPayload(token);
-		if (!payload) return false;
-		const rolesRaw = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
-		// If user has multiple roles, it's an array. If only one role, it's a string.
-		const roles = Array.isArray(rolesRaw) ? rolesRaw : (rolesRaw ? [rolesRaw] : []);
-		return rolesToCheck.some(role => roles.includes(role));
-	}
-
-	private setToken(token: string) {
-		localStorage.setItem(this.tokenKey, token);
+		return rolesToCheck.some(role => this.roles().includes(role));
 	}
 
 	private decodeTokenPayload(token: string): any | null {

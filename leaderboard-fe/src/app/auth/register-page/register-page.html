@@ -7,18 +7,6 @@
 				Register an account to start uploading scores and competing with the community.
 			</p>
 		</header>
-		<form class="auth-form">
-			<label for="username">Username</label>
-			<input type="text" id="username" name="username" required>
-
-			<label for="password">Password</label>
-			<input type="password" id="password" name="password" required>
-
-			<button type="button" (click)="handleSubmit()">Create account</button>
-		</form>
-		<p class="alt-link">
-			Already have an account?
-			<a routerLink="/auth/login">Log in here</a>
-		</p>
+		<clerk-sign-up [props]="{ routing: 'path', path: '/auth/register', signInUrl: '/auth/login' }" />
 	</div>
 </section>
