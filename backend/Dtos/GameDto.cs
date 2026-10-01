@@ -26,6 +26,11 @@ public class GameDto
 	/// </summary>
 	public int? OwnerId { get; set; }
 	/// <summary>
+	/// The username of the user who owns this game, if known.
+	/// This is output-only and is ignored on create/update; use OwnerId to change the owner.
+	/// </summary>
+	public string? OwnerUsername { get; set; }
+	/// <summary>
 	/// Indicates whether the game is currently accepting score submissions.
 	/// If false, users will not be able to submit scores for this game.
 	/// This doesn't affect api key submissions.

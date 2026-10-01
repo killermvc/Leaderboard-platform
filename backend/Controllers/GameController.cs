@@ -109,15 +109,16 @@ namespace Leaderboard.Controllers
 			{
 				List<Game> games = await _gameRepository.GetAllGamesAsync();
 				var pagedGames = games.Skip(offset).Take(limit);
-				var gameDtos = pagedGames.Select(g => new GameDto
-				{
-					Id = ((Game)g).Id,
-					Name = ((Game)g).Name,
-					Description = ((Game)g).Description,
-					ImageUrl = ((Game)g).ImageUrl,
-					OwnerId = ((Game)g).OwnerId,
-					IsSubmitAllowed = ((Game)g).SubmitsAllowed
-				});
+			var gameDtos = pagedGames.Select(g => new GameDto
+			{
+				Id = ((Game)g).Id,
+				Name = ((Game)g).Name,
+				Description = ((Game)g).Description,
+				ImageUrl = ((Game)g).ImageUrl,
+				OwnerId = ((Game)g).OwnerId,
+				OwnerUsername = ((Game)g).Owner?.Username,
+				IsSubmitAllowed = ((Game)g).SubmitsAllowed
+			});
 				return Ok(gameDtos);
 			}
 			catch (Exception)
@@ -134,15 +135,16 @@ namespace Leaderboard.Controllers
 		{
 			var games = await _gameRepository.GetGamesByPlayerIdAsync(playerId);
 
-			var gameDtos = games.Select(g => new GameDto
-			{
-				Id = g.Id,
-				Name = g.Name,
-				Description = g.Description,
-				ImageUrl = g.ImageUrl,
-				OwnerId = g.OwnerId,
-				IsSubmitAllowed = g.SubmitsAllowed
-			});
+		var gameDtos = games.Select(g => new GameDto
+		{
+			Id = g.Id,
+			Name = g.Name,
+			Description = g.Description,
+			ImageUrl = g.ImageUrl,
+			OwnerId = g.OwnerId,
+			OwnerUsername = g.Owner?.Username,
+			IsSubmitAllowed = g.SubmitsAllowed
+		});
 
 			return Ok(gameDtos);
 		}
@@ -164,6 +166,7 @@ namespace Leaderboard.Controllers
 			Description = game.Description,
 			ImageUrl = game.ImageUrl,
 			OwnerId = game.OwnerId,
+			OwnerUsername = game.Owner?.Username,
 			IsSubmitAllowed = game.SubmitsAllowed
 		};
 	}

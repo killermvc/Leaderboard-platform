@@ -9,6 +9,7 @@ export interface Game {
   description: string;
   imageUrl?: string;
   ownerId?: number | null;
+  ownerUsername?: string | null;
   isSubmitAllowed: boolean;
 }
 

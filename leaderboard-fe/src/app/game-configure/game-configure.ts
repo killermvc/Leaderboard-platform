@@ -66,7 +66,7 @@ export class GameConfigure implements OnInit {
         }
 
         this.game.set(game);
-        this.selectedOwner.set(game.ownerId ? { id: game.ownerId, username: `User #${game.ownerId}` } : null);
+        this.setSelectedOwnerFromGame(game);
         this.gameForm.setValue({
           name: game.name,
           description: game.description ?? '',
@@ -103,6 +103,7 @@ export class GameConfigure implements OnInit {
     }).subscribe({
       next: (game) => {
         this.game.set(game);
+        this.setSelectedOwnerFromGame(game);
         this.saving.set(false);
         this.success.set('Game settings saved.');
       },
@@ -216,6 +217,29 @@ export class GameConfigure implements OnInit {
   private canManage(game: Game): boolean {
     const userId = Number(this.authService.getUserIdFromToken());
     return this.isAdmin() || (!!game.ownerId && game.ownerId === userId);
+  }
+
+  private setSelectedOwnerFromGame(game: Game): void {
+    if (!game.ownerId) {
+      this.selectedOwner.set(null);
+      return;
+    }
+
+    if (game.ownerUsername) {
+      this.selectedOwner.set({ id: game.ownerId, username: game.ownerUsername });
+      return;
+    }
+
+    // Fallback for older API responses without ownerUsername: resolve via profile.
+    this.selectedOwner.set({ id: game.ownerId, username: `User #${game.ownerId}` });
+    this.userService.getUserProfile(game.ownerId).subscribe({
+      next: (profile) => {
+        if (this.game()?.ownerId === profile.id) {
+          this.selectedOwner.set({ id: profile.id, username: profile.username });
+        }
+      },
+      error: () => undefined,
+    });
   }
 
   private loadModerators(gameId: number): void {
