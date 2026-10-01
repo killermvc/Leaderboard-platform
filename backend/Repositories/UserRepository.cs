@@ -38,6 +38,19 @@ public class UserRepository(AppDbContext context) : IUserRepository
 	}
 
 	/// <summary>
+	/// Retrieves a user by their Clerk user ID from the database.
+	/// </summary>
+	/// <param name="clerkUserId">The Clerk user ID of the user to retrieve.</param>
+	/// <returns>The user with the specified Clerk user ID, or null if not found.</returns>
+	public async Task<User?> GetUserByClerkIdAsync(string clerkUserId)
+	{
+		return await _context.Users
+			.Include(u => u.UserRoles)
+			.ThenInclude(ur => ur.Role)
+			.FirstOrDefaultAsync(u => u.ClerkUserId == clerkUserId);
+	}
+
+	/// <summary>
 	/// Adds a new user to the database asynchronously.
 	/// </summary>
 	/// <param name="user">The user entity to add.</param>

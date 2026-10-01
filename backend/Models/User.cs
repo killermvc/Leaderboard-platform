@@ -18,6 +18,11 @@ public class User
 	[Required]
 	public string Username {get; set;} = string.Empty;
 	/// <summary>
+	/// The stable subject identifier issued by Clerk for externally managed users.
+	/// </summary>
+	[MaxLength(255)]
+	public string? ClerkUserId { get; set; }
+	/// <summary>
 	/// The hashed password of the user, which is required for secure authentication. The actual password is never stored in plain text for security reasons.
 	/// </summary>
 	[Required]

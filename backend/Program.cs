@@ -19,7 +19,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
-    new MySqlServerVersion(new Version(8, 0, 40))));
+    new MySqlServerVersion(new Version(8, 0, 40)),
+    mySqlOptions => mySqlOptions.EnableRetryOnFailure()));
 
 string redisConnectionString = builder.Configuration.GetConnectionString("Redis")!;
 ConnectionMultiplexer redis = ConnectionMultiplexer.Connect(redisConnectionString);
@@ -56,6 +57,7 @@ if(builder.Configuration["Cors:Origins"] is not null)
 
 builder.Services.AddControllers();
 builder.Services.Configure<RateLimitOptions>(builder.Configuration.GetSection("RateLimiting"));
+builder.Services.Configure<ClerkOptions>(builder.Configuration.GetSection(ClerkOptions.SectionName));
 
 
 builder.Services.AddOpenApi("v1", options => {
@@ -70,18 +72,26 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
+    var clerkIssuer = builder.Configuration["Clerk:Issuer"];
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
+        ValidateIssuer = !string.IsNullOrWhiteSpace(clerkIssuer),
+        ValidateAudience = string.IsNullOrWhiteSpace(clerkIssuer),
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-		ValidIssuer = builder.Configuration["Jwt:Issuer"],
-		ValidAudience = builder.Configuration["Jwt:Audience"],
+        ValidIssuer = clerkIssuer ?? builder.Configuration["Jwt:Issuer"],
+        ValidAudience = string.IsNullOrWhiteSpace(clerkIssuer) ? builder.Configuration["Jwt:Audience"] : null,
 		NameClaimType = ClaimTypes.Name,
 		RoleClaimType = ClaimTypes.Role,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+        IssuerSigningKey = string.IsNullOrWhiteSpace(clerkIssuer)
+            ? new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+            : null
     };
+    if (!string.IsNullOrWhiteSpace(clerkIssuer))
+    {
+        options.Authority = clerkIssuer;
+        options.RequireHttpsMetadata = true;
+    }
 
 	if(builder.Environment.IsDevelopment())
 	{
@@ -112,6 +122,7 @@ if (app.Environment.IsDevelopment())
 //app.UseHttpsRedirection();
 
 app.UseAuthentication();
+app.UseMiddleware<ClerkUserMiddleware>();
 app.UseMiddleware<GameClientRateLimitingMiddleware>();
 app.UseMiddleware<ApiKeyAuthenticationMiddleware>();
 app.UseAuthorization();

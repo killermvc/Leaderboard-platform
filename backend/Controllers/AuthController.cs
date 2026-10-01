@@ -140,7 +140,15 @@ public class AuthController : ControllerBase
 		if (user == null)
 			return NotFound(new { Message = "User not found" });
 
-		return Ok(new { Id = user.Id, Username = user.Username });
+		return Ok(new
+		{
+			Id = user.Id,
+			Username = user.Username,
+			Roles = user.UserRoles
+				.Where(userRole => userRole.Role is not null)
+				.Select(userRole => userRole.Role!.Name)
+				.ToArray()
+		});
 	}
 
 	/// <summary>Updates the authenticated user's username.</summary>

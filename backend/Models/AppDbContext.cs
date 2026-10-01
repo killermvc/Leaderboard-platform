@@ -26,6 +26,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
+		modelBuilder.Entity<User>().HasIndex(u => u.ClerkUserId).IsUnique();
 		modelBuilder.Entity<Game>().HasIndex(g => g.Name).IsUnique();
 
 		modelBuilder.Entity<Game>()

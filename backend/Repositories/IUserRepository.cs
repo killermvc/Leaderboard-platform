@@ -20,6 +20,10 @@ public interface IUserRepository
 	/// <returns>The matching user, or <see langword="null"/> if no user is found.</returns>
 	public Task<User?> GetUserByIdAsync(int id);
 	/// <summary>
+	/// Gets a user by the Clerk subject identifier.
+	/// </summary>
+	public Task<User?> GetUserByClerkIdAsync(string clerkUserId);
+	/// <summary>
 	/// Adds a user.
 	/// </summary>
 	/// <param name="user">The user to add.</param>
