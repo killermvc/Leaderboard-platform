@@ -4,7 +4,7 @@ This project is a backend system for a real-time leaderboard service. The servic
 
 ## Features
 
-- User authentication: Users can register and log in to the system.
+- User authentication is handled by Clerk.
 - Score submission: Users can submit their scores for various games or activities.
 - Real-time leaderboard updates: The leaderboard is updated in real-time to reflect the latest scores submitted by users.
 - Score history tracking: Users can view their score history for a specific game or activity.
@@ -14,10 +14,18 @@ This project is a backend system for a real-time leaderboard service. The servic
 
 The API provides the following endpoints:
 
+Authentication and identity:
+- GET `api/auth/me`: Get the authenticated local user ID and roles. Authentication and profile management are handled by Clerk.
+- GET `api/users/search?q={query}&limit={limit}`: Search Clerk users and return active local user links. Requires `Clerk:SecretKey`.
+- POST `api/webhooks/clerk`: Receive signed Clerk lifecycle webhooks.
 
-Authentication:
-- POST `api/auth/register`: Register a new user.
-- POST `api/auth/login`: Log in a user. Returns a JWT.
+Configure the Clerk dashboard webhook with these events:
+- `user.created`: Provision the local application user.
+- `user.deleted`: Disable access, remove roles/moderator assignments, release game ownership, and preserve score history.
+- `user.updated`: Accepted for lifecycle compatibility; profile fields remain owned by Clerk.
+
+Set `ConnectionStrings__DefaultConnection`, `ConnectionStrings__Redis`, `Clerk__Issuer`, `Clerk__SecretKey`, and `Clerk__WebhookSecret` through deployment configuration. Copy `backend/.env.example` to `backend/.env` for the local variable template, then load those values into the process environment before starting the API. Never commit real Clerk or database secrets.
+
 
 Game:
 - POST `api/games`: Create a new game. Requires 'Admin' role.

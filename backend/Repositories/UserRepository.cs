@@ -11,19 +11,6 @@ public class UserRepository(AppDbContext context) : IUserRepository
     private readonly AppDbContext _context = context;
 
 	/// <summary>
-	/// Retrieves a user by their username from the database.
-	/// </summary>
-	/// <param name="username">The username of the user to retrieve.</param>
-	/// <returns>The user with the specified username, or null if not found.</returns>
-    public async Task<User?> GetUserByNameAsync(string username)
-	{
-		return await _context.Users
-			.Include(u => u.UserRoles)
-			.ThenInclude(ur => ur.Role)
-			.FirstOrDefaultAsync(u => u.Username == username);
-	}
-
-	/// <summary>
 	/// Retrieves a user by their ID from the database.
 	/// </summary>
 	/// <param name="id">The ID of the user to retrieve.</param>
@@ -48,6 +35,18 @@ public class UserRepository(AppDbContext context) : IUserRepository
 			.Include(u => u.UserRoles)
 			.ThenInclude(ur => ur.Role)
 			.FirstOrDefaultAsync(u => u.ClerkUserId == clerkUserId);
+	}
+
+	/// <summary>
+	/// Gets local users matching Clerk subject identifiers.
+	/// </summary>
+	public async Task<List<User>> GetUsersByClerkIdsAsync(IReadOnlyCollection<string> clerkUserIds)
+	{
+		return await _context.Users
+			.Include(u => u.UserRoles)
+			.ThenInclude(ur => ur.Role)
+			.Where(u => u.ClerkUserId != null && clerkUserIds.Contains(u.ClerkUserId))
+			.ToListAsync();
 	}
 
 	/// <summary>
@@ -89,18 +88,4 @@ public class UserRepository(AppDbContext context) : IUserRepository
 		await _context.SaveChangesAsync();
 	}
 
-	/// <summary>
-	/// Searches for users in the database asynchronously.
-	/// </summary>
-	/// <param name="query">The search query.</param>
-	/// <param name="limit">The maximum number of results to return.</param>
-	/// <returns>A list of users matching the search query.</returns>
-	public async Task<List<User>> SearchUsersAsync(string query, int limit)
-	{
-		return await _context.Users
-			.AsNoTracking()
-			.Where(u => EF.Functions.Like(u.Username, $"%{query}%"))
-			.Take(limit)
-			.ToListAsync();
-	}
 }

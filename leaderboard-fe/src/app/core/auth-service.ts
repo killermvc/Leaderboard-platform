@@ -41,13 +41,15 @@ export class AuthService {
 	}
 
 	/** Fetch the currently authenticated user's basic info */
-	getCurrentUser(): Observable<{ id: number; username: string; roles: string[] } | null> {
-		return this.http.get<{ id: number; username: string; roles: string[] }>(`${this.apiUrl}/me`).pipe(
+	getCurrentUser(): Observable<{ id: number; clerkUserId: string | null; roles: string[] } | null> {
+		return this.http.get<{ id: number; clerkUserId: string | null; roles: string[] }>(`${this.apiUrl}/me`).pipe(
 			tap((u) => {
 				this.currentUserId = u?.id ?? null;
 				this.roles.set(u?.roles ?? []);
-				if (u && u.username) {
-					this.username$.next(u.username);
+				const clerkUser = this.clerk.user();
+				const displayName = clerkUser?.username ?? clerkUser?.fullName ?? clerkUser?.primaryEmailAddress?.emailAddress;
+				if (displayName) {
+					this.username$.next(displayName);
 				}
 			}),
 			map((u) => u),
@@ -66,28 +68,6 @@ export class AuthService {
 		this.username$.next(null);
 		this.token = null;
 		localStorage.removeItem(this.tokenKey);
-	}
-
-	changePassword(oldPassword: string, newPassword: string): Observable<boolean> {
-		const body = { OldPassword: oldPassword, NewPassword: newPassword };
-		return this.http.put<any>(`${this.apiUrl}`, body).pipe(
-			map(() => true),
-			catchError(() => of(false))
-		);
-	}
-
-	updateUsername(newUserName: string): Observable<boolean> {
-		const body = { NewUserName: newUserName };
-		return this.http.put<any>(`${this.apiUrl}/username`, body).pipe(
-			map((res) => {
-				if (res) {
-					// Optionally, you might want to update the token or re-login
-					return true;
-				}
-				return false;
-			}),
-			catchError(() => of(false))
-		);
 	}
 
 	getToken(): string | null {

@@ -1,119 +1,12 @@
-<div class="auth-shell">
+<section class="auth-shell">
   <div class="auth-panel">
-    <p class="eyebrow">Account Settings</p>
-    <h1>Manage Your Account</h1>
-    <p class="lede">Update your username or change your password.</p>
-
-    <!-- Change Username Section -->
-    <section class="settings-section">
-      <h2>Change Username</h2>
-      <form [formGroup]="usernameForm" (ngSubmit)="updateUsername()" class="auth-form">
-        <div class="form-group">
-          <label for="newUsername">New Username</label>
-          <input
-            type="text"
-            id="newUsername"
-            formControlName="newUsername"
-            placeholder="Enter new username"
-          />
-          @if (usernameForm.controls.newUsername.invalid && usernameForm.controls.newUsername.touched) {
-            <span class="error-text">Username must be at least 3 characters</span>
-          }
-        </div>
-
-        @if (usernameSuccess()) {
-          <div class="success-message">{{ usernameSuccess() }}</div>
-        }
-
-        @if (usernameError()) {
-          <div class="error-message">{{ usernameError() }}</div>
-        }
-
-        <button
-          type="submit"
-          [disabled]="usernameForm.invalid || usernameSubmitting()"
-        >
-          @if (usernameSubmitting()) {
-            Updating...
-          } @else {
-            Update Username
-          }
-        </button>
-      </form>
-    </section>
-
-    <div class="divider"></div>
-
-    <!-- Change Password Section -->
-    <section class="settings-section">
-      <h2>Change Password</h2>
-      <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="auth-form">
-        <div class="form-group">
-          <label for="oldPassword">Current Password</label>
-          <input
-            type="password"
-            id="oldPassword"
-            formControlName="oldPassword"
-            placeholder="Enter current password"
-          />
-          @if (passwordForm.controls.oldPassword.invalid && passwordForm.controls.oldPassword.touched) {
-            <span class="error-text">Current password is required</span>
-          }
-        </div>
-
-        <div class="form-group">
-          <label for="newPassword">New Password</label>
-          <input
-            type="password"
-            id="newPassword"
-            formControlName="newPassword"
-            placeholder="Enter new password"
-          />
-          @if (passwordForm.controls.newPassword.invalid && passwordForm.controls.newPassword.touched) {
-            <span class="error-text">Password must be at least 6 characters</span>
-          }
-        </div>
-
-        <div class="form-group">
-          <label for="confirmPassword">Confirm New Password</label>
-          <input
-            type="password"
-            id="confirmPassword"
-            formControlName="confirmPassword"
-            placeholder="Confirm new password"
-          />
-        </div>
-
-        @if (passwordForm.hasError('passwordMismatch') && (passwordForm.controls.newPassword.touched || passwordForm.controls.confirmPassword.touched)) {
-          <span class="error-text">Passwords do not match</span>
-        }
-
-        @if (passwordSuccess()) {
-          <div class="success-message">{{ passwordSuccess() }}</div>
-        }
-
-        @if (passwordError()) {
-          <div class="error-message">{{ passwordError() }}</div>
-        }
-
-        <button
-          type="submit"
-          [disabled]="!passwordForm.valid || passwordSubmitting()"
-        >
-          @if (passwordSubmitting()) {
-            Changing...
-          } @else {
-            Change Password
-          }
-        </button>
-      </form>
-    </section>
-
-    <div class="divider"></div>
-
-    <div class="action-links">
-      <a routerLink="/" class="link-secondary">Back to Home</a>
-      <button class="logout-btn" (click)="logout()">Logout</button>
+    <header>
+      <p class="eyebrow">Account Settings</p>
+      <h1>Manage Your Account</h1>
+      <p class="lede">Update your profile and manage your account settings.</p>
+    </header>
+    <div class="profile-wrapper">
+      <clerk-user-profile />
     </div>
   </div>
-</div>
+</section>

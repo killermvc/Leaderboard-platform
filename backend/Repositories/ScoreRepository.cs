@@ -443,10 +443,10 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 		var users = await _context.Users
 			.AsNoTracking()
 			.Where(IsAnyOf<User, int>(userIds, u => u.Id))
-			.Select(u => new { u.Id, u.Username })
+			.Select(u => new { u.Id, u.ClerkUserId })
 			.ToListAsync();
 
-		return users.ToDictionary(u => u.Id, u => u.Username);
+		return users.ToDictionary(u => u.Id, u => u.ClerkUserId ?? string.Empty);
 	}
 
 	/// <summary>
@@ -535,7 +535,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			{
 				UserId = s.UserId,
 				// Scores without an account are displayed with the name the game client gave them
-				UserName = s.User!.Username ?? s.PlayerName,
+				UserName = s.User!.ClerkUserId ?? s.PlayerName,
 				Score = s.Value
 			})
 			.ToListAsync();

@@ -10,7 +10,15 @@ public sealed class ClerkOptions
 	/// </summary>
 	public const string SectionName = "Clerk";
 	/// <summary>
-	/// Gets or sets the Clerk API key used for authentication.
+	/// Gets or sets the Clerk issuer used for token validation.
 	/// </summary>
 	public string Issuer { get; set; } = string.Empty;
+	/// <summary>
+	/// Gets or sets the Clerk secret key used for server-side directory lookups.
+	/// </summary>
+	public string SecretKey { get; set; } = string.Empty;
+	/// <summary>
+	/// Gets or sets the Clerk webhook signing secret.
+	/// </summary>
+	public string WebhookSecret { get; set; } = string.Empty;
 }

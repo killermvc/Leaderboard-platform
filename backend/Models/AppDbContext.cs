@@ -13,6 +13,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 	public DbSet<UserRole> UserRoles { get; set; } = null!;
 	public DbSet<GameModerator> GameModerators { get; set; } = null!;
 	public DbSet<ApiKey> ApiKeys { get; set; } = null!;
+	public DbSet<ClerkWebhookEvent> ClerkWebhookEvents { get; set; } = null!;
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -25,7 +26,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
 		modelBuilder.Entity<User>().HasIndex(u => u.ClerkUserId).IsUnique();
 		modelBuilder.Entity<Game>().HasIndex(g => g.Name).IsUnique();
 

@@ -72,6 +72,20 @@ namespace Leaderboard.Migrations
                     b.ToTable("ApiKeys");
                 });
 
+            modelBuilder.Entity("Leaderboard.Models.ClerkWebhookEvent", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime>("ProcessedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ClerkWebhookEvents");
+                });
+
             modelBuilder.Entity("Leaderboard.Models.Game", b =>
                 {
                     b.Property<int>("Id")
@@ -229,20 +243,12 @@ namespace Leaderboard.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ClerkUserId")
-                        .IsUnique();
-
-                    b.HasIndex("Username")
                         .IsUnique();
 
                     b.ToTable("Users");

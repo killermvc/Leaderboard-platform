@@ -8,12 +8,6 @@ namespace Leaderboard.Repositories;
 public interface IUserRepository
 {
 	/// <summary>
-	/// Gets a user by username.
-	/// </summary>
-	/// <param name="username">The username to search for.</param>
-	/// <returns>The matching user, or <see langword="null"/> if no user is found.</returns>
-	public Task<User?> GetUserByNameAsync(string username);
-	/// <summary>
 	/// Gets a user by identifier.
 	/// </summary>
 	/// <param name="id">The user identifier.</param>
@@ -23,6 +17,10 @@ public interface IUserRepository
 	/// Gets a user by the Clerk subject identifier.
 	/// </summary>
 	public Task<User?> GetUserByClerkIdAsync(string clerkUserId);
+	/// <summary>
+	/// Gets local users matching Clerk subject identifiers.
+	/// </summary>
+	public Task<List<User>> GetUsersByClerkIdsAsync(IReadOnlyCollection<string> clerkUserIds);
 	/// <summary>
 	/// Adds a user.
 	/// </summary>
@@ -40,11 +38,4 @@ public interface IUserRepository
 	/// <param name="user">The user to modify.</param>
 	/// <param name="role">The role to add.</param>
 	public Task AddRoleToUserAsync(User user, Role role);
-	/// <summary>
-	/// Searches for users matching a query.
-	/// </summary>
-	/// <param name="query">The search query.</param>
-	/// <param name="limit">The maximum number of users to return.</param>
-	/// <returns>A list of matching users.</returns>
-	public Task<List<User>> SearchUsersAsync(string query, int limit);
 }

@@ -31,7 +31,7 @@ public class ClerkUserMiddlewareTests
 		await middleware.InvokeAsync(context, users.Object);
 
 		users.Verify(item => item.AddUserAsync(It.Is<User>(user =>
-			user.ClerkUserId == "user_123" && user.Username == "user_123")), Times.Once);
+			user.ClerkUserId == "user_123" && user.IsActive)), Times.Once);
 		Assert.Equal("42", context.User.FindFirstValue(ClaimTypes.Name));
 	}
 }

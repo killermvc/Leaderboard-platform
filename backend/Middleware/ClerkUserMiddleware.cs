@@ -23,10 +23,15 @@ public sealed class ClerkUserMiddleware(RequestDelegate next)
 			User? user = await userRepository.GetUserByClerkIdAsync(clerkUserId);
 			if (user is null)
 			{
-				string username = GetUsername(context.User, clerkUserId);
-				user = new User { ClerkUserId = clerkUserId, Username = username };
+				user = new User { ClerkUserId = clerkUserId };
 				await userRepository.AddUserAsync(user);
 				user = await userRepository.GetUserByClerkIdAsync(clerkUserId) ?? user;
+			}
+
+			if (!user.IsActive)
+			{
+				context.Response.StatusCode = StatusCodes.Status403Forbidden;
+				return;
 			}
 
 			var identity = (ClaimsIdentity)context.User.Identity!;
@@ -43,14 +48,6 @@ public sealed class ClerkUserMiddleware(RequestDelegate next)
 		}
 
 		await _next(context);
-	}
-
-	private static string GetUsername(ClaimsPrincipal principal, string clerkUserId)
-	{
-		return principal.FindFirstValue("username")
-			?? principal.FindFirstValue("email")
-			?? principal.FindFirstValue("email_address")
-			?? clerkUserId;
 	}
 
 	private static string? GetClerkUserId(ClaimsPrincipal principal)

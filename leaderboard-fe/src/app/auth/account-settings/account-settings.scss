@@ -8,8 +8,10 @@
 }
 
 .auth-shell {
-  max-width: 620px;
+  max-width: 880px;
   margin: 0 auto;
+  display: flex;
+  justify-content: center;
 }
 
 .auth-panel {
@@ -18,6 +20,12 @@
   border-radius: 20px;
   padding: clamp(1.5rem, 5vw, 2.75rem);
   box-shadow: 0 25px 45px rgba(2, 6, 16, 0.55);
+  width: 100%;
+}
+
+.profile-wrapper {
+  display: flex;
+  justify-content: center;
 }
 
 .eyebrow {

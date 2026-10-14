@@ -1,7 +1,6 @@
 using Scalar.AspNetCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.OpenApi;
@@ -31,9 +30,10 @@ builder.Services.AddScoped<IGameRepository, GameRepository>();
 builder.Services.AddScoped<IScoreRepository, ScoreRepository>();
 builder.Services.AddScoped<IGameModeratorRepository, GameModeratorRepository>();
 builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
-builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
 builder.Services.AddScoped<IApiKeyAuthorizationService, ApiKeyAuthorizationService>();
+builder.Services.AddScoped<IClerkWebhookService, ClerkWebhookService>();
+builder.Services.AddHttpClient<IClerkDirectoryService, ClerkDirectoryService>();
 
 builder.Services.AddLogging(loggingBuilder =>
 {
@@ -72,26 +72,20 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    var clerkIssuer = builder.Configuration["Clerk:Issuer"];
+    var clerkIssuer = builder.Configuration["Clerk:Issuer"]
+        ?? throw new InvalidOperationException("Clerk:Issuer must be configured.");
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuer = !string.IsNullOrWhiteSpace(clerkIssuer),
-        ValidateAudience = string.IsNullOrWhiteSpace(clerkIssuer),
+        ValidateIssuer = true,
+        ValidateAudience = false,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = clerkIssuer ?? builder.Configuration["Jwt:Issuer"],
-        ValidAudience = string.IsNullOrWhiteSpace(clerkIssuer) ? builder.Configuration["Jwt:Audience"] : null,
+        ValidIssuer = clerkIssuer,
 		NameClaimType = ClaimTypes.Name,
-		RoleClaimType = ClaimTypes.Role,
-        IssuerSigningKey = string.IsNullOrWhiteSpace(clerkIssuer)
-            ? new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
-            : null
+        RoleClaimType = ClaimTypes.Role
     };
-    if (!string.IsNullOrWhiteSpace(clerkIssuer))
-    {
-        options.Authority = clerkIssuer;
-        options.RequireHttpsMetadata = true;
-    }
+    options.Authority = clerkIssuer;
+    options.RequireHttpsMetadata = true;
 
 	if(builder.Environment.IsDevelopment())
 	{

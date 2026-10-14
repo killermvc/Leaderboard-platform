@@ -93,6 +93,8 @@ Key settings in `backend/appsettings.json`:
 |---|---|---|
 | `ConnectionStrings:DefaultConnection` | MySQL connection string | `Server=localhost;Database=LeaderBoardDB;...` |
 | `ConnectionStrings:Redis` | Redis connection string | `localhost` |
+| `Clerk:SecretKey` | Clerk Backend API secret key for user search | Environment variable only |
+| `Clerk:WebhookSecret` | Clerk webhook signing secret | Environment variable only |
 | `Jwt:Key` | HMAC-SHA256 signing key | _(hardcoded — change for production)_ |
 | `Jwt:Issuer` | JWT issuer | `YourIssuer` |
 | `Jwt:Audience` | JWT audience | `YourAudience` |

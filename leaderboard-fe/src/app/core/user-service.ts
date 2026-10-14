@@ -42,11 +42,12 @@ export interface UserProfile {
 })
 export class UserService {
   private readonly baseUrl = environment.apiUrl;
+  private readonly usersUrl = environment.apiUrl.replace(/\/auth$/, '') + '/users';
 
   constructor(private http: HttpClient) {}
 
   searchUsers(query: string, limit = 20): Observable<User[]> {
-    return this.http.get<User[]>(`${this.baseUrl}/search`, {
+    return this.http.get<User[]>(`${this.usersUrl}/search`, {
       params: { q: query, limit: limit.toString() }
     });
   }
