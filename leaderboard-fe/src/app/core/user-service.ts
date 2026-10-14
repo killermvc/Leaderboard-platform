@@ -9,6 +9,7 @@ export interface User {
   scoresCount?: number;
   gamesPlayedCount?: number;
   createdAt?: string;
+  profileImageUrl?: string | null;
 }
 
 export interface GameRanking {
@@ -35,6 +36,7 @@ export interface UserProfile {
   gamesPlayedCount: number;
   gameRankings: GameRanking[];
   recentScores: UserScore[];
+  profileImageUrl?: string | null;
 }
 
 @Injectable({

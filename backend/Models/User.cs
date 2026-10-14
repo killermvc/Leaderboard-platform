@@ -18,6 +18,11 @@ public class User
 	[MaxLength(255)]
 	public string? ClerkUserId { get; set; }
 	/// <summary>
+	/// The profile image URL synced from Clerk (via webhooks). Null when none is set.
+	/// </summary>
+	[MaxLength(2048)]
+	public string? ProfileImageUrl { get; set; }
+	/// <summary>
 	/// Whether the linked Clerk identity can access the application.
 	/// </summary>
 	public bool IsActive { get; set; } = true;

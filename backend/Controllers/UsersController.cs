@@ -42,6 +42,13 @@ public sealed class UsersController(
 					continue;
 				}
 
+				// Keep the stored avatar in sync with Clerk (covers users created before webhook sync)
+				if (clerkUser.ImageUrl != user.ProfileImageUrl)
+				{
+					user.ProfileImageUrl = clerkUser.ImageUrl;
+					await userRepository.UpdateUserAsync(user);
+				}
+
 				var scores = await scoreRepository.GetScoresByUserAsync(user.Id, 1000, 0);
 				results.Add(new UserDto
 				{
@@ -49,7 +56,8 @@ public sealed class UsersController(
 					Username = clerkUser.DisplayName,
 					ScoresCount = scores.Count,
 					GamesPlayedCount = scores.Select(score => score.Game.Id).Distinct().Count(),
-					CreatedAt = user.CreatedAt
+					CreatedAt = user.CreatedAt,
+					ProfileImageUrl = user.ProfileImageUrl
 				});
 			}
 

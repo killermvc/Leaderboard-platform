@@ -60,6 +60,7 @@ public sealed class ClerkWebhookService(
 				if (user is not null)
 				{
 					user.IsActive = false;
+					user.ProfileImageUrl = null;
 					dbContext.UserRoles.RemoveRange(user.UserRoles);
 					List<GameModerator> moderators = await dbContext.GameModerators
 						.Where(item => item.UserId == user.Id)
@@ -74,15 +75,49 @@ public sealed class ClerkWebhookService(
 					}
 				}
 			}
-			else if (user is null)
+			else
 			{
-				dbContext.Users.Add(new User { ClerkUserId = clerkUserId });
+				if (TryExtractImageUrl(dataElement, out string? imageUrl))
+				{
+					if (user is null)
+					{
+						dbContext.Users.Add(new User { ClerkUserId = clerkUserId, ProfileImageUrl = imageUrl });
+					}
+					else if (imageUrl != user.ProfileImageUrl)
+					{
+						user.ProfileImageUrl = imageUrl;
+					}
+				}
+				else if (user is null)
+				{
+					dbContext.Users.Add(new User { ClerkUserId = clerkUserId });
+				}
 			}
 		}
 
 		dbContext.ClerkWebhookEvents.Add(new ClerkWebhookEvent { Id = eventId });
 		await dbContext.SaveChangesAsync(cancellationToken);
 		return ClerkWebhookResult.Processed;
+	}
+
+	/// <summary>
+	/// Extracts the profile image URL from a Clerk user webhook payload ("image_url").
+	/// Returns false when the payload carries no image property, leaving stored value untouched.
+	/// A present-but-empty value yields null (image removed).
+	/// </summary>
+	private static bool TryExtractImageUrl(JsonElement dataElement, out string? imageUrl)
+	{
+		if ((dataElement.TryGetProperty("image_url", out JsonElement imageElement) ||
+			dataElement.TryGetProperty("profile_image_url", out imageElement)) &&
+			imageElement.ValueKind == JsonValueKind.String)
+		{
+			string? raw = imageElement.GetString();
+			imageUrl = string.IsNullOrWhiteSpace(raw) ? null : raw;
+			return true;
+		}
+
+		imageUrl = null;
+		return false;
 	}
 
 	private bool IsValidSignature(string payload, string eventId, string timestamp, string signature)

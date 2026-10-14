@@ -35,7 +35,13 @@
           <div class="users-grid">
             @for (user of filteredUsers(); track user.id) {
               <div class="user-card" (click)="viewUser(user.id)">
-                <div class="user-icon">👤</div>
+                @if (user.profileImageUrl) {
+                  <img [src]="user.profileImageUrl" alt="Profile picture" class="user-avatar" />
+                } @else if (user.id === ownId() && ownAvatarUrl()) {
+                  <img [src]="ownAvatarUrl()" alt="Profile picture" class="user-avatar" />
+                } @else {
+                  <div class="user-icon">👤</div>
+                }
                 <div class="user-info">
                   <span class="username">{{ user.username }}</span>
                   <div class="user-stats">

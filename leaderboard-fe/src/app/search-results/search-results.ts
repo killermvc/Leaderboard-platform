@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GameService, Game } from '../core/game-service';
 import { UserService, User } from '../core/user-service';
+import { AuthService } from '../core/auth-service';
+import { ClerkService } from 'ngx-clerk';
 import { GameCard } from '../game-card/game-card';
 
 @Component({
@@ -17,11 +19,16 @@ export class SearchResults implements OnInit {
   private userService = inject(UserService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private clerk = inject(ClerkService);
+  private auth = inject(AuthService);
 
   games = signal<Game[]>([]);
   users = signal<User[]>([]);
   searchQuery = signal<string>('');
   loading = signal<boolean>(false);
+
+  ownId = this.auth.currentUserIdSig;
+  ownAvatarUrl = computed(() => this.clerk.user()?.imageUrl ?? null);
 
   filteredGames = computed(() => {
     const query = this.searchQuery().toLowerCase();

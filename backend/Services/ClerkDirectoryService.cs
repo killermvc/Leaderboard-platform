@@ -72,14 +72,20 @@ public sealed class ClerkDirectoryService(
 
 	public async Task<string> GetDisplayNameAsync(string clerkUserId, CancellationToken cancellationToken = default)
 	{
+		ClerkDirectoryUser? user = await GetUserAsync(clerkUserId, cancellationToken);
+		return user?.DisplayName ?? clerkUserId;
+	}
+
+	public async Task<ClerkDirectoryUser?> GetUserAsync(string clerkUserId, CancellationToken cancellationToken = default)
+	{
 		if (string.IsNullOrWhiteSpace(clerkUserId))
 		{
-			return string.Empty;
+			return null;
 		}
 
 		if (string.IsNullOrWhiteSpace(options.Value.SecretKey))
 		{
-			return clerkUserId;
+			return null;
 		}
 
 		try
@@ -92,24 +98,23 @@ public sealed class ClerkDirectoryService(
 			using HttpResponseMessage response = await httpClient.SendAsync(request, cancellationToken);
 			if (!response.IsSuccessStatusCode)
 			{
-				return clerkUserId;
+				return null;
 			}
 
 			using JsonDocument document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
-			ClerkDirectoryUser? user = MapUser(document.RootElement);
-			return user?.DisplayName ?? clerkUserId;
+			return MapUser(document.RootElement);
 		}
 		catch (HttpRequestException)
 		{
-			return clerkUserId;
+			return null;
 		}
 		catch (TaskCanceledException)
 		{
-			return clerkUserId;
+			return null;
 		}
 		catch (JsonException)
 		{
-			return clerkUserId;
+			return null;
 		}
 	}
 
@@ -137,7 +142,13 @@ public sealed class ClerkDirectoryService(
 			displayName = clerkUserId;
 		}
 
-		return new ClerkDirectoryUser(clerkUserId, displayName);
+		string? imageUrl = GetString(user, "image_url") ?? GetString(user, "profile_image_url");
+		if (string.IsNullOrWhiteSpace(imageUrl))
+		{
+			imageUrl = null;
+		}
+
+		return new ClerkDirectoryUser(clerkUserId, displayName, imageUrl);
 	}
 
 	private static string? GetString(JsonElement element, string propertyName) =>

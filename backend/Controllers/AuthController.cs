@@ -69,6 +69,7 @@ public class AuthController : ControllerBase
 		{
 			Id = user.Id,
 			ClerkUserId = user.ClerkUserId,
+			ProfileImageUrl = user.ProfileImageUrl,
 			Roles = user.UserRoles
 				.Where(userRole => userRole.Role is not null)
 				.Select(userRole => userRole.Role!.Name)
@@ -115,6 +116,7 @@ public class AuthController : ControllerBase
 			Id = user.Id,
 			Username = await _clerkDirectory.GetDisplayNameAsync(user.ClerkUserId ?? string.Empty),
 			ClerkUserId = user.ClerkUserId,
+			ProfileImageUrl = user.ProfileImageUrl ?? (await _clerkDirectory.GetUserAsync(user.ClerkUserId ?? string.Empty))?.ImageUrl,
 			CreatedAt = user.CreatedAt,
 			TotalScoresSubmitted = scores.Count,
 			GamesPlayedCount = gamesPlayed.Count,

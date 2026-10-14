@@ -23,11 +23,13 @@ export class UserProfileComponent implements OnInit {
   loading = signal<boolean>(true);
   error = signal<string | null>(null);
 
-  /** Clerk avatar, only when viewing your own profile. Capped via .avatar-img CSS. */
+  /** Stored avatar from the backend, falling back to live Clerk image for your own profile. Capped via .avatar-img CSS. */
   avatarUrl = computed(() => {
     const profile = this.userProfile();
+    if (profile === null) return null;
+    if (profile.profileImageUrl) return profile.profileImageUrl;
     const ownId = this.auth.currentUserIdSig();
-    if (profile === null || ownId === null || profile.id !== ownId) return null;
+    if (ownId === null || profile.id !== ownId) return null;
     return this.clerk.user()?.imageUrl ?? null;
   });
 

@@ -74,6 +74,52 @@ public class ClerkWebhookServiceTests
 		Assert.Empty(context.GameModerators);
 	}
 
+	[Fact]
+	public async Task ProcessAsync_WithCreatedUser_SyncsImageUrl()
+	{
+		await using var context = CreateContext();
+		var service = CreateService(context);
+		string payload = PayloadWithImage("user.created", "user_123", "https://img.clerk.com/avatar.png");
+		string timestamp = Timestamp();
+
+		var result = await service.ProcessAsync(payload, "evt_img_create", timestamp, Sign("evt_img_create", timestamp, payload));
+
+		Assert.Equal(ClerkWebhookResult.Processed, result);
+		Assert.Equal("https://img.clerk.com/avatar.png", context.Users.Single().ProfileImageUrl);
+	}
+
+	[Fact]
+	public async Task ProcessAsync_WithUpdatedUser_UpdatesImageUrl()
+	{
+		await using var context = CreateContext();
+		context.Users.Add(new User { ClerkUserId = "user_123", ProfileImageUrl = "https://img.clerk.com/old.png" });
+		await context.SaveChangesAsync();
+		var service = CreateService(context);
+		string payload = PayloadWithImage("user.updated", "user_123", "https://img.clerk.com/new.png");
+		string timestamp = Timestamp();
+
+		var result = await service.ProcessAsync(payload, "evt_img_update", timestamp, Sign("evt_img_update", timestamp, payload));
+
+		Assert.Equal(ClerkWebhookResult.Processed, result);
+		Assert.Equal("https://img.clerk.com/new.png", context.Users.Single().ProfileImageUrl);
+	}
+
+	[Fact]
+	public async Task ProcessAsync_WithUpdatedUserWithoutImageProperty_KeepsStoredImageUrl()
+	{
+		await using var context = CreateContext();
+		context.Users.Add(new User { ClerkUserId = "user_123", ProfileImageUrl = "https://img.clerk.com/old.png" });
+		await context.SaveChangesAsync();
+		var service = CreateService(context);
+		string payload = Payload("user.updated", "user_123");
+		string timestamp = Timestamp();
+
+		var result = await service.ProcessAsync(payload, "evt_img_keep", timestamp, Sign("evt_img_keep", timestamp, payload));
+
+		Assert.Equal(ClerkWebhookResult.Processed, result);
+		Assert.Equal("https://img.clerk.com/old.png", context.Users.Single().ProfileImageUrl);
+	}
+
 	private static AppDbContext CreateContext()
 	{
 		var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -87,6 +133,11 @@ public class ClerkWebhookServiceTests
 
 	private static string Payload(string eventType, string clerkUserId) =>
 		$"{{\"type\":\"{eventType}\",\"data\":{{\"id\":\"{clerkUserId}\"}}}}";
+
+	private static string PayloadWithImage(string eventType, string clerkUserId, string? imageUrl) =>
+		imageUrl is null
+			? $@"{{""type"":""{eventType}"",""data"":{{""id"":""{clerkUserId}"",""image_url"":null}}}}"
+			: $@"{{""type"":""{eventType}"",""data"":{{""id"":""{clerkUserId}"",""image_url"":""{imageUrl}""}}}}";
 
 	private static string Timestamp() => TimestampFor(string.Empty);
 

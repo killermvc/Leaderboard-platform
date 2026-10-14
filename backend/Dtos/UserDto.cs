@@ -25,4 +25,8 @@ public class UserDto
 	/// The date and time when the user was created.
 	/// </summary>
     public DateTime? CreatedAt { get; set; }
+	/// <summary>
+	/// The profile image URL synced from Clerk. Null when none is set.
+	/// </summary>
+    public string? ProfileImageUrl { get; set; }
 }

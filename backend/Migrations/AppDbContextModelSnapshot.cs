@@ -246,6 +246,10 @@ namespace Leaderboard.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<string>("ProfileImageUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("varchar(2048)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ClerkUserId")
