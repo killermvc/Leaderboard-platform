@@ -14,6 +14,7 @@ export class AuthService {
 	private currentUserId: number | null = null;
 	private token: string | null = null;
 	private readonly roles = signal<string[]>([]);
+	readonly currentUserIdSig = signal<number | null>(null);
 
 	/** Holds the current username when available */
 	public username$ = new BehaviorSubject<string | null>(null);
@@ -45,6 +46,7 @@ export class AuthService {
 		return this.http.get<{ id: number; clerkUserId: string | null; roles: string[] }>(`${this.apiUrl}/me`).pipe(
 			tap((u) => {
 				this.currentUserId = u?.id ?? null;
+				this.currentUserIdSig.set(u?.id ?? null);
 				this.roles.set(u?.roles ?? []);
 				const clerkUser = this.clerk.user();
 				const displayName = clerkUser?.username ?? clerkUser?.fullName ?? clerkUser?.primaryEmailAddress?.emailAddress;
@@ -64,6 +66,7 @@ export class AuthService {
 	logout(): void {
 		void this.clerk.signOut();
 		this.currentUserId = null;
+		this.currentUserIdSig.set(null);
 		this.roles.set([]);
 		this.username$.next(null);
 		this.token = null;

@@ -50,6 +50,26 @@ public class UserRepository(AppDbContext context) : IUserRepository
 	}
 
 	/// <summary>
+	/// Gets an existing local user by Clerk subject identifier, or creates a new one if not found.
+	/// </summary>
+	public async Task<User> GetOrCreateUserByClerkIdAsync(string clerkUserId)
+	{
+		User? user = await _context.Users
+			.Include(u => u.UserRoles)
+			.ThenInclude(ur => ur.Role)
+			.FirstOrDefaultAsync(u => u.ClerkUserId == clerkUserId);
+
+		if (user is null)
+		{
+			user = new User { ClerkUserId = clerkUserId };
+			_context.Users.Add(user);
+			await _context.SaveChangesAsync();
+		}
+
+		return user;
+	}
+
+	/// <summary>
 	/// Adds a new user to the database asynchronously.
 	/// </summary>
 	/// <param name="user">The user entity to add.</param>

@@ -21,6 +21,13 @@ public interface IUserRepository
 	/// Gets local users matching Clerk subject identifiers.
 	/// </summary>
 	public Task<List<User>> GetUsersByClerkIdsAsync(IReadOnlyCollection<string> clerkUserIds);
+
+	/// <summary>
+	/// Gets an existing local user by Clerk subject identifier, or creates a new one if not found.
+	/// </summary>
+	/// <param name="clerkUserId">The Clerk user identifier.</param>
+	/// <returns>The local user (existing or newly created).</returns>
+	public Task<User> GetOrCreateUserByClerkIdAsync(string clerkUserId);
 	/// <summary>
 	/// Adds a user.
 	/// </summary>

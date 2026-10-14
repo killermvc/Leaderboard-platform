@@ -10,8 +10,12 @@
 	</form>
 	@if (authService.isAuthenticated()) {
 		<button (click)="routeToMySubmissions()">My Submissions</button>
-		<button (click)="routeToProfile()">
-			<ng-icon name="octFeedPerson" size="24px"></ng-icon>
+		<button class="profile-button" (click)="routeToProfile()">
+			@if (profileImageUrl()) {
+				<img [src]="profileImageUrl()" alt="Profile" class="profile-avatar" />
+			} @else {
+				<ng-icon name="octFeedPerson" size="24px"></ng-icon>
+			}
 			<span class="username">  {{ username() ?? 'Account' }}</span>
 		</button>
 		<button (click)="onLogout()">Logout</button>

@@ -1,7 +1,9 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UserService, UserProfile, GameRanking, UserScore } from '../core/user-service';
+import { AuthService } from '../core/auth-service';
+import { ClerkService } from 'ngx-clerk';
 
 @Component({
   selector: 'app-user-profile',
@@ -14,10 +16,20 @@ export class UserProfileComponent implements OnInit {
   private userService = inject(UserService);
   private route = inject(ActivatedRoute);
   public router = inject(Router);
+  private clerk = inject(ClerkService);
+  private auth = inject(AuthService);
 
   userProfile = signal<UserProfile | null>(null);
   loading = signal<boolean>(true);
   error = signal<string | null>(null);
+
+  /** Clerk avatar, only when viewing your own profile. Capped via .avatar-img CSS. */
+  avatarUrl = computed(() => {
+    const profile = this.userProfile();
+    const ownId = this.auth.currentUserIdSig();
+    if (profile === null || ownId === null || profile.id !== ownId) return null;
+    return this.clerk.user()?.imageUrl ?? null;
+  });
 
   ngOnInit() {
     this.route.params.subscribe(params => {

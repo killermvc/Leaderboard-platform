@@ -29,15 +29,15 @@ public sealed class UsersController(
 		try
 		{
 			IReadOnlyList<ClerkDirectoryUser> clerkUsers = await clerkDirectoryService.SearchUsersAsync(q, limit, cancellationToken);
-			List<User> localUsers = await userRepository.GetUsersByClerkIdsAsync(clerkUsers.Select(user => user.ClerkUserId).ToArray());
-			var localUsersByClerkId = localUsers
-				.Where(user => user.IsActive && user.ClerkUserId is not null)
-				.ToDictionary(user => user.ClerkUserId!, StringComparer.Ordinal);
 
 			var results = new List<UserDto>();
 			foreach (ClerkDirectoryUser clerkUser in clerkUsers)
 			{
-				if (!localUsersByClerkId.TryGetValue(clerkUser.ClerkUserId, out User? user))
+				// Get or create local user for this Clerk user
+				User user = await userRepository.GetOrCreateUserByClerkIdAsync(clerkUser.ClerkUserId);
+
+				// Skip inactive users (deleted in Clerk)
+				if (!user.IsActive)
 				{
 					continue;
 				}

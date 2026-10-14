@@ -85,3 +85,21 @@
 	color: #ecf9ff;
 	font-weight: 500;
 }
+
+.profile-button {
+	display: inline-flex;
+	align-items: center;
+}
+
+.profile-avatar {
+	width: 28px;
+	height: 28px;
+	min-width: 28px;
+	min-height: 28px;
+	max-width: 28px;
+	max-height: 28px;
+	border-radius: 50%;
+	object-fit: cover;
+	flex-shrink: 0;
+	display: block;
+}

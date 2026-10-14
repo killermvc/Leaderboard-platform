@@ -1,9 +1,10 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { AuthService } from '../core/auth-service';
 import { Router } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { octSearch, octFeedPerson } from '@ng-icons/octicons';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { ClerkService } from 'ngx-clerk';
 
 @Component({
   selector: 'app-header',
@@ -14,9 +15,11 @@ import { toSignal } from '@angular/core/rxjs-interop';
 })
 export class Header {
 	public authService = inject(AuthService);
+	private clerk = inject(ClerkService);
 	private router = inject(Router);
 
 	username = toSignal(this.authService.username$);
+	profileImageUrl = computed(() => this.clerk.user()?.imageUrl ?? null);
 
 	constructor() {
 		if (this.authService.isAuthenticated()) {

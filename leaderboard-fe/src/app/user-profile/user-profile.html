@@ -13,7 +13,11 @@
     <!-- Profile Header -->
     <header class="profile-header">
       <div class="avatar">
-        <span class="avatar-icon">👤</span>
+        @if (avatarUrl()) {
+          <img [src]="avatarUrl()" alt="Profile picture" class="avatar-img" />
+        } @else {
+          <span class="avatar-icon">👤</span>
+        }
       </div>
       <div class="profile-info">
         <h1 class="username">{{ userProfile()!.username }}</h1>
