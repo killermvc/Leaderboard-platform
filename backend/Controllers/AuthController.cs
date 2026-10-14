@@ -1,13 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
-using BCryptClass = BCrypt.Net.BCrypt;
 using System.Security.Claims;
 
 using Leaderboard.Repositories;
 using Leaderboard.Models;
-using Leaderboard.Services;
 using Leaderboard.Dtos;
+using Leaderboard.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace Leaderboard.Controllers;
 
@@ -19,90 +17,17 @@ namespace Leaderboard.Controllers;
 public class AuthController : ControllerBase
 {
 	private readonly IUserRepository _userRepository;
-	private readonly IJwtService _jwtService;
 	private readonly IScoreRepository _scoreRepository;
+	private readonly IClerkDirectoryService _clerkDirectory;
 
 	/// <summary>
 	/// Initializes the authentication controller.
 	///</summary>
-	public AuthController(IUserRepository userRepository, IJwtService jwtService, IScoreRepository scoreRepository)
+	public AuthController(IUserRepository userRepository, IScoreRepository scoreRepository, IClerkDirectoryService clerkDirectoryService)
 	{
 		_userRepository = userRepository;
-		_jwtService = jwtService;
 		_scoreRepository = scoreRepository;
-	}
-
-	/// <summary>
-	/// Registers a new user.
-	///</summary>
-	[HttpPost("register")]
-	public async Task<IActionResult> Register([FromBody] CredentialsRequest request)
-	{
-		if (string.IsNullOrWhiteSpace(request.UserName))
-		{
-			return BadRequest(new { Message = "Username is required" });
-		}
-
-		if (await _userRepository.GetUserByNameAsync(request.UserName) != null)
-		{
-			return BadRequest(new { Message = "Username already exists" });
-		}
-
-		var user = new User
-		{
-			Username = request.UserName,
-			PasswordHash = BCryptClass.HashPassword(request.Password)
-		};
-		await _userRepository.AddUserAsync(user);
-		return Ok(new { Message = "User registered successfully" });
-	}
-	/// <summary>
-	/// Authenticates a user and returns a JWT token if successful.
-	/// </summary>
-	[HttpPost("login")]
-	public async Task<IActionResult> Login([FromBody] CredentialsRequest request)
-	{
-		User? user = await _userRepository.GetUserByNameAsync(request.UserName!);
-
-		if(user == null || !BCryptClass.Verify(request.Password, user.PasswordHash))
-		{
-			return Unauthorized(new {Message = "Invalid username or password"});
-		}
-
-		// Debug: Log roles being added to token
-		Console.WriteLine($"User {user.Username} has {user.UserRoles.Count} roles:");
-		foreach (var ur in user.UserRoles)
-		{
-			Console.WriteLine($"  - Role: {ur.Role?.Name ?? "(null)"}");
-		}
-
-		string token = _jwtService.GenerateToken(user);
-
-		return Ok(new {Token = token, Message = "Login successful"});
-	}
-
-	/// <summary>Changes the authenticated user's password.</summary>
-	[HttpPut]
-	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-	public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
-	{
-		var userIdClaim = User.FindFirst(ClaimTypes.Name)?.Value;
-		if (userIdClaim == null || !int.TryParse(userIdClaim, out int userId))
-		{
-			return Unauthorized(new { Message = "Invalid token" });
-		}
-
-		User? user = await _userRepository.GetUserByIdAsync(userId);
-
-		if(user == null || !BCryptClass.Verify(request.OldPassword, user.PasswordHash))
-		{
-			return Unauthorized(new {Message = "Invalid password"});
-		}
-
-		user.PasswordHash = BCryptClass.HashPassword(request.NewPassword);
-		await _userRepository.UpdateUserAsync(user);
-
-		return Ok(new {Message = "Password changed successfully"});
+		_clerkDirectory = clerkDirectoryService;
 	}
 
 	/// <summary>
@@ -143,67 +68,12 @@ public class AuthController : ControllerBase
 		return Ok(new
 		{
 			Id = user.Id,
-			Username = user.Username,
+			ClerkUserId = user.ClerkUserId,
 			Roles = user.UserRoles
 				.Where(userRole => userRole.Role is not null)
 				.Select(userRole => userRole.Role!.Name)
 				.ToArray()
 		});
-	}
-
-	/// <summary>Updates the authenticated user's username.</summary>
-	[HttpPut("username")]
-	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-	public async Task<IActionResult> UpdateUsername([FromBody] UpdateUsernameRequest request)
-	{
-		var userIdClaim = User.FindFirst(ClaimTypes.Name)?.Value;
-		if (userIdClaim == null || !int.TryParse(userIdClaim, out int userId))
-		{
-			return Unauthorized(new { Message = "Invalid token" });
-		}
-
-		if (string.IsNullOrWhiteSpace(request.NewUserName))
-			return BadRequest(new { Message = "Invalid username" });
-
-		if (await _userRepository.GetUserByNameAsync(request.NewUserName!) != null)
-			return BadRequest(new { Message = "Username already exists" });
-
-		User? user = await _userRepository.GetUserByIdAsync(userId);
-		if (user == null)
-			return NotFound(new { Message = "User not found" });
-
-		user.Username = request.NewUserName;
-		await _userRepository.UpdateUserAsync(user);
-
-		return Ok(new { Message = "Username updated successfully" });
-	}
-
-	/// <summary>
-	/// Searches for users.
-	///</summary>
-	[HttpGet("search")]
-	public async Task<IActionResult> SearchUsers([FromQuery] string q, [FromQuery] int limit = 20)
-	{
-		if (string.IsNullOrWhiteSpace(q))
-			return BadRequest(new { Message = "Search query is required" });
-
-		var users = await _userRepository.SearchUsersAsync(q, limit);
-		var userDtos = new List<UserDto>();
-
-		foreach (var u in users)
-		{
-			var scores = await _scoreRepository.GetScoresByUserAsync(u.Id, 1000, 0);
-			userDtos.Add(new UserDto
-			{
-				Id = u.Id,
-				Username = u.Username,
-				ScoresCount = scores.Count,
-				GamesPlayedCount = scores.Select(s => s.Game.Id).Distinct().Count(),
-				CreatedAt = u.CreatedAt
-			});
-		}
-
-		return Ok(userDtos);
 	}
 
 	/// <summary>Returns a user's profile and score statistics.</summary>
@@ -243,7 +113,8 @@ public class AuthController : ControllerBase
 
 		return Ok(new {
 			Id = user.Id,
-			Username = user.Username,
+			Username = await _clerkDirectory.GetDisplayNameAsync(user.ClerkUserId ?? string.Empty),
+			ClerkUserId = user.ClerkUserId,
 			CreatedAt = user.CreatedAt,
 			TotalScoresSubmitted = scores.Count,
 			GamesPlayedCount = gamesPlayed.Count,
@@ -253,43 +124,3 @@ public class AuthController : ControllerBase
 	}
 }
 
-/// <summary>
-/// Contains username and password credentials.
-///</summary>
-public class CredentialsRequest
-{
-	/// <summary>
-	/// Gets or sets the username.
-	///</summary>
-	public string? UserName {get; set;}
-	/// <summary>
-	/// Gets or sets the password.
-	///</summary>
-	public string? Password {get; set;}
-}
-
-/// <summary>
-/// Contains a replacement username.
-///</summary>
-public class UpdateUsernameRequest
-{
-	/// <summary>
-	/// Gets or sets the new username.
-	///</summary>
-	public string? NewUserName { get; set; }
-}
-
-/// <summary>
-/// Contains the current and replacement passwords.
-///</summary>
-public class ChangePasswordRequest
-{
-	/// <summary>
-	/// Gets or sets the current password.
-	///</summary>
-	public string? OldPassword { get; set; }
-	/// <summary>
-	/// Gets or sets the replacement password.
-	///</summary>
-	public string? NewPassword { get; set; }
-}

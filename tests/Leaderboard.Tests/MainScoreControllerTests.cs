@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Leaderboard.Controllers;
 using Leaderboard.Models;
 using Leaderboard.Repositories;
+using Leaderboard.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -81,10 +82,16 @@ public class ScoreControllerTests
 		IGameRepository? games = null,
 		string userId = "4")
 	{
+		var directory = new Mock<IClerkDirectoryService>();
+		directory.Setup(d => d.GetDisplayNamesAsync(
+				It.IsAny<IReadOnlyCollection<string>>(),
+				It.IsAny<CancellationToken>()))
+			.ReturnsAsync(new Dictionary<string, string>(StringComparer.Ordinal));
 		var controller = new ScoreController(
 			scores,
 			games ?? Mock.Of<IGameRepository>(),
 			Mock.Of<IUserRepository>(),
+			directory.Object,
 			NullLogger<ScoreController>.Instance);
 		controller.ControllerContext = new ControllerContext
 		{

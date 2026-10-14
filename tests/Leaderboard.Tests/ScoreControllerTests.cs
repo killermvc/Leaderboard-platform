@@ -369,6 +369,7 @@ public class V1ScoreControllerTests
 		var controller = new ScoreController(
 			scoreRepository.Object,
 			gameRepository.Object,
+			Mock.Of<Leaderboard.Services.IClerkDirectoryService>(),
 			NullLogger<ScoreController>.Instance);
 
 		var claims = authenticated

@@ -1,6 +1,7 @@
 using Leaderboard.Controllers;
 using Leaderboard.Models;
 using Leaderboard.Repositories;
+using Leaderboard.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -14,7 +15,7 @@ public class ReportsControllerTests
 	public async Task GetTopPlayersReport_WhenDateRangeIsInvalid_ReturnsBadRequest()
 	{
 		var repository = new Mock<IScoreRepository>();
-		var controller = new ReportsController(repository.Object, NullLogger<ReportsController>.Instance);
+		var controller = new ReportsController(repository.Object, Mock.Of<IClerkDirectoryService>(), NullLogger<ReportsController>.Instance);
 
 		var result = await controller.GetTopPlayersReport(DateTime.Parse("2026-01-02"), DateTime.Parse("2026-01-01"));
 
@@ -28,7 +29,12 @@ public class ReportsControllerTests
 		var repository = new Mock<IScoreRepository>();
 		repository.Setup(item => item.GetTopPlayersAsync(It.IsAny<DateTime>(), It.IsAny<DateTime>(), 5))
 			.ReturnsAsync([new LeaderboardEntry { UserId = 4, UserName = "Ryu", Score = 9000 }]);
-		var controller = new ReportsController(repository.Object, NullLogger<ReportsController>.Instance);
+		var directory = new Mock<IClerkDirectoryService>();
+		directory.Setup(d => d.GetDisplayNamesAsync(
+				It.IsAny<IReadOnlyCollection<string>>(),
+				It.IsAny<CancellationToken>()))
+			.ReturnsAsync(new Dictionary<string, string>(StringComparer.Ordinal));
+		var controller = new ReportsController(repository.Object, directory.Object, NullLogger<ReportsController>.Instance);
 		var start = DateTime.Parse("2026-01-01");
 		var end = DateTime.Parse("2026-01-31");
 

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Leaderboard.Models;
 using Leaderboard.Repositories;
 using Leaderboard.Dtos;
+using Leaderboard.Services;
 
 namespace Leaderboard.Controllers;
 
@@ -12,9 +13,10 @@ namespace Leaderboard.Controllers;
 /// </summary>
 [ApiController]
 [Route("reports")]
-public class ReportsController(IScoreRepository scoreRepository, ILogger<ReportsController> logger) : ControllerBase
+public class ReportsController(IScoreRepository scoreRepository, IClerkDirectoryService clerkDirectoryService, ILogger<ReportsController> logger) : ControllerBase
 {
     private readonly IScoreRepository _scoreRepository = scoreRepository;
+    private readonly IClerkDirectoryService _clerkDirectory = clerkDirectoryService;
     private readonly ILogger _logger = logger;
 
 	/// <summary>
@@ -32,10 +34,20 @@ public class ReportsController(IScoreRepository scoreRepository, ILogger<Reports
             }
 
             var topPlayers = await _scoreRepository.GetTopPlayersAsync(start_date, end_date, limit);
+            var clerkIds = topPlayers
+                .Where(tp => tp.UserId.HasValue && !string.IsNullOrWhiteSpace(tp.UserName))
+                .Select(tp => tp.UserName!)
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
+            IReadOnlyDictionary<string, string> displayNames = clerkIds.Length == 0
+                ? new Dictionary<string, string>(StringComparer.Ordinal)
+                : await _clerkDirectory.GetDisplayNamesAsync(clerkIds);
             var dto = topPlayers.Select(tp => new LeaderboardEntryDto
             {
                 UserId = tp.UserId,
-                UserName = tp.UserName,
+                UserName = tp.UserId.HasValue && !string.IsNullOrWhiteSpace(tp.UserName) && displayNames.TryGetValue(tp.UserName!, out string? displayName)
+                    ? displayName
+                    : tp.UserName,
                 Score = tp.Score
             }).ToList();
 

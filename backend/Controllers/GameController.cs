@@ -11,6 +11,7 @@ using System.Security.Claims;
 using Leaderboard.Models;
 using Leaderboard.Repositories;
 using Leaderboard.Dtos;
+using Leaderboard.Services;
 
 namespace Leaderboard.Controllers
 {
@@ -19,10 +20,11 @@ namespace Leaderboard.Controllers
 	/// </summary>
     [Route("api/[controller]")]
     [ApiController]
-		public class GameController(IGameRepository gameRepository, IUserRepository userRepository) : ControllerBase
+		public class GameController(IGameRepository gameRepository, IUserRepository userRepository, IClerkDirectoryService clerkDirectoryService) : ControllerBase
     {
 		private readonly IGameRepository _gameRepository = gameRepository;
 		private readonly IUserRepository _userRepository = userRepository;
+		private readonly IClerkDirectoryService _clerkDirectory = clerkDirectoryService;
 
 		/// <summary>
 		/// Creates a new game in the system. Only accessible by users with the "Admin" role.
@@ -46,7 +48,7 @@ namespace Leaderboard.Controllers
 				SubmitsAllowed = gameDto.IsSubmitAllowed
 			};
 			await _gameRepository.AddAsync(game);
-			var resultDto = ToDto(game);
+			var resultDto = await ToDtoAsync(game);
 			return CreatedAtAction("GetGame", new { id = game.Id }, resultDto);
 		}
 
@@ -82,7 +84,7 @@ namespace Leaderboard.Controllers
 				game.OwnerId = gameDto.OwnerId;
 			}
 			await _gameRepository.UpdateAsync(game);
-			return Ok(ToDto(game));
+			return Ok(await ToDtoAsync(game));
 		}
 
 		/// <summary>
@@ -96,7 +98,7 @@ namespace Leaderboard.Controllers
 			{
 				return NotFound();
 			}
-			return ToDto(game);
+			return await ToDtoAsync(game);
 		}
 
 		/// <summary>
@@ -109,6 +111,7 @@ namespace Leaderboard.Controllers
 			{
 				List<Game> games = await _gameRepository.GetAllGamesAsync();
 				var pagedGames = games.Skip(offset).Take(limit);
+			var displayNames = await GetDisplayNamesAsync(pagedGames.Select(g => ((Game)g).Owner?.ClerkUserId));
 			var gameDtos = pagedGames.Select(g => new GameDto
 			{
 				Id = ((Game)g).Id,
@@ -116,7 +119,7 @@ namespace Leaderboard.Controllers
 				Description = ((Game)g).Description,
 				ImageUrl = ((Game)g).ImageUrl,
 				OwnerId = ((Game)g).OwnerId,
-				OwnerUsername = ((Game)g).Owner?.Username,
+				OwnerUsername = DisplayOrId(((Game)g).Owner?.ClerkUserId, displayNames),
 				IsSubmitAllowed = ((Game)g).SubmitsAllowed
 			});
 				return Ok(gameDtos);
@@ -135,6 +138,7 @@ namespace Leaderboard.Controllers
 		{
 			var games = await _gameRepository.GetGamesByPlayerIdAsync(playerId);
 
+		var displayNames = await GetDisplayNamesAsync(games.Select(g => g.Owner?.ClerkUserId));
 		var gameDtos = games.Select(g => new GameDto
 		{
 			Id = g.Id,
@@ -142,7 +146,7 @@ namespace Leaderboard.Controllers
 			Description = g.Description,
 			ImageUrl = g.ImageUrl,
 			OwnerId = g.OwnerId,
-			OwnerUsername = g.Owner?.Username,
+			OwnerUsername = DisplayOrId(g.Owner?.ClerkUserId, displayNames),
 			IsSubmitAllowed = g.SubmitsAllowed
 		});
 
@@ -159,15 +163,46 @@ namespace Leaderboard.Controllers
 			return int.TryParse(User.FindFirstValue(ClaimTypes.Name), out var userId) && game.OwnerId == userId;
 		}
 
-		private static GameDto ToDto(Game game) => new()
+		private async Task<GameDto> ToDtoAsync(Game game, CancellationToken cancellationToken = default)
 		{
-			Id = game.Id,
-			Name = game.Name,
-			Description = game.Description,
-			ImageUrl = game.ImageUrl,
-			OwnerId = game.OwnerId,
-			OwnerUsername = game.Owner?.Username,
-			IsSubmitAllowed = game.SubmitsAllowed
-		};
+			string? ownerUsername = null;
+			if (!string.IsNullOrWhiteSpace(game.Owner?.ClerkUserId))
+			{
+				ownerUsername = await _clerkDirectory.GetDisplayNameAsync(game.Owner.ClerkUserId!, cancellationToken);
+			}
+
+			return new GameDto
+			{
+				Id = game.Id,
+				Name = game.Name,
+				Description = game.Description,
+				ImageUrl = game.ImageUrl,
+				OwnerId = game.OwnerId,
+				OwnerUsername = ownerUsername,
+				IsSubmitAllowed = game.SubmitsAllowed
+			};
+		}
+
+		private async Task<IReadOnlyDictionary<string, string>> GetDisplayNamesAsync(
+			IEnumerable<string?> clerkUserIds,
+			CancellationToken cancellationToken = default)
+		{
+			var ids = clerkUserIds
+				.Where(id => !string.IsNullOrWhiteSpace(id))
+				.Select(id => id!)
+				.Distinct(StringComparer.Ordinal)
+				.ToArray();
+			if (ids.Length == 0)
+			{
+				return new Dictionary<string, string>(StringComparer.Ordinal);
+			}
+
+			return await _clerkDirectory.GetDisplayNamesAsync(ids, cancellationToken);
+		}
+
+		private static string? DisplayOrId(string? clerkUserId, IReadOnlyDictionary<string, string> displayNames) =>
+			string.IsNullOrWhiteSpace(clerkUserId)
+				? null
+				: displayNames.TryGetValue(clerkUserId, out string? displayName) ? displayName : clerkUserId;
 	}
 }

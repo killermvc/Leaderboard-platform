@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using Leaderboard.Models;
 using Leaderboard.Repositories;
 using Leaderboard.Dtos;
+using Leaderboard.Services;
 
 namespace Leaderboard.Controllers;
 
@@ -19,6 +20,7 @@ public class ModerationController(
     IGameModeratorRepository gameModeratorRepository,
     IGameRepository gameRepository,
     IUserRepository userRepository,
+    IClerkDirectoryService clerkDirectoryService,
     ILogger<ModerationController> logger
 ) : ControllerBase
 {
@@ -26,6 +28,7 @@ public class ModerationController(
     private readonly IGameModeratorRepository _gameModeratorRepository = gameModeratorRepository;
     private readonly IGameRepository _gameRepository = gameRepository;
     private readonly IUserRepository _userRepository = userRepository;
+    private readonly IClerkDirectoryService _clerkDirectory = clerkDirectoryService;
     private readonly ILogger _logger = logger;
 
     /// <summary>
@@ -155,7 +158,7 @@ public class ModerationController(
             }
 
             var scores = await _scoreRepository.GetPendingScoresForGameAsync(gameId, limit, offset);
-            var dtos = scores.Select(MapToScoreDto).ToList();
+            var dtos = await MapToScoreDtosAsync(scores);
 
             return Ok(dtos);
         }
@@ -209,7 +212,7 @@ public class ModerationController(
                 .Take(limit)
                 .ToList();
 
-            var dtos = uniqueScores.Select(MapToScoreDto).ToList();
+            var dtos = await MapToScoreDtosAsync(uniqueScores);
 
             return Ok(dtos);
         }
@@ -247,7 +250,8 @@ public class ModerationController(
             }
 
             await _gameModeratorRepository.AddModeratorAsync(gameId, userId);
-            return Ok(new { Message = $"User {user.Username} is now a moderator for {game.Name}." });
+            string moderatorName = await _clerkDirectory.GetDisplayNameAsync(user.ClerkUserId ?? string.Empty);
+            return Ok(new { Message = $"User {moderatorName} is now a moderator for {game.Name}." });
         }
         catch (InvalidOperationException ex)
         {
@@ -303,6 +307,15 @@ public class ModerationController(
             }
 
             var moderators = await _gameModeratorRepository.GetModeratorsForGameAsync(gameId);
+            var moderatorIds = moderators
+                .Select(gm => gm.User?.ClerkUserId)
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Select(id => id!)
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
+            var displayNames = moderatorIds.Length == 0
+                ? new Dictionary<string, string>(StringComparer.Ordinal)
+                : await _clerkDirectory.GetDisplayNamesAsync(moderatorIds);
             var dtos = moderators.Select(gm => new GameModeratorDto
             {
                 Id = gm.Id,
@@ -310,7 +323,7 @@ public class ModerationController(
                 User = new GameModeratorUserDto
                 {
                     Id = gm.User.Id,
-                    Username = gm.User.Username
+                    Username = DisplayOrId(gm.User.ClerkUserId, displayNames)
                 },
                 GameId = gm.GameId,
                 GameName = gm.Game.Name,
@@ -385,21 +398,39 @@ public class ModerationController(
         }
     }
 
-    private static ScoreDto MapToScoreDto(Score s) => new()
+    private async Task<List<ScoreDto>> MapToScoreDtosAsync(List<Score> scores, CancellationToken cancellationToken = default)
     {
-        Id = s.Id,
-        User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = s.User.Username },
-        PlayerName = s.PlayerName,
-        Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
-        Value = s.Value,
-        DateAchieved = s.DateAchieved,
-        Title = s.Title,
-        Description = s.Description,
-        Status = s.Status,
-        ReviewedBy = s.ReviewedBy == null ? null : new UserDto { Id = s.ReviewedBy.Id, Username = s.ReviewedBy.Username },
-        ReviewedAt = s.ReviewedAt,
-        RejectionReason = s.RejectionReason
-    };
+        var ids = scores
+            .SelectMany(s => new[] { s.User?.ClerkUserId, s.ReviewedBy?.ClerkUserId })
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Select(id => id!)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        IReadOnlyDictionary<string, string> displayNames = ids.Length == 0
+            ? new Dictionary<string, string>(StringComparer.Ordinal)
+            : await _clerkDirectory.GetDisplayNamesAsync(ids, cancellationToken);
+
+        return scores.Select(s => new ScoreDto
+        {
+            Id = s.Id,
+            User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User.ClerkUserId, displayNames) },
+            PlayerName = s.PlayerName,
+            Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
+            Value = s.Value,
+            DateAchieved = s.DateAchieved,
+            Title = s.Title,
+            Description = s.Description,
+            Status = s.Status,
+            ReviewedBy = s.ReviewedBy == null ? null : new UserDto { Id = s.ReviewedBy.Id, Username = DisplayOrId(s.ReviewedBy.ClerkUserId, displayNames) },
+            ReviewedAt = s.ReviewedAt,
+            RejectionReason = s.RejectionReason
+        }).ToList();
+    }
+
+    private static string DisplayOrId(string? clerkUserId, IReadOnlyDictionary<string, string> displayNames) =>
+        string.IsNullOrWhiteSpace(clerkUserId)
+            ? string.Empty
+            : displayNames.TryGetValue(clerkUserId, out string? displayName) ? displayName : clerkUserId;
 
     private async Task<bool> CanManageGameAsync(int gameId)
     {

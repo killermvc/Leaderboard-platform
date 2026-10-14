@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Leaderboard.Controllers;
 using Leaderboard.Models;
 using Leaderboard.Repositories;
+using Leaderboard.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -59,6 +60,7 @@ public class ModerationControllerTests
 			moderators,
 			Mock.Of<IGameRepository>(),
 			Mock.Of<IUserRepository>(),
+			Mock.Of<IClerkDirectoryService>(),
 			NullLogger<ModerationController>.Instance);
 		controller.ControllerContext = new ControllerContext
 		{

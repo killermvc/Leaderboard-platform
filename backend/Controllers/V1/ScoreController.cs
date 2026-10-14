@@ -6,6 +6,7 @@ using Leaderboard.Dtos;
 using Leaderboard.Middleware;
 using Leaderboard.Models;
 using Leaderboard.Repositories;
+using Leaderboard.Services;
 
 namespace Leaderboard.Controllers.V1;
 
@@ -19,11 +20,13 @@ namespace Leaderboard.Controllers.V1;
 public class ScoreController(
 		IScoreRepository scoreRepository,
 		IGameRepository gameRepository,
+		IClerkDirectoryService clerkDirectoryService,
 		ILogger<ScoreController> logger
 	) : ControllerBase
 {
 	private readonly IScoreRepository _scoreRepository = scoreRepository;
 	private readonly IGameRepository _gameRepository = gameRepository;
+	private readonly IClerkDirectoryService _clerkDirectory = clerkDirectoryService;
 	private readonly ILogger _logger = logger;
 
 	/// <summary>
@@ -90,7 +93,7 @@ public class ScoreController(
 				"Api key {ApiKeyId} submitted score {ScoreValue} of player {PlayerName} for game {GameId}, score {ScoreId}.",
 				User.GetApiKeyId(), score.Value, score.PlayerName, keyGameId, score.Id);
 
-			return StatusCode(StatusCodes.Status201Created, ToScoreDto(score));
+			return StatusCode(StatusCodes.Status201Created, await ToScoreDtoAsync(score));
 		}
 		catch (KeyNotFoundException ex)
 		{
@@ -181,7 +184,7 @@ public class ScoreController(
 		Score? score = await _scoreRepository.GetBestNamedScoreByGameAsync(gameId, playerName);
 		return score is null
 			? NotFound(new { Message = "Score not found." })
-			: Ok(ToScoreDto(score));
+			: Ok(await ToScoreDtoAsync(score));
 	}
 
 	/// <summary>
@@ -216,6 +219,7 @@ public class ScoreController(
 		try
 		{
 			List<LeaderboardEntry> leaderboard = await _scoreRepository.GetLeaderboardAsync(gameId, int.MaxValue);
+			await EnrichLeaderboardAsync(leaderboard);
 			return Ok(leaderboard);
 		}
 		catch (KeyNotFoundException ex)
@@ -253,10 +257,26 @@ public class ScoreController(
 		return true;
 	}
 
-	private static ScoreDto ToScoreDto(Score s) => new()
+	private async Task<ScoreDto> ToScoreDtoAsync(Score s, CancellationToken cancellationToken = default)
 	{
-		Id = s.Id,
-		User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = s.User.Username },
+		var ids = new[] { s.User?.ClerkUserId, s.ReviewedBy?.ClerkUserId }
+			.Where(id => !string.IsNullOrWhiteSpace(id))
+			.Select(id => id!)
+			.Distinct(StringComparer.Ordinal)
+			.ToArray();
+		IReadOnlyDictionary<string, string> displayNames = ids.Length == 0
+			? new Dictionary<string, string>(StringComparer.Ordinal)
+			: await _clerkDirectory.GetDisplayNamesAsync(ids, cancellationToken);
+
+		string DisplayOrId(string? clerkUserId) =>
+			string.IsNullOrWhiteSpace(clerkUserId)
+				? string.Empty
+				: displayNames.TryGetValue(clerkUserId, out string? displayName) ? displayName : clerkUserId;
+
+		return new ScoreDto
+		{
+			Id = s.Id,
+			User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User.ClerkUserId) },
 		PlayerName = s.PlayerName,
 		Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed},
 		Value = s.Value,
@@ -264,10 +284,34 @@ public class ScoreController(
 		Title = s.Title,
 		Description = s.Description,
 		Status = s.Status,
-		ReviewedBy = s.ReviewedBy == null ? null : new UserDto { Id = s.ReviewedBy.Id, Username = s.ReviewedBy.Username },
+		ReviewedBy = s.ReviewedBy == null ? null : new UserDto { Id = s.ReviewedBy.Id, Username = DisplayOrId(s.ReviewedBy.ClerkUserId) },
 		ReviewedAt = s.ReviewedAt,
 		RejectionReason = s.RejectionReason
 	};
+	}
+
+	private async Task EnrichLeaderboardAsync(List<LeaderboardEntry> leaderboard, CancellationToken cancellationToken = default)
+	{
+		var ids = leaderboard
+			.Where(entry => entry.UserId.HasValue && !string.IsNullOrWhiteSpace(entry.UserName))
+			.Select(entry => entry.UserName!)
+			.Distinct(StringComparer.Ordinal)
+			.ToArray();
+		if (ids.Length == 0)
+		{
+			return;
+		}
+
+		var displayNames = await _clerkDirectory.GetDisplayNamesAsync(ids, cancellationToken);
+		foreach (LeaderboardEntry entry in leaderboard)
+		{
+			if (entry.UserId.HasValue && !string.IsNullOrWhiteSpace(entry.UserName) &&
+				displayNames.TryGetValue(entry.UserName!, out string? displayName))
+			{
+				entry.UserName = displayName;
+			}
+		}
+	}
 }
 
 /// <summary>

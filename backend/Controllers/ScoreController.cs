@@ -7,6 +7,7 @@ using System.Security.Claims;
 using Leaderboard.Models;
 using Leaderboard.Repositories;
 using Leaderboard.Dtos;
+using Leaderboard.Services;
 
 namespace Leaderboard.Controllers;
 
@@ -19,6 +20,7 @@ public class ScoreController(
 		IScoreRepository scoreRepository,
 		IGameRepository gameRepository,
 		IUserRepository userRepository,
+		IClerkDirectoryService clerkDirectoryService,
 		ILogger<ScoreController> logger
 	) : ControllerBase
 {
@@ -26,6 +28,7 @@ public class ScoreController(
 	private readonly IScoreRepository _scoreRepository = scoreRepository;
 	private readonly IGameRepository _gameRepository = gameRepository;
 	private readonly IUserRepository _userRepository = userRepository;
+	private readonly IClerkDirectoryService _clerkDirectory = clerkDirectoryService;
 	private readonly ILogger _logger = logger;
 
 	/// <summary>
@@ -90,6 +93,7 @@ public class ScoreController(
         try
         {
             var leaderboard = await _scoreRepository.GetLeaderboardAsync(gameId, limit);
+			await EnrichLeaderboardAsync(leaderboard);
 			return Ok(leaderboard);
         }
         catch (KeyNotFoundException ex)
@@ -147,6 +151,7 @@ public class ScoreController(
 		try
 		{
 			var leaderboard = await _scoreRepository.GetLeaderboardAsync(gameId, limit);
+			await EnrichLeaderboardAsync(leaderboard);
 			return Ok(new
             {
                 gameId,
@@ -175,10 +180,11 @@ public class ScoreController(
 		try
 		{
 			var scores = await _scoreRepository.GetScoresByUserAsync(userId, limit, offset);
+			var displayNames = await GetDisplayNamesAsync(scores.SelectMany(s => new[] { s.User?.ClerkUserId }));
 			var dtos = scores.Select(s => new ScoreDto
 			{
 				Id = s.Id,
-				User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = s.User?.Username ?? string.Empty },
+				User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User?.ClerkUserId, displayNames) },
 				PlayerName = s.PlayerName,
 				Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
 				Value = s.Value,
@@ -206,10 +212,11 @@ public class ScoreController(
 		try
 		{
 			var scores = await _scoreRepository.GetRecentScoresAsync(limit, offset);
+			var displayNames = await GetDisplayNamesAsync(scores.SelectMany(s => new[] { s.User?.ClerkUserId, s.ReviewedBy?.ClerkUserId }));
 			var dtos = scores.Select(s => new ScoreDto
 			{
 				Id = s.Id,
-				User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = s.User?.Username ?? string.Empty },
+				User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User?.ClerkUserId, displayNames) },
 				PlayerName = s.PlayerName,
 				Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
 				Value = s.Value,
@@ -217,7 +224,7 @@ public class ScoreController(
 				Title = s.Title,
 				Description = s.Description,
 				Status = s.Status,
-				ReviewedBy = s.ReviewedBy == null ? null : new UserDto { Id = s.ReviewedBy.Id, Username = s.ReviewedBy.Username },
+				ReviewedBy = s.ReviewedBy == null ? null : new UserDto { Id = s.ReviewedBy.Id, Username = DisplayOrId(s.ReviewedBy.ClerkUserId, displayNames) },
 				ReviewedAt = s.ReviewedAt,
 				RejectionReason = s.RejectionReason
 			}).ToList();
@@ -246,10 +253,11 @@ public class ScoreController(
 				return NotFound("Score not found.");
 			}
 
+			var displayNames = await GetDisplayNamesAsync(new[] { s.User?.ClerkUserId, s.ReviewedBy?.ClerkUserId });
 			var dto = new ScoreDto
 			{
 				Id = s.Id,
-				User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = s.User?.Username ?? string.Empty },
+				User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User?.ClerkUserId, displayNames) },
 				PlayerName = s.PlayerName,
 				Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
 				Value = s.Value,
@@ -257,7 +265,7 @@ public class ScoreController(
 				Title = s.Title,
 				Description = s.Description,
 				Status = s.Status,
-				ReviewedBy = s.ReviewedBy == null ? null : new UserDto { Id = s.ReviewedBy.Id, Username = s.ReviewedBy.Username },
+				ReviewedBy = s.ReviewedBy == null ? null : new UserDto { Id = s.ReviewedBy.Id, Username = DisplayOrId(s.ReviewedBy.ClerkUserId, displayNames) },
 				ReviewedAt = s.ReviewedAt,
 				RejectionReason = s.RejectionReason
 			};
@@ -306,10 +314,11 @@ public class ScoreController(
 		try
 		{
 			var scores = await _scoreRepository.GetAllSubmissionsAsync(limit, offset);
+			var displayNames = await GetDisplayNamesAsync(scores.SelectMany(s => new[] { s.User?.ClerkUserId, s.ReviewedBy?.ClerkUserId }));
 			var dtos = scores.Select(s => new ScoreDto
 			{
 				Id = s.Id,
-				User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = s.User?.Username ?? string.Empty },
+				User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User?.ClerkUserId, displayNames) },
 				PlayerName = s.PlayerName,
 				Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
 				Value = s.Value,
@@ -317,7 +326,7 @@ public class ScoreController(
 				Title = s.Title,
 				Description = s.Description,
 				Status = s.Status,
-				ReviewedBy = s.ReviewedBy == null ? null : new UserDto { Id = s.ReviewedBy.Id, Username = s.ReviewedBy.Username },
+				ReviewedBy = s.ReviewedBy == null ? null : new UserDto { Id = s.ReviewedBy.Id, Username = DisplayOrId(s.ReviewedBy.ClerkUserId, displayNames) },
 				ReviewedAt = s.ReviewedAt,
 				RejectionReason = s.RejectionReason
 			}).ToList();
@@ -348,10 +357,11 @@ public class ScoreController(
 		try
 		{
 			var scores = await _scoreRepository.GetAllScoresByUserAsync(userId, limit, offset);
+			var displayNames = await GetDisplayNamesAsync(scores.SelectMany(s => new[] { s.User?.ClerkUserId, s.ReviewedBy?.ClerkUserId }));
 			var dtos = scores.Select(s => new ScoreDto
 			{
 				Id = s.Id,
-				User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = s.User?.Username ?? string.Empty },
+				User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User?.ClerkUserId, displayNames) },
 				PlayerName = s.PlayerName,
 				Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
 				Value = s.Value,
@@ -359,7 +369,7 @@ public class ScoreController(
 				Title = s.Title,
 				Description = s.Description,
 				Status = s.Status,
-				ReviewedBy = s.ReviewedBy == null ? null : new UserDto { Id = s.ReviewedBy.Id, Username = s.ReviewedBy.Username },
+				ReviewedBy = s.ReviewedBy == null ? null : new UserDto { Id = s.ReviewedBy.Id, Username = DisplayOrId(s.ReviewedBy.ClerkUserId, displayNames) },
 				ReviewedAt = s.ReviewedAt,
 				RejectionReason = s.RejectionReason
 			}).ToList();
@@ -370,6 +380,51 @@ public class ScoreController(
 		{
 			_logger.LogError(ex, "Error retrieving user submissions.");
 			return StatusCode(500, "An error occurred while retrieving submissions.");
+		}
+	}
+
+	private async Task<IReadOnlyDictionary<string, string>> GetDisplayNamesAsync(
+		IEnumerable<string?> clerkUserIds,
+		CancellationToken cancellationToken = default)
+	{
+		var ids = clerkUserIds
+			.Where(id => !string.IsNullOrWhiteSpace(id))
+			.Select(id => id!)
+			.Distinct(StringComparer.Ordinal)
+			.ToArray();
+		if (ids.Length == 0)
+		{
+			return new Dictionary<string, string>(StringComparer.Ordinal);
+		}
+
+		return await _clerkDirectory.GetDisplayNamesAsync(ids, cancellationToken);
+	}
+
+	private static string DisplayOrId(string? clerkUserId, IReadOnlyDictionary<string, string> displayNames) =>
+		string.IsNullOrWhiteSpace(clerkUserId)
+			? string.Empty
+			: displayNames.TryGetValue(clerkUserId, out string? displayName) ? displayName : clerkUserId;
+
+	private async Task EnrichLeaderboardAsync(List<LeaderboardEntry> leaderboard, CancellationToken cancellationToken = default)
+	{
+		var ids = leaderboard
+			.Where(entry => entry.UserId.HasValue && !string.IsNullOrWhiteSpace(entry.UserName))
+			.Select(entry => entry.UserName!)
+			.Distinct(StringComparer.Ordinal)
+			.ToArray();
+		if (ids.Length == 0)
+		{
+			return;
+		}
+
+		var displayNames = await _clerkDirectory.GetDisplayNamesAsync(ids, cancellationToken);
+		foreach (LeaderboardEntry entry in leaderboard)
+		{
+			if (entry.UserId.HasValue && !string.IsNullOrWhiteSpace(entry.UserName) &&
+				displayNames.TryGetValue(entry.UserName!, out string? displayName))
+			{
+				entry.UserName = displayName;
+			}
 		}
 	}
 }

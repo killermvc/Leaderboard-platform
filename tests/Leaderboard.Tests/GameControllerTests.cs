@@ -2,6 +2,7 @@ using Leaderboard.Controllers;
 using Leaderboard.Dtos;
 using Leaderboard.Models;
 using Leaderboard.Repositories;
+using Leaderboard.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -23,7 +24,7 @@ public class GameControllerTests
 			Description = "Classic game",
 			ImageUrl = "https://example.test/arcade.png"
 		});
-		var controller = new GameController(repository.Object, Mock.Of<IUserRepository>());
+		var controller = new GameController(repository.Object, Mock.Of<IUserRepository>(), Mock.Of<IClerkDirectoryService>());
 
 		var result = await controller.GetGame(7);
 
@@ -38,7 +39,7 @@ public class GameControllerTests
 	{
 		var repository = new Mock<IGameRepository>();
 		repository.Setup(item => item.GetGameByIdAsync(7)).ReturnsAsync((Game?)null);
-		var controller = new GameController(repository.Object, Mock.Of<IUserRepository>());
+		var controller = new GameController(repository.Object, Mock.Of<IUserRepository>(), Mock.Of<IClerkDirectoryService>());
 
 		var result = await controller.GetGame(7);
 
@@ -52,7 +53,7 @@ public class GameControllerTests
 		repository.Setup(item => item.AddAsync(It.IsAny<Game>()))
 			.Callback<Game>(game => game.Id = 12)
 			.Returns(Task.CompletedTask);
-		var controller = new GameController(repository.Object, Mock.Of<IUserRepository>());
+		var controller = new GameController(repository.Object, Mock.Of<IUserRepository>(), Mock.Of<IClerkDirectoryService>());
 
 		var result = await controller.PostGame(new GameDto { Name = "Arcade", Description = "Classic game" , IsSubmitAllowed = true});
 
@@ -75,7 +76,7 @@ public class GameControllerTests
 			OwnerId = 8,
 			SubmitsAllowed = true
 		});
-		var controller = new GameController(repository.Object, Mock.Of<IUserRepository>());
+		var controller = new GameController(repository.Object, Mock.Of<IUserRepository>(), Mock.Of<IClerkDirectoryService>());
 		controller.ControllerContext = new ControllerContext
 		{
 			HttpContext = new DefaultHttpContext
@@ -106,7 +107,7 @@ public class GameControllerTests
 			Description = "Classic game",
 			OwnerId = 8
 		});
-		var controller = new GameController(repository.Object, Mock.Of<IUserRepository>());
+		var controller = new GameController(repository.Object, Mock.Of<IUserRepository>(), Mock.Of<IClerkDirectoryService>());
 		controller.ControllerContext = new ControllerContext
 		{
 			HttpContext = new DefaultHttpContext
