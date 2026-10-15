@@ -13,7 +13,8 @@ namespace Leaderboard.Services;
 
 public sealed class ClerkWebhookService(
 	AppDbContext dbContext,
-	IOptions<ClerkOptions> options) : IClerkWebhookService
+	IOptions<ClerkOptions> options,
+	ILogger<ClerkWebhookService> logger) : IClerkWebhookService
 {
 	private static readonly TimeSpan MaximumTimestampAge = TimeSpan.FromMinutes(5);
 
@@ -24,8 +25,11 @@ public sealed class ClerkWebhookService(
 		string signature,
 		CancellationToken cancellationToken = default)
 	{
-		if (!IsValidSignature(payload, eventId, timestamp, signature))
+		// eventId is the Svix delivery id (svix-id header), distinct from data.id (the Clerk user id).
+		string svixId = eventId;
+		if (!IsValidSignature(payload, svixId, timestamp, signature))
 		{
+			logger.LogWarning("Rejected Clerk webhook with invalid signature (svix-id: {SvixId}).", svixId);
 			return ClerkWebhookResult.InvalidSignature;
 		}
 
@@ -34,18 +38,21 @@ public sealed class ClerkWebhookService(
 			!document.RootElement.TryGetProperty("data", out JsonElement dataElement) ||
 			!dataElement.TryGetProperty("id", out JsonElement idElement))
 		{
+			logger.LogWarning("Rejected Clerk webhook with invalid payload (svix-id: {SvixId}).", svixId);
 			return ClerkWebhookResult.InvalidPayload;
 		}
 
 		string eventType = typeElement.GetString() ?? string.Empty;
 		string clerkUserId = idElement.GetString() ?? string.Empty;
-		if (string.IsNullOrWhiteSpace(eventId) || string.IsNullOrWhiteSpace(clerkUserId))
+		if (string.IsNullOrWhiteSpace(svixId) || string.IsNullOrWhiteSpace(clerkUserId))
 		{
+			logger.LogWarning("Rejected Clerk webhook with missing ids (svix-id: {SvixId}, type: {EventType}).", svixId, eventType);
 			return ClerkWebhookResult.InvalidPayload;
 		}
 
-		if (await dbContext.ClerkWebhookEvents.AnyAsync(item => item.Id == eventId, cancellationToken))
+		if (await dbContext.ClerkWebhookEvents.AnyAsync(item => item.Id == svixId, cancellationToken))
 		{
+			logger.LogInformation("Ignored duplicate Clerk webhook (svix-id: {SvixId}, type: {EventType}, user: {ClerkUserId}).", svixId, eventType, clerkUserId);
 			return ClerkWebhookResult.AlreadyProcessed;
 		}
 
@@ -95,8 +102,9 @@ public sealed class ClerkWebhookService(
 			}
 		}
 
-		dbContext.ClerkWebhookEvents.Add(new ClerkWebhookEvent { Id = eventId });
+		dbContext.ClerkWebhookEvents.Add(new ClerkWebhookEvent { Id = svixId });
 		await dbContext.SaveChangesAsync(cancellationToken);
+		logger.LogInformation("Processed Clerk webhook (svix-id: {SvixId}, type: {EventType}, user: {ClerkUserId}).", svixId, eventType, clerkUserId);
 		return ClerkWebhookResult.Processed;
 	}
 

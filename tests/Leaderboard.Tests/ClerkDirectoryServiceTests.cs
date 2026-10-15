@@ -43,6 +43,20 @@ public class ClerkDirectoryServiceTests
 	}
 
 	[Fact]
+	public async Task GetDisplayNameAsync_CachesSingleUserFetch()
+	{
+		var handler = new FakeHandler(_ => JsonResponse(new { id = "user_123", username = "alice" }));
+		var service = CreateService(handler, "sk_test_123");
+
+		string first = await service.GetDisplayNameAsync("user_123");
+		string second = await service.GetDisplayNameAsync("user_123");
+
+		Assert.Equal("alice", first);
+		Assert.Equal("alice", second);
+		Assert.Equal(1, handler.CallCount);
+	}
+
+	[Fact]
 	public async Task GetDisplayNamesAsync_WithoutSecretKey_FallsBackToIds()
 	{
 		var handler = new FakeHandler(_ => JsonResponse(new { id = "user_123", username = "alice" }));
@@ -55,7 +69,7 @@ public class ClerkDirectoryServiceTests
 	}
 
 	private static ClerkDirectoryService CreateService(FakeHandler handler, string secretKey) =>
-		new(new HttpClient(handler), Microsoft.Extensions.Options.Options.Create(new ClerkOptions { SecretKey = secretKey }));
+		new(new HttpClient(handler), Microsoft.Extensions.Options.Options.Create(new ClerkOptions { SecretKey = secretKey }), new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()));
 
 	private static HttpResponseMessage JsonResponse(object payload) =>
 		new(HttpStatusCode.OK)

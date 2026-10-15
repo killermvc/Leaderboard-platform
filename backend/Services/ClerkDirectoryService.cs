@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
 using Leaderboard.Options;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
 #pragma warning disable CS1591
@@ -9,8 +10,10 @@ namespace Leaderboard.Services;
 
 public sealed class ClerkDirectoryService(
 	HttpClient httpClient,
-	IOptions<ClerkOptions> options) : IClerkDirectoryService
+	IOptions<ClerkOptions> options,
+	IMemoryCache? cache = null) : IClerkDirectoryService
 {
+	private static readonly TimeSpan UserCacheLifetime = TimeSpan.FromMinutes(5);
 	public async Task<IReadOnlyList<ClerkDirectoryUser>> SearchUsersAsync(
 		string query,
 		int limit,
@@ -88,6 +91,12 @@ public sealed class ClerkDirectoryService(
 			return null;
 		}
 
+		string cacheKey = $"clerk:user:{clerkUserId}";
+		if (cache is not null && cache.TryGetValue<ClerkDirectoryUser>(cacheKey, out ClerkDirectoryUser? cached) && cached is not null)
+		{
+			return cached;
+		}
+
 		try
 		{
 			using var request = new HttpRequestMessage(
@@ -102,7 +111,12 @@ public sealed class ClerkDirectoryService(
 			}
 
 			using JsonDocument document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
-			return MapUser(document.RootElement);
+			ClerkDirectoryUser? user = MapUser(document.RootElement);
+			if (user is not null && cache is not null)
+			{
+				cache.Set(cacheKey, user, UserCacheLifetime);
+			}
+			return user;
 		}
 		catch (HttpRequestException)
 		{

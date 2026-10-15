@@ -32,11 +32,19 @@ public class AuthController : ControllerBase
 
 	/// <summary>
 	/// Promotes a user to administrator.
+	/// The first administrator can bootstrap itself: when no active admin exists,
+	/// any authenticated user may promote (typically themselves). Afterwards the Admin role is required.
 	///</summary>
 	[HttpPut("promote/{userId}")]
-	[Authorize(Roles = "Admin")]
+	[Authorize]
 	public async Task<IActionResult> PromoteToAdmin([FromRoute] int userId)
 	{
+		bool adminExists = await _userRepository.AnyUserInRoleAsync("Admin");
+		if (adminExists && !User.IsInRole("Admin"))
+		{
+			return Forbid();
+		}
+
 		User? user = await _userRepository.GetUserByIdAsync(userId);
 
 		if(user == null)
@@ -44,7 +52,8 @@ public class AuthController : ControllerBase
 			return NotFound(new {Message = "User not found"});
 		}
 
-		await _userRepository.AddRoleToUserAsync(user, new Role { Name = "Admin" });
+		Role adminRole = await _userRepository.GetOrCreateRoleByNameAsync("Admin");
+		await _userRepository.AddRoleToUserAsync(user, adminRole);
 
 		return Ok(new {Message = "User promoted to Admin successfully"});
 	}

@@ -37,19 +37,6 @@ export class GameModeratorsComponent implements OnInit {
   isAdmin = computed(() => this.authService.hasRole('Admin'));
 
   ngOnInit() {
-    // Debug: log token and role check
-    const token = localStorage.getItem('lb_token');
-    if (token) {
-      const parts = token.split('.');
-      if (parts.length >= 2) {
-        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-        console.log('JWT Payload:', payload);
-        console.log('Role claim:', payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']);
-      }
-    }
-    console.log('isAdmin():', this.isAdmin());
-    console.log('hasRole("Admin"):', this.authService.hasRole('Admin'));
-
     if (!this.isAdmin()) {
       this.router.navigate(['/']);
       return;

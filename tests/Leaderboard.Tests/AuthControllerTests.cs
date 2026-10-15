@@ -27,6 +27,35 @@ public class AuthControllerTests
 		Assert.Equal("user_123", response.Value.GetType().GetProperty("ClerkUserId")!.GetValue(response.Value));
 	}
 
+	[Fact]
+	public async Task PromoteToAdmin_WhenNoAdminExists_AllowsAuthenticatedBootstrap()
+	{
+		var users = new Mock<IUserRepository>();
+		users.Setup(item => item.AnyUserInRoleAsync("Admin")).ReturnsAsync(false);
+		users.Setup(item => item.GetUserByIdAsync(7)).ReturnsAsync(new User { Id = 7, ClerkUserId = "user_7" });
+		users.Setup(item => item.GetOrCreateRoleByNameAsync("Admin")).ReturnsAsync(new Role { Id = 1, Name = "Admin" });
+		var controller = new AuthController(users.Object, Mock.Of<IScoreRepository>(), Mock.Of<IClerkDirectoryService>());
+		controller.ControllerContext = CreateContext("7");
+
+		var result = await controller.PromoteToAdmin(7);
+
+		Assert.IsType<OkObjectResult>(result);
+		users.Verify(item => item.AddRoleToUserAsync(It.IsAny<User>(), It.Is<Role>(r => r.Name == "Admin" && r.Id == 1)), Times.Once);
+	}
+
+	[Fact]
+	public async Task PromoteToAdmin_WhenAdminExists_ForbidsNonAdmin()
+	{
+		var users = new Mock<IUserRepository>();
+		users.Setup(item => item.AnyUserInRoleAsync("Admin")).ReturnsAsync(true);
+		var controller = new AuthController(users.Object, Mock.Of<IScoreRepository>(), Mock.Of<IClerkDirectoryService>());
+		controller.ControllerContext = CreateContext("7");
+
+		var result = await controller.PromoteToAdmin(7);
+
+		Assert.IsType<ForbidResult>(result);
+	}
+
 	private static ControllerContext CreateContext(string userId) => new()
 	{
 		HttpContext = new DefaultHttpContext

@@ -49,7 +49,7 @@ export class HomePage implements OnInit {
   private fetchMyScores(): void {
     this.loadingMine = true;
     this.myError = '';
-    const userId = this.authService.getUserIdFromToken();
+    const userId = this.authService.currentUserIdSig();
 
     if (!userId) {
       this.loadingMine = false;

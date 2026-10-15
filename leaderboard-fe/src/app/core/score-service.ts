@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { AuthService } from './auth-service';
 
 export interface LeaderboardEntry {
   /** Null for a score sent by a game client, which is identified by its player name. */
@@ -62,14 +61,13 @@ export class ScoreService {
   // Fallback guards the rare case where scoreApiUrl is omitted in environment files.
   private readonly baseUrl = environment.scoreApiUrl ?? environment.apiUrl.replace(/\/auth$/, '/score');
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(private http: HttpClient) {}
 
   submitScore(gameId: number, score: number, title?: string, description?: string): Observable<string> {
     const payload: Record<string, unknown> = { gameId, score };
     if (title) payload['title'] = title;
     if (description) payload['description'] = description;
     return this.http.post<string>(`${this.baseUrl}/submit`, payload, {
-      ...this.getAuthOptions(),
       responseType: 'text' as 'json',
     });
   }
@@ -129,8 +127,7 @@ export class ScoreService {
   getMySubmissions(limit = 20, offset = 0): Observable<ScoreRecord[]> {
     const params = this.buildPaginationParams(limit, offset);
     return this.http.get<ScoreRecord[]>(`${this.baseUrl}/scores/my-submissions`, {
-      params,
-      ...this.getAuthOptions()
+      params
     });
   }
 
@@ -138,9 +135,5 @@ export class ScoreService {
     return new HttpParams()
       .set('limit', limit.toString())
       .set('offset', offset.toString());
-  }
-
-  private getAuthOptions(): { headers?: HttpHeaders } {
-    return this.authService.getAuthHeaders() as { headers?: HttpHeaders };
   }
 }

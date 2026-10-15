@@ -21,4 +21,9 @@ public sealed class ClerkOptions
 	/// Gets or sets the Clerk webhook signing secret.
 	/// </summary>
 	public string WebhookSecret { get; set; } = string.Empty;
+	/// <summary>
+	/// Comma-separated Clerk user IDs that are granted the Admin role on first sign-in.
+	/// Used to bootstrap the first administrator.
+	/// </summary>
+	public string AdminSeedClerkIds { get; set; } = string.Empty;
 }

@@ -7,6 +7,6 @@
 				Register an account to start uploading scores and competing with the community.
 			</p>
 		</header>
-		<clerk-sign-up [props]="{ routing: 'path', path: '/auth/register', signInUrl: '/auth/login' }" />
+		<clerk-sign-up [props]="{ routing: 'path', path: '/auth/register', signInUrl: '/auth/login', fallbackRedirectUrl: '/' }" />
 	</div>
 </section>

@@ -40,7 +40,7 @@ export class GameDetail implements OnInit {
   isAdmin = computed(() => this.authService.hasRole('Admin'));
   canConfigure = computed(() => {
     const currentGame = this.game();
-    const currentUserId = Number(this.authService.getUserIdFromToken());
+    const currentUserId = this.authService.currentUserIdSig();
     return this.isAdmin() || (!!currentGame?.ownerId && currentGame.ownerId === currentUserId);
   });
 

@@ -45,4 +45,13 @@ public interface IUserRepository
 	/// <param name="user">The user to modify.</param>
 	/// <param name="role">The role to add.</param>
 	public Task AddRoleToUserAsync(User user, Role role);
+	/// <summary>
+	/// Gets an existing role by name, or creates it when missing.
+	/// </summary>
+	/// <param name="roleName">The role name.</param>
+	public Task<Role> GetOrCreateRoleByNameAsync(string roleName);
+	/// <summary>
+	/// Returns true when at least one active user holds the named role.
+	/// </summary>
+	public Task<bool> AnyUserInRoleAsync(string roleName);
 }

@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using Leaderboard.Models;
+using Leaderboard.Options;
 using Leaderboard.Repositories;
+using Microsoft.Extensions.Options;
 
 namespace Leaderboard.Middleware;
 
@@ -14,7 +16,7 @@ public sealed class ClerkUserMiddleware(RequestDelegate next)
 	/// <summary>
 	/// Processes the HTTP request to map the Clerk user to a local user in the database.
 	/// </summary>
-	public async Task InvokeAsync(HttpContext context, IUserRepository userRepository)
+	public async Task InvokeAsync(HttpContext context, IUserRepository userRepository, IOptions<ClerkOptions>? clerkOptions = null)
 	{
 		string? clerkUserId = GetClerkUserId(context.User);
 		if (context.User.Identity?.IsAuthenticated == true &&
@@ -33,6 +35,8 @@ public sealed class ClerkUserMiddleware(RequestDelegate next)
 				context.Response.StatusCode = StatusCodes.Status403Forbidden;
 				return;
 			}
+
+			await EnsureSeedAdminAsync(user, clerkOptions, userRepository);
 
 			var identity = (ClaimsIdentity)context.User.Identity!;
 			foreach (Claim claim in identity.FindAll(ClaimTypes.Name).ToList())
@@ -54,5 +58,36 @@ public sealed class ClerkUserMiddleware(RequestDelegate next)
 	{
 		return principal.FindFirstValue("sub")
 			?? principal.FindFirstValue(ClaimTypes.NameIdentifier);
+	}
+
+	private static async Task EnsureSeedAdminAsync(User user, IOptions<ClerkOptions>? clerkOptions, IUserRepository userRepository)
+	{
+		string seeds = clerkOptions?.Value.AdminSeedClerkIds ?? string.Empty;
+		if (string.IsNullOrWhiteSpace(seeds) ||
+			string.IsNullOrWhiteSpace(user.ClerkUserId))
+		{
+			return;
+		}
+
+		bool isSeed = seeds.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+			.Any(id => string.Equals(id, user.ClerkUserId, StringComparison.Ordinal));
+		if (!isSeed)
+		{
+			return;
+		}
+
+		bool alreadyAdmin = user.UserRoles.Any(ur => ur.Role is not null && ur.Role.Name == "Admin");
+		if (alreadyAdmin)
+		{
+			return;
+		}
+
+		Role adminRole = await userRepository.GetOrCreateRoleByNameAsync("Admin");
+		await userRepository.AddRoleToUserAsync(user, adminRole);
+		User? refreshed = await userRepository.GetUserByClerkIdAsync(user.ClerkUserId);
+		if (refreshed is not null)
+		{
+			user.UserRoles = refreshed.UserRoles;
+		}
 	}
 }

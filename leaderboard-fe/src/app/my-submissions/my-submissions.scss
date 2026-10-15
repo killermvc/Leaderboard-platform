@@ -1,3 +1,9 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #040b1c 0%, #091937 55%, #071520 100%);
+}
+
 .my-submissions-container {
   max-width: 900px;
   margin: 0 auto;
@@ -24,7 +30,7 @@
 .auth-warning {
   text-align: center;
   padding: 3rem;
-  background: linear-gradient(180deg, rgba(3,19,40,0.6), rgba(8,30,45,0.6));
+  background: rgba(5, 12, 26, 0.85);
   color: rgba(226, 243, 255, 0.95);
   border-radius: 8px;
 
@@ -66,7 +72,7 @@
 }
 
 .stat-card {
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  background: rgba(5, 12, 26, 0.85);
   padding: 1.5rem;
   border-radius: 8px;
   text-align: center;
@@ -106,7 +112,7 @@
 }
 
 .submission-card {
-  background: linear-gradient(180deg, rgba(6,18,30,0.6), rgba(8,24,38,0.6));
+  background: rgba(5, 12, 26, 0.85);
   border-radius: 8px;
   padding: 1.25rem;
   box-shadow: 0 6px 24px rgba(2, 8, 23, 0.6);

@@ -16,6 +16,7 @@ export const appConfig: ApplicationConfig = {
       publishableKey: environment.clerkPublishableKey,
       signInUrl: '/auth/login',
       signUpUrl: '/auth/register',
+      afterSignOutUrl: '/',
     }),
     provideHttpClient(withInterceptors([clerkAuthInterceptor]))
   ]

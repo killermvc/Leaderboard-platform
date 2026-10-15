@@ -129,7 +129,7 @@ public class ClerkWebhookServiceTests
 	}
 
 	private static ClerkWebhookService CreateService(AppDbContext context) =>
-		new(context, Microsoft.Extensions.Options.Options.Create(new ClerkOptions { WebhookSecret = Secret }));
+		new(context, Microsoft.Extensions.Options.Options.Create(new ClerkOptions { WebhookSecret = Secret }), Microsoft.Extensions.Logging.Abstractions.NullLogger<ClerkWebhookService>.Instance);
 
 	private static string Payload(string eventType, string clerkUserId) =>
 		$"{{\"type\":\"{eventType}\",\"data\":{{\"id\":\"{clerkUserId}\"}}}}";

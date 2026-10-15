@@ -56,6 +56,7 @@ if(builder.Configuration["Cors:Origins"] is not null)
 
 
 builder.Services.AddControllers();
+builder.Services.AddMemoryCache();
 builder.Services.Configure<RateLimitOptions>(builder.Configuration.GetSection("RateLimiting"));
 builder.Services.Configure<ClerkOptions>(builder.Configuration.GetSection(ClerkOptions.SectionName));
 
@@ -113,7 +114,12 @@ if (app.Environment.IsDevelopment())
 	app.MapScalarApiReference();
 }
 
-//app.UseHttpsRedirection();
+if(app.Environment.IsProduction())
+{
+	app.UseHttpsRedirection();
+}
+
+app.UseCors();
 
 app.UseAuthentication();
 app.UseMiddleware<ClerkUserMiddleware>();
@@ -121,7 +127,6 @@ app.UseMiddleware<GameClientRateLimitingMiddleware>();
 app.UseMiddleware<ApiKeyAuthenticationMiddleware>();
 app.UseAuthorization();
 
-app.UseCors();
 
 app.MapControllers();
 

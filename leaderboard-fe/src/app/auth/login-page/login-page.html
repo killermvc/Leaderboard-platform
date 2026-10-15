@@ -5,6 +5,6 @@
 			<h1>Sign in to keep competing</h1>
 			<p class="lede">Connect your account to record scores and view your rankings.</p>
 		</header>
-		<clerk-sign-in [props]="{ routing: 'path', path: '/auth/login', signUpUrl: '/auth/register' }" />
+		<clerk-sign-in [props]="{ routing: 'path', path: '/auth/login', signUpUrl: '/auth/register', fallbackRedirectUrl: '/' }" />
 	</div>
 </section>

@@ -16,7 +16,7 @@ namespace Leaderboard.Tests;
 public class UsersControllerTests
 {
     [Fact]
-    public async Task Search_ReturnsUsersFromClerkDirectoryEvenIfNotInLocalDb()
+    public async Task Search_ReturnsOnlyLocallyKnownUsersWithoutCreating()
     {
         // Arrange
         var clerkDirectoryMock = new Mock<IClerkDirectoryService>();
@@ -32,14 +32,13 @@ public class UsersControllerTests
                 new ClerkDirectoryUser("clerk_2", "Bob")
             });
 
-        // GetOrCreateUserByClerkIdAsync returns existing user for clerk_1, creates new for clerk_2
+        // Only clerk_1 exists locally; clerk_2 must NOT be created on search
         userRepositoryMock
-            .Setup(x => x.GetOrCreateUserByClerkIdAsync("clerk_1"))
-            .ReturnsAsync(new User { Id = 1, ClerkUserId = "clerk_1", IsActive = true, CreatedAt = DateTime.UtcNow });
-
-        userRepositoryMock
-            .Setup(x => x.GetOrCreateUserByClerkIdAsync("clerk_2"))
-            .ReturnsAsync(new User { Id = 2, ClerkUserId = "clerk_2", IsActive = true, CreatedAt = DateTime.UtcNow });
+            .Setup(x => x.GetUsersByClerkIdsAsync(It.IsAny<IReadOnlyCollection<string>>()))
+            .ReturnsAsync(new List<User>
+            {
+                new User { Id = 1, ClerkUserId = "clerk_1", IsActive = true, CreatedAt = DateTime.UtcNow }
+            });
 
         scoreRepositoryMock
             .Setup(x => x.GetScoresByUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>()))
@@ -58,10 +57,10 @@ public class UsersControllerTests
         var users = Assert.IsAssignableFrom<IEnumerable<UserDto>>(okResult.Value);
         var userList = users.ToList();
 
-        // Should return BOTH users from Clerk, not just the one in local DB
-        Assert.Equal(2, userList.Count);
-        Assert.Contains(userList, u => u.Username == "Alice");
-        Assert.Contains(userList, u => u.Username == "Bob");
+        Assert.Single(userList);
+        Assert.Equal("Alice", userList[0].Username);
+        userRepositoryMock.Verify(x => x.GetOrCreateUserByClerkIdAsync(It.IsAny<string>()), Times.Never);
+        userRepositoryMock.Verify(x => x.AddUserAsync(It.IsAny<User>()), Times.Never);
     }
 
     [Fact]
@@ -83,12 +82,12 @@ public class UsersControllerTests
 
         // Both users exist locally, but one is inactive
         userRepositoryMock
-            .Setup(x => x.GetOrCreateUserByClerkIdAsync("clerk_active"))
-            .ReturnsAsync(new User { Id = 1, ClerkUserId = "clerk_active", IsActive = true, CreatedAt = DateTime.UtcNow });
-
-        userRepositoryMock
-            .Setup(x => x.GetOrCreateUserByClerkIdAsync("clerk_inactive"))
-            .ReturnsAsync(new User { Id = 2, ClerkUserId = "clerk_inactive", IsActive = false, CreatedAt = DateTime.UtcNow });
+            .Setup(x => x.GetUsersByClerkIdsAsync(It.IsAny<IReadOnlyCollection<string>>()))
+            .ReturnsAsync(new List<User>
+            {
+                new User { Id = 1, ClerkUserId = "clerk_active", IsActive = true, CreatedAt = DateTime.UtcNow },
+                new User { Id = 2, ClerkUserId = "clerk_inactive", IsActive = false, CreatedAt = DateTime.UtcNow }
+            });
 
         scoreRepositoryMock
             .Setup(x => x.GetScoresByUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>()))
@@ -110,5 +109,13 @@ public class UsersControllerTests
         // Should only return active user
         Assert.Single(userList);
         Assert.Equal("Active User", userList[0].Username);
+    }
+
+    [Fact]
+    public void Search_RequiresAuthorization()
+    {
+        var method = typeof(UsersController).GetMethod(nameof(UsersController.Search));
+        var hasAuthorize = method!.GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute), inherit: true).Length > 0;
+        Assert.True(hasAuthorize);
     }
 }

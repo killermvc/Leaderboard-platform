@@ -15,74 +15,86 @@ import { ScorePostComponent } from './score-post/score-post';
 import { ApiKeysComponent } from './api-keys/api-keys';
 import { NewGame } from './new-game/new-game';
 import { GameConfigure } from './game-configure/game-configure';
+import { requireAuth, requireGuest } from './core/clerk-guards';
 
 export const routes: Routes = [
-	  {
-		path: 'auth/register',
-		component: RegisterPage
-	  },
-	  {
-		path: 'auth/register/:step',
-		component: RegisterPage
-	  },
-	  {
-		path: 'auth/login',
-		component: LoginPage
-	  },
-	  {
-		path: 'auth/login/:step',
-		component: LoginPage
-	  },
-	  {
-		path: 'auth/account',
-		component: AccountSettings
-	  },
-	  {
-		path: 'scores/:id',
-		component: ScorePostComponent
-	  },
-	  {
-		path: 'games',
-		component: Games
-	  },
-	  {
-		path: 'games/new',
-		component: NewGame
-	  },
-	  {
-		path: 'games/:id/moderators',
-		component: GameModeratorsComponent
-	  },
-	  {
-		path: 'games/:id/configure',
-		component: GameConfigure
-	  },
-	  {
-		path: 'games/:id/pending-scores',
-		component: PendingScoresComponent
-	  },
-	  {
-		path: 'games/:id/api-keys',
-		component: ApiKeysComponent
-	  },
-	  {
-		path: 'games/:id',
-		component: GameDetail
-	  },
-	  {
-		path: 'my-submissions',
-		component: MySubmissionsComponent
-	  },
-	  {
-		path: 'search',
-		component: SearchResults
-	  },
-	  {
-		path: 'user/:id',
-		component: UserProfileComponent
-	  },
-	  {
-		path: '',
-		component: HomePage
-	  }
+  {
+    path: 'auth/register',
+    component: RegisterPage,
+    canActivate: [requireGuest]
+  },
+  {
+    path: 'auth/register/:step',
+    component: RegisterPage,
+    canActivate: [requireGuest]
+  },
+  {
+    path: 'auth/login',
+    component: LoginPage,
+    canActivate: [requireGuest]
+  },
+  {
+    path: 'auth/login/:step',
+    component: LoginPage,
+    canActivate: [requireGuest]
+  },
+  {
+    path: 'auth/account',
+    component: AccountSettings,
+    canActivate: [requireAuth]
+  },
+  {
+    path: 'scores/:id',
+    component: ScorePostComponent
+  },
+  {
+    path: 'games',
+    component: Games
+  },
+  {
+    path: 'games/new',
+    component: NewGame,
+    canActivate: [requireAuth]
+  },
+  {
+    path: 'games/:id/moderators',
+    component: GameModeratorsComponent,
+    canActivate: [requireAuth]
+  },
+  {
+    path: 'games/:id/configure',
+    component: GameConfigure,
+    canActivate: [requireAuth]
+  },
+  {
+    path: 'games/:id/pending-scores',
+    component: PendingScoresComponent,
+    canActivate: [requireAuth]
+  },
+  {
+    path: 'games/:id/api-keys',
+    component: ApiKeysComponent,
+    canActivate: [requireAuth]
+  },
+  {
+    path: 'games/:id',
+    component: GameDetail
+  },
+  {
+    path: 'my-submissions',
+    component: MySubmissionsComponent,
+    canActivate: [requireAuth]
+  },
+  {
+    path: 'search',
+    component: SearchResults
+  },
+  {
+    path: 'user/:id',
+    component: UserProfileComponent
+  },
+  {
+    path: '',
+    component: HomePage
+  }
 ];

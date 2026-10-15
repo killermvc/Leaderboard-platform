@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of } from 'rxjs';
 
@@ -22,8 +23,7 @@ describe('Games', () => {
     gameService.getAllGames.and.returnValue(of(games));
     gameService.getGamesByPlayer.and.returnValue(of([games[0]]));
 
-    authService = jasmine.createSpyObj('AuthService', ['getUserIdFromToken', 'isAuthenticated', 'hasRole']);
-    authService.getUserIdFromToken.and.returnValue('42');
+    authService = jasmine.createSpyObj('AuthService', ['isAuthenticated', 'hasRole'], { currentUserIdSig: signal(42) });
     authService.isAuthenticated.and.returnValue(true);
     authService.hasRole.and.returnValue(false);
 

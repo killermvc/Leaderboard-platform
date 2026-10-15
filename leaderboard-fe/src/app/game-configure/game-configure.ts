@@ -215,7 +215,7 @@ export class GameConfigure implements OnInit {
   }
 
   private canManage(game: Game): boolean {
-    const userId = Number(this.authService.getUserIdFromToken());
+    const userId = this.authService.currentUserIdSig();
     return this.isAdmin() || (!!game.ownerId && game.ownerId === userId);
   }
 

@@ -99,13 +99,51 @@ public class UserRepository(AppDbContext context) : IUserRepository
 	/// <returns>A task representing the asynchronous operation.</returns>
 	public async Task AddRoleToUserAsync(User user, Role role)
 	{
+		Role persisted = role.Id == 0
+			? await GetOrCreateRoleByNameAsync(role.Name)
+			: role;
+
+		bool alreadyHas = await _context.UserRoles.AnyAsync(ur => ur.UserId == user.Id && ur.RoleId == persisted.Id);
+		if (alreadyHas)
+		{
+			return;
+		}
+
 		var userRole = new UserRole
 		{
 			UserId = user.Id,
-			RoleId = role.Id
+			RoleId = persisted.Id
 		};
 		await _context.UserRoles.AddAsync(userRole);
 		await _context.SaveChangesAsync();
+	}
+
+	/// <summary>
+	/// Gets an existing role by name, or creates it when missing.
+	/// </summary>
+	public async Task<Role> GetOrCreateRoleByNameAsync(string roleName)
+	{
+		Role? role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
+		if (role is not null)
+		{
+			return role;
+		}
+
+		role = new Role { Name = roleName };
+		_context.Roles.Add(role);
+		await _context.SaveChangesAsync();
+		return role;
+	}
+
+	/// <summary>
+	/// Returns true when at least one active user holds the named role.
+	/// </summary>
+	public Task<bool> AnyUserInRoleAsync(string roleName)
+	{
+		return _context.UserRoles
+			.Include(ur => ur.Role)
+			.Include(ur => ur.User)
+			.AnyAsync(ur => ur.Role != null && ur.Role.Name == roleName && ur.User != null && ur.User.IsActive);
 	}
 
 }

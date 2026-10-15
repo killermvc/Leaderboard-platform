@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { of } from 'rxjs';
 
 import { HomePage } from './home-page';
@@ -15,7 +16,7 @@ describe('HomePage', () => {
   };
 
   const authServiceMock = {
-    getUserIdFromToken: jasmine.createSpy('getUserIdFromToken').and.returnValue('1'),
+    currentUserIdSig: signal(1),
     isAuthenticated: jasmine.createSpy('isAuthenticated').and.returnValue(true),
   };
 

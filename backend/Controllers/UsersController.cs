@@ -2,6 +2,7 @@ using Leaderboard.Dtos;
 using Leaderboard.Models;
 using Leaderboard.Repositories;
 using Leaderboard.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 #pragma warning disable CS1591
@@ -16,6 +17,7 @@ public sealed class UsersController(
 	IScoreRepository scoreRepository) : ControllerBase
 {
 	[HttpGet("search")]
+	[Authorize]
 	public async Task<IActionResult> Search(
 		[FromQuery] string q,
 		[FromQuery] int limit = 20,
@@ -28,25 +30,31 @@ public sealed class UsersController(
 
 		try
 		{
-			IReadOnlyList<ClerkDirectoryUser> clerkUsers = await clerkDirectoryService.SearchUsersAsync(q, limit, cancellationToken);
+			IReadOnlyList<ClerkDirectoryUser> clerkUsers = await clerkDirectoryService.SearchUsersAsync(q, Math.Clamp(limit, 1, 50), cancellationToken);
+
+			var clerkIds = clerkUsers
+				.Select(u => u.ClerkUserId)
+				.Where(id => !string.IsNullOrWhiteSpace(id))
+				.Distinct(StringComparer.Ordinal)
+				.ToList();
+			List<User> localUsers = clerkIds.Count == 0
+				? []
+				: await userRepository.GetUsersByClerkIdsAsync(clerkIds);
+			var localByClerkId = localUsers.ToDictionary(u => u.ClerkUserId!, StringComparer.Ordinal);
 
 			var results = new List<UserDto>();
 			foreach (ClerkDirectoryUser clerkUser in clerkUsers)
 			{
-				// Get or create local user for this Clerk user
-				User user = await userRepository.GetOrCreateUserByClerkIdAsync(clerkUser.ClerkUserId);
+				// Never create local users on search: only surface users already known locally.
+				if (!localByClerkId.TryGetValue(clerkUser.ClerkUserId, out User? user))
+				{
+					continue;
+				}
 
 				// Skip inactive users (deleted in Clerk)
 				if (!user.IsActive)
 				{
 					continue;
-				}
-
-				// Keep the stored avatar in sync with Clerk (covers users created before webhook sync)
-				if (clerkUser.ImageUrl != user.ProfileImageUrl)
-				{
-					user.ProfileImageUrl = clerkUser.ImageUrl;
-					await userRepository.UpdateUserAsync(user);
 				}
 
 				var scores = await scoreRepository.GetScoresByUserAsync(user.Id, 1000, 0);

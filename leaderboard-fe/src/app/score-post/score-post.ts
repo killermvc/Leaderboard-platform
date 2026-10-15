@@ -31,10 +31,7 @@ export class ScorePostComponent implements OnInit {
   rejectionReason = signal('');
 
   isAuthenticated = computed(() => this.authService.isAuthenticated());
-  currentUserId = computed(() => {
-    const id = this.authService.getUserIdFromToken();
-    return id ? Number(id) : null;
-  });
+  currentUserId = computed(() => this.authService.currentUserIdSig());
 
   isPending = computed(() => this.score()?.status === ScoreStatus.Pending);
   isApproved = computed(() => this.score()?.status === ScoreStatus.Approved);

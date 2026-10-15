@@ -12,7 +12,7 @@ describe('AuthService', () => {
   const clerk = {
     isLoaded: signal(true),
     isSignedIn: signal(true),
-    getToken: jasmine.createSpy('getToken').and.resolveTo('fresh-token'),
+    user: signal(null),
     signOut: jasmine.createSpy('signOut').and.resolveTo()
   };
 
@@ -26,19 +26,21 @@ describe('AuthService', () => {
     });
     service = TestBed.inject(AuthService);
     httpTesting = TestBed.inject(HttpTestingController);
-    localStorage.setItem('lb_token', 'header.eyJleHAiOjF9.signature');
   });
 
   afterEach(() => {
     httpTesting.verify();
-    localStorage.removeItem('lb_token');
   });
 
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
 
-  it('stays authenticated when Clerk has refreshed an expired cached token', () => {
+  it('stays authenticated when Clerk reports signed-in', () => {
     expect(service.isAuthenticated()).toBeTrue();
+  });
+
+  it('does not touch localStorage for tokens', () => {
+    expect(localStorage.getItem('lb_token')).toBeNull();
   });
 });

@@ -47,7 +47,7 @@ export class Games implements OnInit {
   }
 
   loadGames() {
-    const userId = this.authService.getUserIdFromToken();
+    const userId = this.authService.currentUserIdSig();
     if (this.showSubmittedOnly() && !userId) {
       this.games.set([]);
       return;
