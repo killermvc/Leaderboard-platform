@@ -69,7 +69,7 @@ namespace Leaderboard.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ApiKeys");
+                    b.ToTable("ApiKeys", (string)null);
                 });
 
             modelBuilder.Entity("Leaderboard.Models.ClerkWebhookEvent", b =>
@@ -83,7 +83,7 @@ namespace Leaderboard.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ClerkWebhookEvents");
+                    b.ToTable("ClerkWebhookEvents", (string)null);
                 });
 
             modelBuilder.Entity("Leaderboard.Models.Game", b =>
@@ -118,7 +118,7 @@ namespace Leaderboard.Migrations
 
                     b.HasIndex("OwnerId");
 
-                    b.ToTable("Games");
+                    b.ToTable("Games", (string)null);
                 });
 
             modelBuilder.Entity("Leaderboard.Models.GameModerator", b =>
@@ -145,7 +145,7 @@ namespace Leaderboard.Migrations
                     b.HasIndex("GameId", "UserId")
                         .IsUnique();
 
-                    b.ToTable("GameModerators");
+                    b.ToTable("GameModerators", (string)null);
                 });
 
             modelBuilder.Entity("Leaderboard.Models.Role", b =>
@@ -162,7 +162,7 @@ namespace Leaderboard.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles");
+                    b.ToTable("Roles", (string)null);
                 });
 
             modelBuilder.Entity("Leaderboard.Models.Score", b =>
@@ -225,7 +225,7 @@ namespace Leaderboard.Migrations
                     b.HasIndex("GameId", "SubmissionId")
                         .IsUnique();
 
-                    b.ToTable("Scores");
+                    b.ToTable("Scores", (string)null);
                 });
 
             modelBuilder.Entity("Leaderboard.Models.User", b =>
@@ -255,7 +255,7 @@ namespace Leaderboard.Migrations
                     b.HasIndex("ClerkUserId")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("Leaderboard.Models.UserRole", b =>
@@ -270,7 +270,7 @@ namespace Leaderboard.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("UserRoles");
+                    b.ToTable("UserRoles", (string)null);
                 });
 
             modelBuilder.Entity("Leaderboard.Models.ApiKey", b =>

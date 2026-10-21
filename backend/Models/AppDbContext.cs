@@ -108,9 +108,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 		modelBuilder.Entity<GameModerator>()
 			.HasIndex(gm => new { gm.GameId, gm.UserId })
 			.IsUnique();
-
-		// Seed the Admin role so role lookups succeed on fresh databases.
-		modelBuilder.Entity<Role>().HasData(new Role { Id = 1, Name = "Admin" });
     }
 }
 
