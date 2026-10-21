@@ -2,7 +2,7 @@ using Scalar.AspNetCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Microsoft.AspNetCore.OpenApi;
 using StackExchange.Redis;
 using System.Security.Claims;
@@ -140,7 +140,7 @@ internal sealed class BearerSecuritySchemeTransformer(Microsoft.AspNetCore.Authe
         var authenticationSchemes = await authenticationSchemeProvider.GetAllSchemesAsync();
         if (authenticationSchemes.Any(authScheme => authScheme.Name == "Bearer"))
         {
-            var requirements = new Dictionary<string, OpenApiSecurityScheme>
+            var requirements = new Dictionary<string, IOpenApiSecurityScheme>
             {
                 ["Bearer"] = new OpenApiSecurityScheme
                 {
@@ -162,20 +162,34 @@ internal sealed class BearerSecuritySchemeTransformer(Microsoft.AspNetCore.Authe
 
             foreach (var path in document.Paths)
             {
-                foreach (var operation in path.Value.Operations)
+                var pathItem = path.Value;
+                if (pathItem is null)
                 {
-                    bool isGameClientEndpoint = path.Key.StartsWith("/api/v1/", StringComparison.OrdinalIgnoreCase);
-                    operation.Value.Security.Clear();
-                    operation.Value.Security.Add(new OpenApiSecurityRequirement
+                    continue;
+                }
+
+                var operations = pathItem.Operations;
+                if (operations is null)
+                {
+                    continue;
+                }
+
+                foreach (var operation in operations)
+                {
+                    var operationItem = operation.Value;
+                    if (operationItem is null)
                     {
-                        [new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Id = isGameClientEndpoint ? ApiKeyAuthenticationMiddleware.HeaderName : "Bearer",
-                                Type = ReferenceType.SecurityScheme
-                            }
-                        }] = Array.Empty<string>()
+                        continue;
+                    }
+
+                    bool isGameClientEndpoint = path.Key.StartsWith("/api/v1/", StringComparison.OrdinalIgnoreCase);
+                    operationItem.Security ??= [];
+                    operationItem.Security.Clear();
+                    operationItem.Security.Add(new OpenApiSecurityRequirement
+                    {
+                        [new OpenApiSecuritySchemeReference(
+                            isGameClientEndpoint ? ApiKeyAuthenticationMiddleware.HeaderName : "Bearer",
+                            document)] = new List<string>()
                     });
                 }
             }

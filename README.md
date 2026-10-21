@@ -20,7 +20,7 @@ A real-time leaderboard platform with an ASP.NET Core 9.0 backend and Angular 21
 
 | Layer | Technology |
 |---|---|
-| Backend Runtime | .NET 9.0 |
+| Backend Runtime | .NET 10.0 |
 | Backend Framework | ASP.NET Core Web API |
 | Frontend | Angular 21 (Standalone Components, Signals) |
 | Database | MySQL 8.0 (EF Core + Pomelo) |
