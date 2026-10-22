@@ -121,6 +121,8 @@ if(app.Environment.IsProduction())
 
 app.UseCors();
 
+app.UseMiddleware<ErrorHandlingMiddleware>();
+
 app.UseAuthentication();
 app.UseMiddleware<ClerkUserMiddleware>();
 app.UseMiddleware<GameClientRateLimitingMiddleware>();

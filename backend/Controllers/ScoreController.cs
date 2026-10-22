@@ -8,6 +8,8 @@ using Leaderboard.Models;
 using Leaderboard.Repositories;
 using Leaderboard.Dtos;
 using Leaderboard.Services;
+using Leaderboard.Exceptions;
+using Leaderboard.Errors;
 
 namespace Leaderboard.Controllers;
 
@@ -41,45 +43,29 @@ public class ScoreController(
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            throw new ValidationException(ErrorCodes.ValidationFailed, "Invalid request data.", ModelState);
         }
 
         var userIdClaim = User.Identity?.Name;
 
 		if (!int.TryParse(userIdClaim, out int userId))
         {
-            return Unauthorized("Invalid user token.");
+            throw new UnauthorizedException(ErrorCodes.InvalidToken, "Invalid user token.");
         }
 
-        try
+        var game = await _gameRepository.GetGameByIdAsync(request.GameId);
+        if (game is null)
         {
-			var game = await _gameRepository.GetGameByIdAsync(request.GameId);
-			if (game is null)
-			{
-				return NotFound("Game not found.");
-			}
-			if (!game.SubmitsAllowed)
-			{
-				return BadRequest("Submissions are not allowed for this game.");
-			}
+            throw new NotFoundException(ErrorCodes.GameNotFound, "Game not found.");
+        }
+        if (!game.SubmitsAllowed)
+        {
+            throw new ValidationException(ErrorCodes.SubmissionsNotAllowed, "Submissions are not allowed for this game.");
+        }
 
-            // Submit the score through the repository
-            await _scoreRepository.SubmitScoreAsync(userId, request.GameId, request.Score, request.Title, request.Description);
-            return Ok("Score submitted successfully.");
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(ex.Message);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error submitting score.");
-            return StatusCode(500, "An error occurred while submitting the score.");
-        }
+        // Submit the score through the repository
+        await _scoreRepository.SubmitScoreAsync(userId, request.GameId, request.Score, request.Title, request.Description);
+        return Ok("Score submitted successfully.");
     }
 
 	/// <summary>
@@ -98,12 +84,7 @@ public class ScoreController(
         }
         catch (KeyNotFoundException ex)
         {
-            return NotFound(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving leaderboard.");
-            return StatusCode(500, "An error occurred while retrieving the leaderboard.");
+            throw new NotFoundException(ErrorCodes.GameNotFound, ex.Message);
         }
     }
 
@@ -115,30 +96,17 @@ public class ScoreController(
 	[Route("leaderboard/{gameId}/rank/{userId}")]
 	public async Task<IActionResult> GetRank(int gameId, int userId)
 	{
-		try
+		var rank = await _scoreRepository.GetRankAsync(gameId, userId);
+		if(rank == null)
 		{
-			var rank = await _scoreRepository.GetRankAsync(gameId, userId);
-			if(rank == null)
-			{
-				return NotFound("User not found in leaderboard.");
-			}
-			return Ok(new
-            {
-                gameId,
-                userId,
-                rank
-            });
-
+			throw new NotFoundException(ErrorCodes.ScoreNotFound, "User not found in leaderboard.");
 		}
-		catch (KeyNotFoundException ex)
-		{
-			return NotFound(ex.Message);
-		}
-		catch (Exception ex)
-		{
-			_logger.LogError(ex, "Error retrieving rank.");
-			return StatusCode(500, "An error occurred while retrieving the rank.");
-		}
+		return Ok(new
+        {
+            gameId,
+            userId,
+            rank
+        });
 	}
 
 	/// <summary>
@@ -148,26 +116,14 @@ public class ScoreController(
 	[Route("leaderboard/{gameId}/top/{limit}")]
 	public async Task<IActionResult> GetTopPlayers(int gameId, int limit)
 	{
-		try
-		{
-			var leaderboard = await _scoreRepository.GetLeaderboardAsync(gameId, limit);
-			await EnrichLeaderboardAsync(leaderboard);
-			return Ok(new
-            {
-                gameId,
-				limit,
-                leaderboard
-            });
-		}
-		catch (KeyNotFoundException ex)
-		{
-			return NotFound(ex.Message);
-		}
-		catch (Exception ex)
-		{
-			_logger.LogError(ex, "Error retrieving leaderboard.");
-			return StatusCode(500, "An error occurred while retrieving the leaderboard.");
-		}
+		var leaderboard = await _scoreRepository.GetLeaderboardAsync(gameId, limit);
+		await EnrichLeaderboardAsync(leaderboard);
+		return Ok(new
+        {
+            gameId,
+			limit,
+            leaderboard
+        });
 	}
 
 	/// <summary>
@@ -177,29 +133,21 @@ public class ScoreController(
 	[Route("scores/user/{userId}")]
 	public async Task<IActionResult> GetScoresByUser(int userId, [FromQuery] int limit = 10, [FromQuery] int offset = 0)
 	{
-		try
+		var scores = await _scoreRepository.GetScoresByUserAsync(userId, limit, offset);
+		var displayNames = await GetDisplayNamesAsync(scores.SelectMany(s => new[] { s.User?.ClerkUserId }));
+		var dtos = scores.Select(s => new ScoreDto
 		{
-			var scores = await _scoreRepository.GetScoresByUserAsync(userId, limit, offset);
-			var displayNames = await GetDisplayNamesAsync(scores.SelectMany(s => new[] { s.User?.ClerkUserId }));
-			var dtos = scores.Select(s => new ScoreDto
-			{
-				Id = s.Id,
-				User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User?.ClerkUserId, displayNames) },
-				PlayerName = s.PlayerName,
-				Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
-				Value = s.Value,
-				DateAchieved = s.DateAchieved,
-				Title = s.Title,
-				Description = s.Description
-			}).ToList();
+			Id = s.Id,
+			User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User?.ClerkUserId, displayNames) },
+			PlayerName = s.PlayerName,
+			Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
+			Value = s.Value,
+			DateAchieved = s.DateAchieved,
+			Title = s.Title,
+			Description = s.Description
+		}).ToList();
 
-			return Ok(dtos);
-		}
-		catch (Exception ex)
-		{
-			_logger.LogError(ex, "Error retrieving scores by user.");
-			return StatusCode(500, "An error occurred while retrieving the scores.");
-		}
+		return Ok(dtos);
 	}
 
 	/// <summary>
@@ -209,33 +157,25 @@ public class ScoreController(
 	[Route("scores/recent")]
 	public async Task<IActionResult> GetRecentScores([FromQuery] int limit = 10, [FromQuery] int offset = 0)
 	{
-		try
+		var scores = await _scoreRepository.GetRecentScoresAsync(limit, offset);
+		var displayNames = await GetDisplayNamesAsync(scores.SelectMany(s => new[] { s.User?.ClerkUserId, s.ReviewedBy?.ClerkUserId }));
+		var dtos = scores.Select(s => new ScoreDto
 		{
-			var scores = await _scoreRepository.GetRecentScoresAsync(limit, offset);
-			var displayNames = await GetDisplayNamesAsync(scores.SelectMany(s => new[] { s.User?.ClerkUserId, s.ReviewedBy?.ClerkUserId }));
-			var dtos = scores.Select(s => new ScoreDto
-			{
-				Id = s.Id,
-				User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User?.ClerkUserId, displayNames) },
-				PlayerName = s.PlayerName,
-				Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
-				Value = s.Value,
-				DateAchieved = s.DateAchieved,
-				Title = s.Title,
-				Description = s.Description,
-				Status = s.Status,
-				ReviewedBy = s.ReviewedBy == null ? null : new UserDto { Id = s.ReviewedBy.Id, Username = DisplayOrId(s.ReviewedBy.ClerkUserId, displayNames) },
-				ReviewedAt = s.ReviewedAt,
-				RejectionReason = s.RejectionReason
-			}).ToList();
+			Id = s.Id,
+			User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User?.ClerkUserId, displayNames) },
+			PlayerName = s.PlayerName,
+			Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
+			Value = s.Value,
+			DateAchieved = s.DateAchieved,
+			Title = s.Title,
+			Description = s.Description,
+			Status = s.Status,
+			ReviewedBy = s.ReviewedBy == null ? null : new UserDto { Id = s.ReviewedBy.Id, Username = DisplayOrId(s.ReviewedBy.ClerkUserId, displayNames) },
+			ReviewedAt = s.ReviewedAt,
+			RejectionReason = s.RejectionReason
+		}).ToList();
 
-			return Ok(dtos);
-		}
-		catch (Exception ex)
-		{
-			_logger.LogError(ex, "Error retrieving recent scores.");
-			return StatusCode(500, "An error occurred while retrieving the recent scores.");
-		}
+		return Ok(dtos);
 	}
 
 	/// <summary>
@@ -245,38 +185,30 @@ public class ScoreController(
 	[Route("scores/{scoreId}")]
 	public async Task<IActionResult> GetScoreById(int scoreId)
 	{
-		try
+		var s = await _scoreRepository.GetByIdAsync(scoreId);
+		if (s == null)
 		{
-			var s = await _scoreRepository.GetByIdAsync(scoreId);
-			if (s == null)
-			{
-				return NotFound("Score not found.");
-			}
-
-			var displayNames = await GetDisplayNamesAsync(new[] { s.User?.ClerkUserId, s.ReviewedBy?.ClerkUserId });
-			var dto = new ScoreDto
-			{
-				Id = s.Id,
-				User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User?.ClerkUserId, displayNames) },
-				PlayerName = s.PlayerName,
-				Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
-				Value = s.Value,
-				DateAchieved = s.DateAchieved,
-				Title = s.Title,
-				Description = s.Description,
-				Status = s.Status,
-				ReviewedBy = s.ReviewedBy == null ? null : new UserDto { Id = s.ReviewedBy.Id, Username = DisplayOrId(s.ReviewedBy.ClerkUserId, displayNames) },
-				ReviewedAt = s.ReviewedAt,
-				RejectionReason = s.RejectionReason
-			};
-
-			return Ok(dto);
+			throw new NotFoundException(ErrorCodes.ScoreNotFound, "Score not found.");
 		}
-		catch (Exception ex)
+
+		var displayNames = await GetDisplayNamesAsync(new[] { s.User?.ClerkUserId, s.ReviewedBy?.ClerkUserId });
+		var dto = new ScoreDto
 		{
-			_logger.LogError(ex, "Error retrieving score.");
-			return StatusCode(500, "An error occurred while retrieving the score.");
-		}
+			Id = s.Id,
+			User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User?.ClerkUserId, displayNames) },
+			PlayerName = s.PlayerName,
+			Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
+			Value = s.Value,
+			DateAchieved = s.DateAchieved,
+			Title = s.Title,
+			Description = s.Description,
+			Status = s.Status,
+			ReviewedBy = s.ReviewedBy == null ? null : new UserDto { Id = s.ReviewedBy.Id, Username = DisplayOrId(s.ReviewedBy.ClerkUserId, displayNames) },
+			ReviewedAt = s.ReviewedAt,
+			RejectionReason = s.RejectionReason
+		};
+
+		return Ok(dto);
 	}
 
 	/// <summary>
@@ -287,21 +219,13 @@ public class ScoreController(
 	[Route("scores/lookup")]
 	public async Task<IActionResult> LookupScore([FromQuery] int gameId, [FromQuery] int userId)
 	{
-		try
+		var score = await _scoreRepository.GetTopScoreByUserAndGameAsync(gameId, userId);
+		if (score == null)
 		{
-			var score = await _scoreRepository.GetTopScoreByUserAndGameAsync(gameId, userId);
-			if (score == null)
-			{
-				return NotFound("No approved score found for this user in this game.");
-			}
+			throw new NotFoundException(ErrorCodes.ScoreNotFound, "No approved score found for this user in this game.");
+		}
 
-			return Ok(new { scoreId = score.Id });
-		}
-		catch (Exception ex)
-		{
-			_logger.LogError(ex, "Error looking up score.");
-			return StatusCode(500, "An error occurred while looking up the score.");
-		}
+		return Ok(new { scoreId = score.Id });
 	}
 
 	/// <summary>
@@ -311,33 +235,25 @@ public class ScoreController(
 	[Route("scores/submissions")]
 	public async Task<IActionResult> GetAllSubmissions([FromQuery] int limit = 20, [FromQuery] int offset = 0)
 	{
-		try
+		var scores = await _scoreRepository.GetAllSubmissionsAsync(limit, offset);
+		var displayNames = await GetDisplayNamesAsync(scores.SelectMany(s => new[] { s.User?.ClerkUserId, s.ReviewedBy?.ClerkUserId }));
+		var dtos = scores.Select(s => new ScoreDto
 		{
-			var scores = await _scoreRepository.GetAllSubmissionsAsync(limit, offset);
-			var displayNames = await GetDisplayNamesAsync(scores.SelectMany(s => new[] { s.User?.ClerkUserId, s.ReviewedBy?.ClerkUserId }));
-			var dtos = scores.Select(s => new ScoreDto
-			{
-				Id = s.Id,
-				User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User?.ClerkUserId, displayNames) },
-				PlayerName = s.PlayerName,
-				Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
-				Value = s.Value,
-				DateAchieved = s.DateAchieved,
-				Title = s.Title,
-				Description = s.Description,
-				Status = s.Status,
-				ReviewedBy = s.ReviewedBy == null ? null : new UserDto { Id = s.ReviewedBy.Id, Username = DisplayOrId(s.ReviewedBy.ClerkUserId, displayNames) },
-				ReviewedAt = s.ReviewedAt,
-				RejectionReason = s.RejectionReason
-			}).ToList();
+			Id = s.Id,
+			User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User?.ClerkUserId, displayNames) },
+			PlayerName = s.PlayerName,
+			Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
+			Value = s.Value,
+			DateAchieved = s.DateAchieved,
+			Title = s.Title,
+			Description = s.Description,
+			Status = s.Status,
+			ReviewedBy = s.ReviewedBy == null ? null : new UserDto { Id = s.ReviewedBy.Id, Username = DisplayOrId(s.ReviewedBy.ClerkUserId, displayNames) },
+			ReviewedAt = s.ReviewedAt,
+			RejectionReason = s.RejectionReason
+		}).ToList();
 
-			return Ok(dtos);
-		}
-		catch (Exception ex)
-		{
-			_logger.LogError(ex, "Error retrieving submissions.");
-			return StatusCode(500, "An error occurred while retrieving submissions.");
-		}
+		return Ok(dtos);
 	}
 
 	/// <summary>
@@ -351,36 +267,28 @@ public class ScoreController(
 		var userIdClaim = User.Identity?.Name;
 		if (!int.TryParse(userIdClaim, out int userId))
 		{
-			return Unauthorized("Invalid user token.");
+			throw new UnauthorizedException(ErrorCodes.InvalidToken, "Invalid user token.");
 		}
 
-		try
+		var scores = await _scoreRepository.GetAllScoresByUserAsync(userId, limit, offset);
+		var displayNames = await GetDisplayNamesAsync(scores.SelectMany(s => new[] { s.User?.ClerkUserId, s.ReviewedBy?.ClerkUserId }));
+		var dtos = scores.Select(s => new ScoreDto
 		{
-			var scores = await _scoreRepository.GetAllScoresByUserAsync(userId, limit, offset);
-			var displayNames = await GetDisplayNamesAsync(scores.SelectMany(s => new[] { s.User?.ClerkUserId, s.ReviewedBy?.ClerkUserId }));
-			var dtos = scores.Select(s => new ScoreDto
-			{
-				Id = s.Id,
-				User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User?.ClerkUserId, displayNames) },
-				PlayerName = s.PlayerName,
-				Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
-				Value = s.Value,
-				DateAchieved = s.DateAchieved,
-				Title = s.Title,
-				Description = s.Description,
-				Status = s.Status,
-				ReviewedBy = s.ReviewedBy == null ? null : new UserDto { Id = s.ReviewedBy.Id, Username = DisplayOrId(s.ReviewedBy.ClerkUserId, displayNames) },
-				ReviewedAt = s.ReviewedAt,
-				RejectionReason = s.RejectionReason
-			}).ToList();
+			Id = s.Id,
+			User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User?.ClerkUserId, displayNames) },
+			PlayerName = s.PlayerName,
+			Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
+			Value = s.Value,
+			DateAchieved = s.DateAchieved,
+			Title = s.Title,
+			Description = s.Description,
+			Status = s.Status,
+			ReviewedBy = s.ReviewedBy == null ? null : new UserDto { Id = s.ReviewedBy.Id, Username = DisplayOrId(s.ReviewedBy.ClerkUserId, displayNames) },
+			ReviewedAt = s.ReviewedAt,
+			RejectionReason = s.RejectionReason
+		}).ToList();
 
-			return Ok(dtos);
-		}
-		catch (Exception ex)
-		{
-			_logger.LogError(ex, "Error retrieving user submissions.");
-			return StatusCode(500, "An error occurred while retrieving submissions.");
-		}
+		return Ok(dtos);
 	}
 
 	private async Task<IReadOnlyDictionary<string, string>> GetDisplayNamesAsync(
