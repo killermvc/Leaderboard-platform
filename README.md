@@ -95,7 +95,7 @@ Key settings in `backend/appsettings.json`:
 | `ConnectionStrings:Redis` | Redis connection string | `localhost` |
 | `Clerk:SecretKey` | Clerk Backend API secret key for user search | Environment variable only |
 | `Clerk:WebhookSecret` | Clerk webhook signing secret | Environment variable only |
-| `Jwt:Key` | HMAC-SHA256 signing key | _(hardcoded — change for production)_ |
+| `Jwt:Key` | HMAC-SHA256 signing key | Change for production |
 | `Jwt:Issuer` | JWT issuer | `YourIssuer` |
 | `Jwt:Audience` | JWT audience | `YourAudience` |
 | `Clerk:Issuer` | Clerk token issuer; enables Clerk authentication when non-empty | _(empty)_ |
@@ -107,13 +107,8 @@ Key settings in `backend/appsettings.json`:
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| POST | `/register` | — | Register a new user |
-| POST | `/login` | — | Login, returns JWT |
 | GET | `/me` | Yes | Get current user |
-| GET | `/search?q=` | — | Search users by username |
 | GET | `/user/{userId}` | — | Public user profile |
-| PUT | `/` | Yes | Change password |
-| PUT | `/username` | Yes | Update username |
 | PUT | `/promote/{userId}` | Admin | Promote user to Admin |
 
 ### Game (`/api/game`)
