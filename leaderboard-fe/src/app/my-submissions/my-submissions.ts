@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { ScoreService, ScoreRecord, ScoreStatus } from '../core/score-service';
 import { AuthService } from '../core/auth-service';
+import { TranslationService } from '../core/translation.service';
 
 @Component({
   selector: 'app-my-submissions',
@@ -15,6 +16,7 @@ export class MySubmissionsComponent implements OnInit {
   private scoreService = inject(ScoreService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private translationService = inject(TranslationService);
 
   submissions = signal<ScoreRecord[]>([]);
   loading = signal(true);
@@ -29,6 +31,11 @@ export class MySubmissionsComponent implements OnInit {
 
   // Expose enum for template
   ScoreStatus = ScoreStatus;
+
+  rejectionReasonLabel = signal('Reason:');
+  noReasonLabel = signal('No reason provided.');
+  rejectedOnLabel = signal('Rejected on');
+  approvedOnLabel = signal('Approved on');
 
   ngOnInit() {
     if (!this.isAuthenticated()) {
@@ -96,7 +103,8 @@ export class MySubmissionsComponent implements OnInit {
 
   formatDate(dateString: string): string {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    const locale = this.translationService.getLanguage() === 'es' ? 'es-ES' : 'en-US';
+    return date.toLocaleDateString(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',

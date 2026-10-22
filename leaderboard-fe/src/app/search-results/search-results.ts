@@ -30,6 +30,10 @@ export class SearchResults implements OnInit {
   ownId = this.auth.currentUserIdSig;
   ownAvatarUrl = computed(() => this.clerk.user()?.imageUrl ?? null);
 
+  scoresLabel = signal('scores');
+  gamesLabel = signal('games');
+  joinedLabel = signal('Joined');
+
   filteredGames = computed(() => {
     const query = this.searchQuery().toLowerCase();
     const allGames = this.games();

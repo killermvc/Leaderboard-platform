@@ -2,26 +2,26 @@
   @if (loading()) {
     <div class="loading">
       <div class="loading-spinner"></div>
-      <p>Loading profile...</p>
+      <p i18n="@@userProfile.loading">Loading profile...</p>
     </div>
   } @else if (error()) {
     <div class="error">
       <p>{{ error() }}</p>
-      <button (click)="router.navigate(['/'])">Go Home</button>
+      <button (click)="router.navigate(['/'])" i18n="@@userProfile.goHome">Go Home</button>
     </div>
   } @else if (userProfile()) {
     <!-- Profile Header -->
     <header class="profile-header">
       <div class="avatar">
         @if (avatarUrl()) {
-          <img [src]="avatarUrl()" alt="Profile picture" class="avatar-img" />
+          <img [src]="avatarUrl()" alt="Profile picture" class="avatar-img" i18n-alt="@@userProfile.profilePicture" />
         } @else {
           <span class="avatar-icon">👤</span>
         }
       </div>
       <div class="profile-info">
         <h1 class="username">{{ userProfile()!.username }}</h1>
-        <p class="joined">Member since {{ formatDate(userProfile()!.createdAt) }}</p>
+        <p class="joined">{{ memberSinceLabel() }} {{ formatDate(userProfile()!.createdAt) }}</p>
       </div>
     </header>
 
@@ -29,22 +29,22 @@
     <section class="stats-overview">
       <div class="stat-card">
         <span class="stat-value">{{ userProfile()!.totalScoresSubmitted }}</span>
-        <span class="stat-label">Scores Submitted</span>
+        <span class="stat-label" i18n="@@userProfile.scoresSubmitted">Scores Submitted</span>
       </div>
       <div class="stat-card">
         <span class="stat-value">{{ userProfile()!.gamesPlayedCount }}</span>
-        <span class="stat-label">Games Played</span>
+        <span class="stat-label" i18n="@@userProfile.gamesPlayed">Games Played</span>
       </div>
       <div class="stat-card">
         <span class="stat-value">{{ getTimeAgo(userProfile()!.createdAt) }}</span>
-        <span class="stat-label">Joined</span>
+        <span class="stat-label" i18n="@@userProfile.joined">Joined</span>
       </div>
     </section>
 
     <!-- Game Rankings -->
     @if (userProfile()!.gameRankings.length > 0) {
       <section class="section">
-        <h2>🏆 Game Rankings</h2>
+        <h2 i18n="@@userProfile.gameRankings">🏆 Game Rankings</h2>
         <div class="rankings-grid">
           @for (ranking of userProfile()!.gameRankings; track ranking.gameId) {
             <div class="ranking-card" (click)="viewGame(ranking.gameId)">
@@ -57,11 +57,11 @@
               <div class="ranking-stats">
                 <div class="ranking-stat">
                   <span class="value">{{ ranking.bestScore | number }}</span>
-                  <span class="label">Best Score</span>
+                  <span class="label" i18n="@@userProfile.bestScore">Best Score</span>
                 </div>
                 <div class="ranking-stat">
                   <span class="value">{{ ranking.scoresSubmitted }}</span>
-                  <span class="label">Submissions</span>
+                  <span class="label" i18n="@@userProfile.submissions">Submissions</span>
                 </div>
               </div>
             </div>
@@ -73,7 +73,7 @@
     <!-- Recent Scores -->
     @if (userProfile()!.recentScores.length > 0) {
       <section class="section">
-        <h2>📊 Recent Activity</h2>
+        <h2 i18n="@@userProfile.recentActivity">📊 Recent Activity</h2>
         <div class="scores-list">
           @for (score of userProfile()!.recentScores; track score.id) {
             <div class="score-item" (click)="viewGame(score.gameId)">
@@ -91,7 +91,7 @@
     <!-- Empty State -->
     @if (userProfile()!.gameRankings.length === 0) {
       <section class="empty-state">
-        <p>This user hasn't submitted any scores yet.</p>
+        <p i18n="@@userProfile.noScores">This user hasn't submitted any scores yet.</p>
       </section>
     }
   }

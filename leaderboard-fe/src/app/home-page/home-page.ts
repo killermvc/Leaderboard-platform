@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ScoreService, ScoreRecord } from '../core/score-service';
@@ -20,6 +20,10 @@ export class HomePage implements OnInit {
   recentError = '';
   myError = '';
 
+  anonymousPlayer = signal('Anonymous player');
+  gameLabel = signal('Game:');
+  recordedOnLabel = signal('Recorded on');
+
   constructor(private scoreService: ScoreService, public authService: AuthService, private router: Router) {}
 
   ngOnInit(): void {
@@ -40,7 +44,7 @@ export class HomePage implements OnInit {
         this.loadingRecent = false;
       },
       error: () => {
-        this.recentError = 'No se pudieron cargar los scores recientes.';
+        this.recentError = 'Failed to load recent scores.';
         this.loadingRecent = false;
       }
     });
@@ -63,7 +67,7 @@ export class HomePage implements OnInit {
         this.loadingMine = false;
       },
       error: () => {
-        this.myError = 'No se pudieron cargar tus scores.';
+        this.myError = 'Failed to load your scores.';
         this.loadingMine = false;
       }
     });

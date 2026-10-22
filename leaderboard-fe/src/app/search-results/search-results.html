@@ -1,22 +1,22 @@
 <div class="search-container">
-  <h1>Search Results</h1>
+  <h1 i18n="@@searchResults.title">Search Results</h1>
 
   @if (searchQuery()) {
-    <p class="search-query">Searching for: "{{ searchQuery() }}"</p>
+    <p class="search-query" i18n="@@searchResults.searchingFor">Searching for: "{{ searchQuery() }}"</p>
   }
 
   @if (loading()) {
-    <div class="loading">Loading...</div>
+    <div class="loading" i18n="@@searchResults.loading">Loading...</div>
   } @else {
     @if (!hasResults()) {
       <div class="no-results">
-        <p>No results found for "{{ searchQuery() }}"</p>
+        <p i18n="@@searchResults.noResults">No results found for "{{ searchQuery() }}"</p>
       </div>
     } @else {
       <!-- Games Results -->
       @if (filteredGames().length > 0) {
         <section class="results-section">
-          <h2>Games ({{ filteredGames().length }})</h2>
+          <h2 i18n="@@searchResults.games">Games ({{ filteredGames().length }})</h2>
           <div class="games-grid">
             @for (game of filteredGames(); track game.id) {
               <app-game-card
@@ -31,26 +31,26 @@
       <!-- Users Results -->
       @if (filteredUsers().length > 0) {
         <section class="results-section">
-          <h2>Users ({{ filteredUsers().length }})</h2>
+          <h2 i18n="@@searchResults.users">Users ({{ filteredUsers().length }})</h2>
           <div class="users-grid">
             @for (user of filteredUsers(); track user.id) {
               <div class="user-card" (click)="viewUser(user.id)">
                 @if (user.profileImageUrl) {
-                  <img [src]="user.profileImageUrl" alt="Profile picture" class="user-avatar" />
+                  <img [src]="user.profileImageUrl" alt="Profile picture" class="user-avatar" i18n-alt="@@searchResults.profilePicture" />
                 } @else if (user.id === ownId() && ownAvatarUrl()) {
-                  <img [src]="ownAvatarUrl()" alt="Profile picture" class="user-avatar" />
+                  <img [src]="ownAvatarUrl()" alt="Profile picture" class="user-avatar" i18n-alt="@@searchResults.profilePicture" />
                 } @else {
                   <div class="user-icon">👤</div>
                 }
                 <div class="user-info">
                   <span class="username">{{ user.username }}</span>
                   <div class="user-stats">
-                    <span class="stat">{{ user.scoresCount ?? 0 }} scores</span>
+                    <span class="stat">{{ user.scoresCount ?? 0 }} {{ scoresLabel() }}</span>
                     <span class="stat-separator">•</span>
-                    <span class="stat">{{ user.gamesPlayedCount ?? 0 }} games</span>
+                    <span class="stat">{{ user.gamesPlayedCount ?? 0 }} {{ gamesLabel() }}</span>
                   </div>
                   @if (user.createdAt) {
-                    <span class="joined">Joined {{ getTimeAgo(user.createdAt) }}</span>
+                    <span class="joined">{{ joinedLabel() }} {{ getTimeAgo(user.createdAt) }}</span>
                   }
                 </div>
               </div>

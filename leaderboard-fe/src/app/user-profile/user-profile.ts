@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { UserService, UserProfile, GameRanking, UserScore } from '../core/user-service';
 import { AuthService } from '../core/auth-service';
 import { ClerkService } from 'ngx-clerk';
+import { TranslationService } from '../core/translation.service';
 
 @Component({
   selector: 'app-user-profile',
@@ -18,6 +19,7 @@ export class UserProfileComponent implements OnInit {
   public router = inject(Router);
   private clerk = inject(ClerkService);
   private auth = inject(AuthService);
+  private translationService = inject(TranslationService);
 
   userProfile = signal<UserProfile | null>(null);
   loading = signal<boolean>(true);
@@ -89,12 +91,23 @@ export class UserProfileComponent implements OnInit {
 
   formatDate(dateString: string): string {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    const locale = this.translationService.getLanguage() === 'es' ? 'es-ES' : 'en-US';
+    return date.toLocaleDateString(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     });
   }
+
+  memberSinceLabel = signal('Member since');
+  scoresSubmittedLabel = signal('Scores Submitted');
+  gamesPlayedLabel = signal('Games Played');
+  joinedLabel = signal('Joined');
+  gameRankingsLabel = signal('Game Rankings');
+  bestScoreLabel = signal('Best Score');
+  submissionsLabel = signal('Submissions');
+  recentActivityLabel = signal('Recent Activity');
+  noScoresLabel = signal('This user hasn\'t submitted any scores yet.');
 
   getRankDisplay(rank: number | null): string {
     if (rank === null) return 'Unranked';

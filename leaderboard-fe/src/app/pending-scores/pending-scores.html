@@ -1,39 +1,39 @@
 <div class="pending-scores-container">
   <header class="page-header">
-    <button class="back-btn" (click)="goBackToGame()">← Back to Game</button>
+    <button class="back-btn" (click)="goBackToGame()" i18n="@@pendingScores.backToGame">← Back to Game</button>
     @if (game(); as gameData) {
-      <h1>⏳ Pending Scores for {{ gameData.name }}</h1>
-      <p class="subtitle">Review and approve or reject submitted scores for this game</p>
+      <h1 i18n="@@pendingScores.titleGame">⏳ Pending Scores for {{ gameData.name }}</h1>
+      <p class="subtitle" i18n="@@pendingScores.subtitleGame">Review and approve or reject submitted scores for this game</p>
     } @else {
-      <h1>⏳ Pending Score Approvals</h1>
-      <p class="subtitle">Review and approve or reject submitted scores</p>
+      <h1 i18n="@@pendingScores.title">⏳ Pending Score Approvals</h1>
+      <p class="subtitle" i18n="@@pendingScores.subtitle">Review and approve or reject submitted scores</p>
     }
   </header>
 
   @if (loading()) {
     <div class="loading-state">
-      <p>Loading pending scores...</p>
+      <p i18n="@@pendingScores.loading">Loading pending scores...</p>
     </div>
   } @else if (error()) {
     <div class="error-state">
       <p>{{ error() }}</p>
-      <button class="btn-primary" routerLink="/">Go Home</button>
+      <button class="btn-primary" routerLink="/" i18n="@@pendingScores.goHome">Go Home</button>
     </div>
   } @else if (pendingScores().length === 0) {
     <div class="empty-state">
-      <p>🎉 No pending scores to review!</p>
-      <p class="hint">All scores have been processed.</p>
+      <p i18n="@@pendingScores.noPending">🎉 No pending scores to review!</p>
+      <p class="hint" i18n="@@pendingScores.allProcessed">All scores have been processed.</p>
     </div>
   } @else {
     <div class="scores-table-container">
       <table class="scores-table">
         <thead>
           <tr>
-            <th>Post</th>
-            <th>Player</th>
-            <th>Score</th>
-            <th>Submitted</th>
-            <th>Actions</th>
+            <th i18n="@@pendingScores.thPost">Post</th>
+            <th i18n="@@pendingScores.thPlayer">Player</th>
+            <th i18n="@@pendingScores.thScore">Score</th>
+            <th i18n="@@pendingScores.thSubmitted">Submitted</th>
+            <th i18n="@@pendingScores.thActions">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -51,21 +51,21 @@
                     {{ score.user.username }}
                   </button>
                 } @else {
-                  <span class="player-name">{{ score.playerName ?? 'Unknown player' }}</span>
+                  <span class="player-name">{{ score.playerName ?? unknownPlayer() }}</span>
                 }
               </td>
               <td class="score-value">{{ score.value | number }}</td>
               <td class="date">{{ formatDate(score.dateAchieved) }}</td>
               <td class="actions">
                 @if (processingScoreId() === score.id) {
-                  <span class="processing-indicator">Processing...</span>
+                  <span class="processing-indicator" i18n="@@pendingScores.processing">Processing...</span>
                 } @else if (score.user?.id === currentUserId()) {
-                  <span class="self-score-badge">Self Score</span>
+                  <span class="self-score-badge" i18n="@@pendingScores.selfScore">Self Score</span>
                 } @else {
-                  <button class="btn-approve" (click)="approveScore(score.id)" title="Approve">
+                  <button class="btn-approve" (click)="approveScore(score.id)" title="Approve" i18n="@@pendingScores.approveTitle">
                     ✅ Approve
                   </button>
-                  <button class="btn-reject" (click)="openRejectModal(score.id)" title="Reject">
+                  <button class="btn-reject" (click)="openRejectModal(score.id)" title="Reject" i18n="@@pendingScores.rejectBtn">
                     ❌ Reject
                   </button>
                 }
@@ -81,23 +81,24 @@
   @if (showRejectModal()) {
     <div class="modal-overlay" (click)="closeRejectModal()">
       <div class="modal-content" (click)="$event.stopPropagation()">
-        <h2>Reject Score</h2>
-        <p>Are you sure you want to reject this score?</p>
+        <h2 i18n="@@pendingScores.rejectTitle">Reject Score</h2>
+        <p i18n="@@pendingScores.rejectPrompt">Are you sure you want to reject this score?</p>
 
         <div class="form-group">
-          <label for="rejectionReason">Reason (optional):</label>
+          <label for="rejectionReason" i18n="@@pendingScores.reasonLabel">Reason (optional):</label>
           <textarea
             id="rejectionReason"
             [ngModel]="rejectionReason()"
             (ngModelChange)="rejectionReason.set($event)"
             placeholder="Provide a reason for rejection..."
+            i18n-placeholder="@@pendingScores.reasonPlaceholder"
             rows="3"
           ></textarea>
         </div>
 
         <div class="modal-actions">
-          <button class="btn-secondary" (click)="closeRejectModal()">Cancel</button>
-          <button class="btn-reject" (click)="confirmReject()">Reject Score</button>
+          <button class="btn-secondary" (click)="closeRejectModal()" i18n="@@pendingScores.cancel">Cancel</button>
+          <button class="btn-reject" (click)="confirmReject()" i18n="@@pendingScores.confirmReject">Reject Score</button>
         </div>
       </div>
     </div>

@@ -1,14 +1,14 @@
 <div class="game-detail-shell">
-  <button class="back-btn" (click)="goBack()">← Back to Games</button>
+  <button class="back-btn" (click)="goBack()" i18n="@@gameDetail.backToGames">← Back to Games</button>
 
   @if (loading()) {
     <div class="loading-state">
-      <p>Loading game details...</p>
+      <p i18n="@@gameDetail.loading">Loading game details...</p>
     </div>
   } @else if (error()) {
     <div class="error-state">
       <p>{{ error() }}</p>
-      <button class="btn-primary" (click)="goBack()">Go Back</button>
+      <button class="btn-primary" (click)="goBack()" i18n="@@gameDetail.goBack">Go Back</button>
     </div>
   } @else if (game(); as gameData) {
     <header class="game-header">
@@ -16,7 +16,7 @@
         <img [src]="gameData.imageUrl" [alt]="gameData.name" class="game-banner" />
       }
       <div class="game-meta">
-        <p class="eyebrow">Game Details</p>
+        <p class="eyebrow" i18n="@@gameDetail.eyebrow">Game Details</p>
         <h1>{{ gameData.name }}</h1>
         @if (gameData.description) {
           <p class="description">{{ gameData.description }}</p>
@@ -24,16 +24,16 @@
         <!-- Admin/Moderator Actions -->
         <div class="admin-actions">
           @if (canConfigure()) {
-            <button class="btn-secondary" (click)="goToConfigure()">⚙ Configure Game</button>
+            <button class="btn-secondary" (click)="goToConfigure()" i18n="@@gameDetail.configureGame">⚙ Configure Game</button>
           }
           @if (isAdmin()) {
-            <button class="btn-secondary" (click)="goToModerators()">🛡️ Manage Moderators</button>
+            <button class="btn-secondary" (click)="goToModerators()" i18n="@@gameDetail.manageModerators">🛡️ Manage Moderators</button>
           }
           @if (canModerate()) {
-            <button class="btn-secondary" (click)="goToPendingScores()">⏳ Review Pending Scores</button>
+            <button class="btn-secondary" (click)="goToPendingScores()" i18n="@@gameDetail.reviewPendingScores">⏳ Review Pending Scores</button>
           }
           @if (canManageKeys()) {
-            <button class="btn-secondary" (click)="goToApiKeys()">🔑 Api Keys</button>
+            <button class="btn-secondary" (click)="goToApiKeys()" i18n="@@gameDetail.apiKeys">🔑 Api Keys</button>
           }
         </div>
       </div>
@@ -43,16 +43,16 @@
       <!-- Leaderboard Panel -->
       <section class="panel leaderboard-panel">
         <div class="panel-header">
-          <h2>🏆 Leaderboard</h2>
+          <h2 i18n="@@gameDetail.leaderboard">🏆 Leaderboard</h2>
           @if (!loadingLeaderboard()) {
-            <span class="state-chip">Top {{ leaderboard().length }}</span>
+            <span class="state-chip">{{ topLabel() }} {{ leaderboard().length }}</span>
           }
         </div>
 
         @if (loadingLeaderboard()) {
-          <p class="loading-text">Loading leaderboard...</p>
+          <p class="loading-text" i18n="@@gameDetail.loadingLeaderboard">Loading leaderboard...</p>
         } @else if (leaderboard().length === 0) {
-          <p class="empty-text">No scores yet. Be the first to play!</p>
+          <p class="empty-text" i18n="@@gameDetail.noScores">No scores yet. Be the first to play!</p>
         } @else {
           <ol class="leaderboard-list">
             @for (entry of leaderboard(); track entry.userId ?? entry.userName; let i = $index) {
@@ -65,7 +65,7 @@
                     @default { {{ i + 1 }} }
                   }
                 </span>
-                <span class="player-name">{{ entry.userName ?? 'Unknown Player' }}</span>
+                <span class="player-name">{{ entry.userName ?? unknownPlayer() }}</span>
                 <span class="player-score">{{ entry.score | number }}</span>
               </li>
             }
@@ -77,39 +77,41 @@
         <!-- Submit Score Panel -->
         <section class="panel submit-panel">
           <div class="panel-header">
-            <h2>🎮 Submit Score</h2>
+            <h2 i18n="@@gameDetail.submitScore">🎮 Submit Score</h2>
           </div>
 
           @if (isLoggedIn()) {
             <form [formGroup]="scoreForm" (ngSubmit)="submitScore()" class="score-form">
             <div class="form-group">
-              <label for="score">Your Score</label>
+              <label for="score" i18n="@@gameDetail.yourScore">Your Score</label>
               <input
                 type="number"
                 id="score"
                 formControlName="score"
                 min="0"
                 placeholder="Enter your score"
+                i18n-placeholder="@@gameDetail.enterScorePlaceholder"
               />
             </div>
 
             <div class="form-group">
-              <label for="title">Post Title</label>
+              <label for="title" i18n="@@gameDetail.postTitle">Post Title</label>
               <input
                 type="text"
                 id="title"
                 formControlName="title"
-                [placeholder]="'e.g. ' + (game()?.name ?? 'Game') + ' - ' + (scoreForm.value.score ?? 0)"
+                [placeholder]="titlePlaceholder()"
               />
-              <span class="hint">Leave blank for default: "Game Name - Score"</span>
+              <span class="hint" i18n="@@gameDetail.titleHint">Leave blank for default: "Game Name - Score"</span>
             </div>
 
             <div class="form-group">
-              <label for="description">Description <span class="optional">(optional)</span></label>
+              <label for="description" i18n="@@gameDetail.descriptionLabel">Description <span class="optional">(optional)</span></label>
               <textarea
                 id="description"
                 formControlName="description"
                 placeholder="Tell everyone about your achievement..."
+                i18n-placeholder="@@gameDetail.descriptionPlaceholder"
                 rows="3"
               ></textarea>
             </div>
@@ -128,17 +130,17 @@
               [disabled]="scoreForm.invalid || submitting()"
             >
               @if (submitting()) {
-                Submitting...
+                <span i18n="@@gameDetail.submitting">Submitting...</span>
               } @else {
-                Submit Score
+                <span i18n="@@gameDetail.submitScoreBtn">Submit Score</span>
               }
             </button>
             </form>
           } @else {
             <div class="login-prompt">
-              <p>You need to be logged in to submit a score.</p>
-              <a routerLink="/auth/login" class="btn-secondary">Login</a>
-              <a routerLink="/auth/register" class="btn-link">or Register</a>
+              <p i18n="@@gameDetail.loginPrompt">You need to be logged in to submit a score.</p>
+              <a routerLink="/auth/login" class="btn-secondary" i18n="@@gameDetail.loginBtn">Login</a>
+              <a routerLink="/auth/register" class="btn-link" i18n="@@gameDetail.registerBtn">or Register</a>
             </div>
           }
         </section>

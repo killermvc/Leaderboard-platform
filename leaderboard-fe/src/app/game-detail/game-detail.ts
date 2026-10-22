@@ -44,6 +44,10 @@ export class GameDetail implements OnInit {
     return this.isAdmin() || (!!currentGame?.ownerId && currentGame.ownerId === currentUserId);
   });
 
+  topLabel = signal('Top');
+  unknownPlayer = signal('Unknown Player');
+  titlePlaceholder = signal('e.g. Game Name - Score');
+
   scoreForm = this.fb.group({
     score: [0, [Validators.required, Validators.min(0)]],
     title: [''],

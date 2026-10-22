@@ -25,6 +25,8 @@ export class NewGame {
   ownerResults = signal<User[]>([]);
   selectedOwner = signal<User | null>(null);
   searchingOwners = signal(false);
+  creatingLabel = signal('Creating...');
+  createGameLabel = signal('Create game');
 
   gameForm = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(100)]],

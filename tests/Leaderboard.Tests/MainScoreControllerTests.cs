@@ -3,6 +3,8 @@ using Leaderboard.Controllers;
 using Leaderboard.Models;
 using Leaderboard.Repositories;
 using Leaderboard.Services;
+using Leaderboard.Exceptions;
+using Leaderboard.Errors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -53,28 +55,29 @@ public class ScoreControllerTests
 	}
 
 	[Fact]
-	public async Task SubmitScore_WithInvalidUserClaim_ReturnsUnauthorized()
+	public async Task SubmitScore_WithInvalidUserClaim_ThrowsUnauthorizedException()
 	{
 		var scores = new Mock<IScoreRepository>();
 		var controller = CreateController(scores.Object, userId: "not-a-user");
 
-		var result = await controller.SubmitScore(new ScoreRequest { GameId = 7, Score = 100 });
+		var exception = await Assert.ThrowsAsync<UnauthorizedException>(() => 
+			controller.SubmitScore(new ScoreRequest { GameId = 7, Score = 100 }));
 
-		Assert.IsType<UnauthorizedObjectResult>(result);
+		Assert.Equal(ErrorCodes.InvalidToken, exception.ErrorCode);
 		scores.Verify(repository => repository.SubmitScoreAsync(
 			It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string?>(), It.IsAny<string?>()), Times.Never);
 	}
 
 	[Fact]
-	public async Task GetRank_WhenUserHasNoRank_ReturnsNotFound()
+	public async Task GetRank_WhenUserHasNoRank_ThrowsNotFoundException()
 	{
 		var scores = new Mock<IScoreRepository>();
 		scores.Setup(repository => repository.GetRankAsync(7, 4)).ReturnsAsync((long?)null);
 		var controller = CreateController(scores.Object);
 
-		var result = await controller.GetRank(7, 4);
+		var exception = await Assert.ThrowsAsync<NotFoundException>(() => controller.GetRank(7, 4));
 
-		Assert.IsType<NotFoundObjectResult>(result);
+		Assert.Equal(ErrorCodes.ScoreNotFound, exception.ErrorCode);
 	}
 
 	private static ScoreController CreateController(

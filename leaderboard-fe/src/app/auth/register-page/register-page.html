@@ -1,11 +1,9 @@
 <section class="auth-shell">
 	<div class="auth-panel">
 		<header>
-			<p class="eyebrow">Create your profile</p>
-			<h1>Join the leaderboard</h1>
-			<p class="lede">
-				Register an account to start uploading scores and competing with the community.
-			</p>
+			<p class="eyebrow" i18n="@@auth.register.eyebrow">Create your profile</p>
+			<h1 i18n="@@auth.register.title">Join the leaderboard</h1>
+			<p class="lede" i18n="@@auth.register.lede">Register an account to start uploading scores and competing with the community.</p>
 		</header>
 		<clerk-sign-up [props]="{ routing: 'path', path: '/auth/register', signInUrl: '/auth/login', fallbackRedirectUrl: '/' }" />
 	</div>

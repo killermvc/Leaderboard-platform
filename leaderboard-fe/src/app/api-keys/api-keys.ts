@@ -11,6 +11,7 @@ import {
 } from '../core/api-key-service';
 import { GameService, Game } from '../core/game-service';
 import { AuthService } from '../core/auth-service';
+import { TranslationService } from '../core/translation.service';
 
 @Component({
   selector: 'app-api-keys',
@@ -25,6 +26,7 @@ export class ApiKeysComponent implements OnInit {
   private apiKeyService = inject(ApiKeyService);
   private gameService = inject(GameService);
   private authService = inject(AuthService);
+  private translationService = inject(TranslationService);
 
   game = signal<Game | null>(null);
   keys = signal<ApiKeyInfo[]>([]);
@@ -48,6 +50,13 @@ export class ApiKeysComponent implements OnInit {
 
   revokingId = signal<number | null>(null);
   regeneratingId = signal<number | null>(null);
+
+  keyNameLabel = signal('Name');
+  createdLabel = signal('Created');
+  keyIdLabel = signal('ID');
+  lastUsedLabel = signal('Last used');
+  expiresLabel = signal('Expires');
+  revokedLabel = signal('Revoked');
 
   isAuthenticated = computed(() => this.authService.isAuthenticated());
 
@@ -262,7 +271,8 @@ export class ApiKeysComponent implements OnInit {
   formatDate(dateString: string | null | undefined): string {
     if (!dateString) return '—';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    const locale = this.translationService.getLanguage() === 'es' ? 'es-ES' : 'en-US';
+    return date.toLocaleDateString(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',

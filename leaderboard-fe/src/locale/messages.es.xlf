@@ -1,0 +1,1588 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file source-language="en" datatype="plaintext" original="ng2.template">
+    <body>
+      <trans-unit id="apiKeys.authRequired" datatype="html">
+        <source>You need to be logged in to manage api keys.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">4,5</context>
+        </context-group>
+      <target>Necesitas iniciar sesión para gestionar claves API.</target></trans-unit>
+      <trans-unit id="apiKeys.login" datatype="html">
+        <source>Login</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">5,7</context>
+        </context-group>
+      <target>Iniciar sesión</target></trans-unit>
+      <trans-unit id="apiKeys.loading" datatype="html">
+        <source>Loading...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">9,11</context>
+        </context-group>
+      <target>Cargando...</target></trans-unit>
+      <trans-unit id="apiKeys.accessDenied" datatype="html">
+        <source>You do not have permission to manage api keys for this game.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">13,14</context>
+        </context-group>
+      <target>No tienes permiso para gestionar claves API para este juego.</target></trans-unit>
+      <trans-unit id="apiKeys.backToGameUnauth" datatype="html">
+        <source>Back to Game</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">14,16</context>
+        </context-group>
+      <target>Volver al Juego</target></trans-unit>
+      <trans-unit id="apiKeys.backToGameError" datatype="html">
+        <source>Back to Game</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">19,21</context>
+        </context-group>
+      <target>Volver al Juego</target></trans-unit>
+      <trans-unit id="apiKeys.backToGame" datatype="html">
+        <source>← Back to Game</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">22,24</context>
+        </context-group>
+      <target>← Volver al Juego</target></trans-unit>
+      <trans-unit id="apiKeys.title" datatype="html">
+        <source>🔑 Api Keys for <x id="INTERPOLATION" equiv-text="{{ gameData.name }}" /></source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">25,26</context>
+        </context-group>
+      <target>🔑 Claves API para {{ gameData.name }}</target></trans-unit>
+      <trans-unit id="apiKeys.subtitle" datatype="html">
+        <source>Create, view and revoke api keys used to integrate with this game</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">26,29</context>
+        </context-group>
+      <target>Crea, visualiza y revoca claves API usadas para integrar con este juego</target></trans-unit>
+      <trans-unit id="apiKeys.keyCreated" datatype="html">
+        <source>✅ Key created</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">32,33</context>
+        </context-group>
+      <target>✅ Clave creada</target></trans-unit>
+      <trans-unit id="apiKeys.storeNow" datatype="html">
+        <source>Store this key now.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">34</context>
+        </context-group>
+      <target>Guarda esta clave ahora.</target></trans-unit>
+      <trans-unit id="apiKeys.shownOnce" datatype="html">
+        <source>For security reasons the full key can only be shown once.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">34,36</context>
+        </context-group>
+      <target>Por razones de seguridad, la clave completa solo se puede mostrar una vez.</target></trans-unit>
+      <trans-unit id="apiKeys.copied" datatype="html">
+        <source>Copied!</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">39</context>
+        </context-group>
+      <target>¡Copiado!</target></trans-unit>
+      <trans-unit id="apiKeys.copy" datatype="html">
+        <source>Copy</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">39,41</context>
+        </context-group>
+      <target>Copiar</target></trans-unit>
+      <trans-unit id="apiKeys.done" datatype="html">
+        <source>Done</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">43,45</context>
+        </context-group>
+      <target>Hecho</target></trans-unit>
+      <trans-unit id="apiKeys.generateNewKey" datatype="html">
+        <source>Generate New Key</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">49,51</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="apiKeys.keyName" datatype="html">
+        <source>Key Name</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">52,54</context>
+        </context-group>
+      <target>Nombre de la Clave</target></trans-unit>
+      <trans-unit id="apiKeys.keyNamePlaceholder" datatype="html">
+        <source>e.g. Mobile app, CI pipeline, Third-party service...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">58,59</context>
+        </context-group>
+      <target>ej. App móvil, pipeline CI, servicio de terceros...</target></trans-unit>
+      <trans-unit id="apiKeys.permissions" datatype="html">
+        <source>Permissions</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">64,65</context>
+        </context-group>
+      <target>Permisos</target></trans-unit>
+      <trans-unit id="apiKeys.permSubmitScores" datatype="html">
+        <source>Submit scores</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">67,69</context>
+        </context-group>
+      <target>Enviar puntuaciones</target></trans-unit>
+      <trans-unit id="apiKeys.permReadScores" datatype="html">
+        <source>Read scores</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">71,73</context>
+        </context-group>
+      <target>Leer puntuaciones</target></trans-unit>
+      <trans-unit id="apiKeys.permReadLeaderboard" datatype="html">
+        <source>Read leaderboard</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">75,77</context>
+        </context-group>
+      <target>Leer clasificación</target></trans-unit>
+      <trans-unit id="apiKeys.permDeleteScores" datatype="html">
+        <source>Delete scores</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">79,83</context>
+        </context-group>
+      <target>Eliminar puntuaciones</target></trans-unit>
+      <trans-unit id="apiKeys.expiresAt" datatype="html">
+        <source>Expires At <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span class=&quot;optional&quot;&gt;" />(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;" /></source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">84,85</context>
+        </context-group>
+      <target>Expira el &lt;span class="optional"&gt;(opcional)&lt;/span&gt;</target></trans-unit>
+      <trans-unit id="apiKeys.generating" datatype="html">
+        <source>Generating...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">99,101</context>
+        </context-group>
+      <target>Generando...</target></trans-unit>
+      <trans-unit id="apiKeys.generateKey" datatype="html">
+        <source>Generate Key</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">101,104</context>
+        </context-group>
+      <target>Generar Clave</target></trans-unit>
+      <trans-unit id="apiKeys.keys" datatype="html">
+        <source>Keys</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">109,111</context>
+        </context-group>
+      <target>Claves</target></trans-unit>
+      <trans-unit id="apiKeys.loadingKeys" datatype="html">
+        <source>Loading keys...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">112,113</context>
+        </context-group>
+      <target>Cargando claves...</target></trans-unit>
+      <trans-unit id="apiKeys.noKeys" datatype="html">
+        <source>No api keys for this game yet.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">115,116</context>
+        </context-group>
+      <target>Aún no hay claves API para este juego.</target></trans-unit>
+      <trans-unit id="apiKeys.generateHint" datatype="html">
+        <source>Generate a key above to get started.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">116,119</context>
+        </context-group>
+      <target>Genera una clave arriba para empezar.</target></trans-unit>
+      <trans-unit id="apiKeys.regenerating" datatype="html">
+        <source>Regenerating...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">149,151</context>
+        </context-group>
+      <target>Regenerando...</target></trans-unit>
+      <trans-unit id="apiKeys.regenerate" datatype="html">
+        <source>Regenerate</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">151,153</context>
+        </context-group>
+      <target>Regenerar</target></trans-unit>
+      <trans-unit id="apiKeys.revoking" datatype="html">
+        <source>Revoking...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">162,164</context>
+        </context-group>
+      <target>Revocando...</target></trans-unit>
+      <trans-unit id="apiKeys.revoke" datatype="html">
+        <source>Revoke</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/api-keys/api-keys.html</context>
+          <context context-type="linenumber">164,166</context>
+        </context-group>
+      <target>Revocar</target></trans-unit>
+      <trans-unit id="auth.account.eyebrow" datatype="html">
+        <source>Account Settings</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/auth/account-settings/account-settings.html</context>
+          <context context-type="linenumber">4,5</context>
+        </context-group>
+      <target>Configuración de Cuenta</target></trans-unit>
+      <trans-unit id="auth.account.title" datatype="html">
+        <source>Manage Your Account</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/auth/account-settings/account-settings.html</context>
+          <context context-type="linenumber">5,6</context>
+        </context-group>
+      <target>Gestiona tu Cuenta</target></trans-unit>
+      <trans-unit id="auth.account.lede" datatype="html">
+        <source>Update your profile and manage your account settings.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/auth/account-settings/account-settings.html</context>
+          <context context-type="linenumber">6,8</context>
+        </context-group>
+      <target>Actualiza tu perfil y gestiona la configuración de tu cuenta.</target></trans-unit>
+      <trans-unit id="auth.login.eyebrow" datatype="html">
+        <source>Welcome back</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/auth/login-page/login-page.html</context>
+          <context context-type="linenumber">4,5</context>
+        </context-group>
+      <target>Bienvenido de nuevo</target></trans-unit>
+      <trans-unit id="auth.login.title" datatype="html">
+        <source>Sign in to keep competing</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/auth/login-page/login-page.html</context>
+          <context context-type="linenumber">5,6</context>
+        </context-group>
+      <target>Inicia sesión para seguir compitiendo</target></trans-unit>
+      <trans-unit id="auth.login.lede" datatype="html">
+        <source>Connect your account to record scores and view your rankings.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/auth/login-page/login-page.html</context>
+          <context context-type="linenumber">6,8</context>
+        </context-group>
+      <target>Conecta tu cuenta para registrar puntuaciones y ver tus rankings.</target></trans-unit>
+      <trans-unit id="auth.register.eyebrow" datatype="html">
+        <source>Create your profile</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/auth/register-page/register-page.html</context>
+          <context context-type="linenumber">4,5</context>
+        </context-group>
+      <target>Crea tu perfil</target></trans-unit>
+      <trans-unit id="auth.register.title" datatype="html">
+        <source>Join the leaderboard</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/auth/register-page/register-page.html</context>
+          <context context-type="linenumber">5,6</context>
+        </context-group>
+      <target>Únete a la clasificación</target></trans-unit>
+      <trans-unit id="auth.register.lede" datatype="html">
+        <source>Register an account to start uploading scores and competing with the community.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/auth/register-page/register-page.html</context>
+          <context context-type="linenumber">6,8</context>
+        </context-group>
+      <target>Regístrate para empezar a subir puntuaciones y competir con la comunidad.</target></trans-unit>
+      <trans-unit id="gameConfigure.backToGame" datatype="html">
+        <source>← Back to Game</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">2,5</context>
+        </context-group>
+      <target>← Volver al Juego</target></trans-unit>
+      <trans-unit id="gameConfigure.loading" datatype="html">
+        <source>Loading game configuration...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">5,6</context>
+        </context-group>
+      <target>Cargando configuración del juego...</target></trans-unit>
+      <trans-unit id="gameConfigure.goToGames" datatype="html">
+        <source>Go to Games</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">9,11</context>
+        </context-group>
+      <target>Ir a Juegos</target></trans-unit>
+      <trans-unit id="gameConfigure.eyebrow" datatype="html">
+        <source>Game owner workspace</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">13,14</context>
+        </context-group>
+      <target>Espacio de trabajo del propietario del juego</target></trans-unit>
+      <trans-unit id="gameConfigure.title" datatype="html">
+        <source>Configure <x id="INTERPOLATION" equiv-text="{{ gameData.name }}" /></source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">14,15</context>
+        </context-group>
+      <target>Configurar {{ gameData.name }}</target></trans-unit>
+      <trans-unit id="gameConfigure.subtitle" datatype="html">
+        <source>Keep the game identity current and choose who can review score submissions.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">15,18</context>
+        </context-group>
+      <target>Mantén la identidad del juego actualizada y elige quién puede revisar envíos de puntuaciones.</target></trans-unit>
+      <trans-unit id="gameConfigure.gameProfile" datatype="html">
+        <source>Game profile</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">29,30</context>
+        </context-group>
+      <target>Perfil del Juego</target></trans-unit>
+      <trans-unit id="gameConfigure.settings" datatype="html">
+        <source>Settings</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">30,32</context>
+        </context-group>
+      <target>Ajustes</target></trans-unit>
+      <trans-unit id="gameConfigure.nameLabel" datatype="html">
+        <source>Name</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">37,38</context>
+        </context-group>
+      <target>Nombre</target></trans-unit>
+      <trans-unit id="gameConfigure.nameRequired" datatype="html">
+        <source>A name is required.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">40,43</context>
+        </context-group>
+      <target>Se requiere un nombre.</target></trans-unit>
+      <trans-unit id="gameConfigure.descriptionLabel" datatype="html">
+        <source>Description</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">43,44</context>
+        </context-group>
+      <target>Descripción</target></trans-unit>
+      <trans-unit id="gameConfigure.imageUrlLabel" datatype="html">
+        <source>Image URL</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">46,47</context>
+        </context-group>
+      <target>URL de Imagen</target></trans-unit>
+      <trans-unit id="gameConfigure.ownerLabel" datatype="html">
+        <source>Game owner</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">50,51</context>
+        </context-group>
+      <target>Propietario del Juego</target></trans-unit>
+      <trans-unit id="gameConfigure.removeOwner" datatype="html">
+        <source>Remove</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">54,56</context>
+        </context-group>
+      <target>Eliminar</target></trans-unit>
+      <trans-unit id="gameConfigure.ownerSearchPlaceholder" datatype="html">
+        <source>Search by username</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">64,65</context>
+        </context-group>
+      <target>Buscar por nombre de usuario</target></trans-unit>
+      <trans-unit id="gameConfigure.searching" datatype="html">
+        <source>Searching...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">68,70</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">119,121</context>
+        </context-group>
+      <target>Buscando...</target></trans-unit>
+      <trans-unit id="gameConfigure.selectOwner" datatype="html">
+        <source>Select</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">75,77</context>
+        </context-group>
+      <target>Seleccionar</target></trans-unit>
+      <trans-unit id="gameConfigure.allowSubmissions" datatype="html">
+        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input id=&quot;submits-allowed&quot; type=&quot;checkbox&quot; formControlName=&quot;isSubmitAllowed&quot; /&gt;" /><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;" /><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;" />Allow manual submissions<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;" /><x id="START_SMALL_TEXT" ctype="x-small" equiv-text="&lt;small&gt;" />Players can submit scores from the game page.<x id="CLOSE_SMALL_TEXT" ctype="x-small" equiv-text="&lt;/small&gt;" /><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;" /></source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">84,90</context>
+        </context-group>
+      <target>Permitir envíos manuales</target></trans-unit>
+      <trans-unit id="gameConfigure.cancel" datatype="html">
+        <source>Cancel</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">92,93</context>
+        </context-group>
+      <target>Cancelar</target></trans-unit>
+      <trans-unit id="gameConfigure.reviewTeam" datatype="html">
+        <source>Review team</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">103,104</context>
+        </context-group>
+      <target>Equipo de revisión</target></trans-unit>
+      <trans-unit id="gameConfigure.addModerator" datatype="html">
+        <source>Add moderator</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">104,106</context>
+        </context-group>
+      <target>Añadir moderador</target></trans-unit>
+      <trans-unit id="gameConfigure.panelCopy" datatype="html">
+        <source>Search for a player and give them permission to approve or reject submissions for this game.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">107,108</context>
+        </context-group>
+      <target>Busca un jugador y dale permiso para aprobar o rechazar envíos para este juego.</target></trans-unit>
+      <trans-unit id="gameConfigure.searchUsers" datatype="html">
+        <source>Search users</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">108,110</context>
+        </context-group>
+      <target>Buscar usuarios</target></trans-unit>
+      <trans-unit id="gameConfigure.moderatorSearchPlaceholder" datatype="html">
+        <source>Search by username</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">115,116</context>
+        </context-group>
+      <target>Buscar por nombre de usuario</target></trans-unit>
+      <trans-unit id="gameConfigure.assignedAccess" datatype="html">
+        <source>Assigned access</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">138,139</context>
+        </context-group>
+      <target>Acceso asignado</target></trans-unit>
+      <trans-unit id="gameConfigure.moderators" datatype="html">
+        <source>Moderators</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">139,141</context>
+        </context-group>
+      <target>Moderadores</target></trans-unit>
+      <trans-unit id="gameConfigure.noModerators" datatype="html">
+        <source>No game-specific moderators yet.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-configure/game-configure.html</context>
+          <context context-type="linenumber">144,146</context>
+        </context-group>
+      <target>Aún no hay moderadores específicos para este juego.</target></trans-unit>
+      <trans-unit id="gameDetail.backToGames" datatype="html">
+        <source>← Back to Games</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">2,5</context>
+        </context-group>
+      <target>← Volver a Juegos</target></trans-unit>
+      <trans-unit id="gameDetail.loading" datatype="html">
+        <source>Loading game details...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">6,8</context>
+        </context-group>
+      <target>Cargando detalles del juego...</target></trans-unit>
+      <trans-unit id="gameDetail.goBack" datatype="html">
+        <source>Go Back</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">11,13</context>
+        </context-group>
+      <target>Volver</target></trans-unit>
+      <trans-unit id="gameDetail.eyebrow" datatype="html">
+        <source>Game Details</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">19,20</context>
+        </context-group>
+      <target>Detalles del Juego</target></trans-unit>
+      <trans-unit id="gameDetail.configureGame" datatype="html">
+        <source>⚙ Configure Game</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">27,29</context>
+        </context-group>
+      <target>⚙ Configurar Juego</target></trans-unit>
+      <trans-unit id="gameDetail.manageModerators" datatype="html">
+        <source>🛡️ Manage Moderators</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">30,32</context>
+        </context-group>
+      <target>🛡️ Gestionar Moderadores</target></trans-unit>
+      <trans-unit id="gameDetail.reviewPendingScores" datatype="html">
+        <source>⏳ Review Pending Scores</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">33,35</context>
+        </context-group>
+      <target>⏳ Revisar Puntuaciones Pendientes</target></trans-unit>
+      <trans-unit id="gameDetail.apiKeys" datatype="html">
+        <source>🔑 Api Keys</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">36,38</context>
+        </context-group>
+      <target>🔑 Claves API</target></trans-unit>
+      <trans-unit id="gameDetail.leaderboard" datatype="html">
+        <source>🏆 Leaderboard</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">46,47</context>
+        </context-group>
+      <target>🏆 Clasificación</target></trans-unit>
+      <trans-unit id="gameDetail.loadingLeaderboard" datatype="html">
+        <source>Loading leaderboard...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">53,54</context>
+        </context-group>
+      <target>Cargando clasificación...</target></trans-unit>
+      <trans-unit id="gameDetail.noScores" datatype="html">
+        <source>No scores yet. Be the first to play!</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">55,57</context>
+        </context-group>
+      <target>Aún no hay puntuaciones. ¡Sé el primero en jugar!</target></trans-unit>
+      <trans-unit id="gameDetail.submitScore" datatype="html">
+        <source>🎮 Submit Score</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">80,83</context>
+        </context-group>
+      <target>🎮 Enviar Puntuación</target></trans-unit>
+      <trans-unit id="gameDetail.yourScore" datatype="html">
+        <source>Your Score</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">86,88</context>
+        </context-group>
+      <target>Tu Puntuación</target></trans-unit>
+      <trans-unit id="gameDetail.enterScorePlaceholder" datatype="html">
+        <source>Enter your score</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">92,93</context>
+        </context-group>
+      <target>Introduce tu puntuación</target></trans-unit>
+      <trans-unit id="gameDetail.postTitle" datatype="html">
+        <source>Post Title</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">98,100</context>
+        </context-group>
+      <target>Título de la Entrada</target></trans-unit>
+      <trans-unit id="gameDetail.titleHint" datatype="html">
+        <source>Leave blank for default: "Game Name - Score"</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">105,108</context>
+        </context-group>
+      <target>Deja en blanco para el predeterminado: "Nombre del Juego - Puntuación"</target></trans-unit>
+      <trans-unit id="gameDetail.descriptionLabel" datatype="html">
+        <source>Description <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span class=&quot;optional&quot;&gt;" />(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;" /></source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">109,110</context>
+        </context-group>
+      <target>Descripción &lt;span class="optional"&gt;(opcional)&lt;/span&gt;</target></trans-unit>
+      <trans-unit id="gameDetail.descriptionPlaceholder" datatype="html">
+        <source>Tell everyone about your achievement...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">113,114</context>
+        </context-group>
+      <target>Cuéntale a todos sobre tu logro...</target></trans-unit>
+      <trans-unit id="gameDetail.submitting" datatype="html">
+        <source>Submitting...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">133,135</context>
+        </context-group>
+      <target>Enviando...</target></trans-unit>
+      <trans-unit id="gameDetail.submitScoreBtn" datatype="html">
+        <source>Submit Score</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">135,137</context>
+        </context-group>
+      <target>Enviar Puntuación</target></trans-unit>
+      <trans-unit id="gameDetail.loginPrompt" datatype="html">
+        <source>You need to be logged in to submit a score.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">141,142</context>
+        </context-group>
+      <target>Necesitas iniciar sesión para enviar una puntuación.</target></trans-unit>
+      <trans-unit id="gameDetail.loginBtn" datatype="html">
+        <source>Login</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">142,143</context>
+        </context-group>
+      <target>Iniciar sesión</target></trans-unit>
+      <trans-unit id="gameDetail.registerBtn" datatype="html">
+        <source>or Register</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-detail/game-detail.html</context>
+          <context context-type="linenumber">143,146</context>
+        </context-group>
+      <target>o Registrarse</target></trans-unit>
+      <trans-unit id="gameModerators.backToGame" datatype="html">
+        <source>← Back to Game</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-moderators/game-moderators.html</context>
+          <context context-type="linenumber">2,4</context>
+        </context-group>
+      <target>← Volver al Juego</target></trans-unit>
+      <trans-unit id="gameModerators.loading" datatype="html">
+        <source>Loading...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-moderators/game-moderators.html</context>
+          <context context-type="linenumber">6,8</context>
+        </context-group>
+      <target>Cargando...</target></trans-unit>
+      <trans-unit id="gameModerators.goToGames" datatype="html">
+        <source>Go to Games</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-moderators/game-moderators.html</context>
+          <context context-type="linenumber">11,13</context>
+        </context-group>
+      <target>Ir a Juegos</target></trans-unit>
+      <trans-unit id="gameModerators.title" datatype="html">
+        <source>🛡️ Moderators for <x id="INTERPOLATION" equiv-text="{{ gameData.name }}" /></source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-moderators/game-moderators.html</context>
+          <context context-type="linenumber">15,16</context>
+        </context-group>
+      <target>🛡️ Moderadores para {{ gameData.name }}</target></trans-unit>
+      <trans-unit id="gameModerators.subtitle" datatype="html">
+        <source>Manage who can approve or reject score submissions for this game</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-moderators/game-moderators.html</context>
+          <context context-type="linenumber">16,19</context>
+        </context-group>
+      <target>Gestiona quién puede aprobar o rechazar envíos de puntuaciones para este juego</target></trans-unit>
+      <trans-unit id="gameModerators.addModerator" datatype="html">
+        <source>Add New Moderator</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-moderators/game-moderators.html</context>
+          <context context-type="linenumber">21,23</context>
+        </context-group>
+      <target>Añadir Nuevo Moderador</target></trans-unit>
+      <trans-unit id="gameModerators.searchPlaceholder" datatype="html">
+        <source>Search for a user by username...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-moderators/game-moderators.html</context>
+          <context context-type="linenumber">28,29</context>
+        </context-group>
+      <target>Buscar un usuario por nombre...</target></trans-unit>
+      <trans-unit id="gameModerators.searching" datatype="html">
+        <source>Searching...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-moderators/game-moderators.html</context>
+          <context context-type="linenumber">32,36</context>
+        </context-group>
+      <target>Buscando...</target></trans-unit>
+      <trans-unit id="gameModerators.adding" datatype="html">
+        <source>Adding...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-moderators/game-moderators.html</context>
+          <context context-type="linenumber">47,49</context>
+        </context-group>
+      <target>Añadiendo...</target></trans-unit>
+      <trans-unit id="gameModerators.addAsModerator" datatype="html">
+        <source>+ Add as Moderator</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-moderators/game-moderators.html</context>
+          <context context-type="linenumber">49,51</context>
+        </context-group>
+      <target>+ Añadir como Moderador</target></trans-unit>
+      <trans-unit id="gameModerators.currentModerators" datatype="html">
+        <source>Current Moderators</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-moderators/game-moderators.html</context>
+          <context context-type="linenumber">60,63</context>
+        </context-group>
+      <target>Moderadores Actuales</target></trans-unit>
+      <trans-unit id="gameModerators.loadingModerators" datatype="html">
+        <source>Loading moderators...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-moderators/game-moderators.html</context>
+          <context context-type="linenumber">63,64</context>
+        </context-group>
+      <target>Cargando moderadores...</target></trans-unit>
+      <trans-unit id="gameModerators.noModerators" datatype="html">
+        <source>No moderators assigned to this game yet.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-moderators/game-moderators.html</context>
+          <context context-type="linenumber">66,67</context>
+        </context-group>
+      <target>Aún no hay moderadores asignados a este juego.</target></trans-unit>
+      <trans-unit id="gameModerators.globalModeratorsHint" datatype="html">
+        <source>Global moderators will handle score approvals for this game.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-moderators/game-moderators.html</context>
+          <context context-type="linenumber">67,70</context>
+        </context-group>
+      <target>Los moderadores globales gestionarán las aprobaciones de puntuaciones para este juego.</target></trans-unit>
+      <trans-unit id="gameModerators.removing" datatype="html">
+        <source>✖ Removing...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-moderators/game-moderators.html</context>
+          <context context-type="linenumber">88,90</context>
+        </context-group>
+      <target>✖ Eliminando...</target></trans-unit>
+      <trans-unit id="gameModerators.remove" datatype="html">
+        <source>✖ Remove</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-moderators/game-moderators.html</context>
+          <context context-type="linenumber">90,92</context>
+        </context-group>
+      <target>✖ Eliminar</target></trans-unit>
+      <trans-unit id="games.title" datatype="html">
+        <source>All Games</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/games/games.html</context>
+          <context context-type="linenumber">3,4</context>
+        </context-group>
+      <target>Todos los juegos</target></trans-unit>
+      <trans-unit id="games.newGame" datatype="html">
+        <source><x id="START_TAG_NG_ICON" ctype="x-ng_icon" equiv-text="&lt;ng-icon name=&quot;octPlus&quot; size=&quot;24px&quot;&gt;" /><x id="CLOSE_TAG_NG_ICON" ctype="x-ng_icon" equiv-text="&lt;/ng-icon&gt;" /><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span class=&quot;new-game-label&quot;&gt;" />New game<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;" /></source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/games/games.html</context>
+          <context context-type="linenumber">6,9</context>
+        </context-group>
+      <target>Nuevo juego</target></trans-unit>
+      <trans-unit id="games.filter.gameName" datatype="html">
+        <source>Game name</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/games/games.html</context>
+          <context context-type="linenumber">13,15</context>
+        </context-group>
+      <target>Nombre del juego</target></trans-unit>
+      <trans-unit id="games.filter.searchPlaceholder" datatype="html">
+        <source>Search games</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/games/games.html</context>
+          <context context-type="linenumber">19,20</context>
+        </context-group>
+      <target>Buscar juegos</target></trans-unit>
+      <trans-unit id="games.filter.submittedOnly" datatype="html">
+        <source>Games I submitted scores to</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/games/games.html</context>
+          <context context-type="linenumber">30,35</context>
+        </context-group>
+      <target>Juegos a los que envié puntuaciones</target></trans-unit>
+      <trans-unit id="games.empty" datatype="html">
+        <source>No games found.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/games/games.html</context>
+          <context context-type="linenumber">39,42</context>
+        </context-group>
+      <target>No se encontraron juegos.</target></trans-unit>
+      <trans-unit id="header.home" datatype="html">
+        <source>Home</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/header/header.html</context>
+          <context context-type="linenumber">2,3</context>
+        </context-group>
+      <target>Inicio</target></trans-unit>
+      <trans-unit id="header.games" datatype="html">
+        <source>Games</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/header/header.html</context>
+          <context context-type="linenumber">3,4</context>
+        </context-group>
+      <target>Juegos</target></trans-unit>
+      <trans-unit id="header.searchPlaceholder" datatype="html">
+        <source>Search game or user</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/header/header.html</context>
+          <context context-type="linenumber">6</context>
+        </context-group>
+      <target>Buscar juego o usuario</target></trans-unit>
+      <trans-unit id="header.searchAriaLabel" datatype="html">
+        <source>Search</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/header/header.html</context>
+          <context context-type="linenumber">6</context>
+        </context-group>
+      <target>Buscar</target></trans-unit>
+      <trans-unit id="header.searchButtonAriaLabel" datatype="html">
+        <source>Search</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/header/header.html</context>
+          <context context-type="linenumber">7</context>
+        </context-group>
+      <target>Buscar</target></trans-unit>
+      <trans-unit id="header.mySubmissions" datatype="html">
+        <source>My Submissions</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/header/header.html</context>
+          <context context-type="linenumber">12,13</context>
+        </context-group>
+      <target>Mis envíos</target></trans-unit>
+      <trans-unit id="header.profileAlt" datatype="html">
+        <source>Profile</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/header/header.html</context>
+          <context context-type="linenumber">15</context>
+        </context-group>
+      <target>Perfil</target></trans-unit>
+      <trans-unit id="header.logout" datatype="html">
+        <source>Logout</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/header/header.html</context>
+          <context context-type="linenumber">21,23</context>
+        </context-group>
+      <target>Cerrar sesión</target></trans-unit>
+      <trans-unit id="header.register" datatype="html">
+        <source>Register</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/header/header.html</context>
+          <context context-type="linenumber">23,24</context>
+        </context-group>
+      <target>Registrarse</target></trans-unit>
+      <trans-unit id="header.login" datatype="html">
+        <source>Login</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/header/header.html</context>
+          <context context-type="linenumber">24,26</context>
+        </context-group>
+      <target>Iniciar sesión</target></trans-unit>
+      <trans-unit id="home.hero.eyebrow" datatype="html">
+        <source>Near real-time activity</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/home-page/home-page.html</context>
+          <context context-type="linenumber">3,4</context>
+        </context-group>
+      <target>Actividad casi en tiempo real</target></trans-unit>
+      <trans-unit id="home.hero.title" datatype="html">
+        <source>Your position in the competitions</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/home-page/home-page.html</context>
+          <context context-type="linenumber">4,5</context>
+        </context-group>
+      <target>Tu posición en las competiciones</target></trans-unit>
+      <trans-unit id="home.hero.lede" datatype="html">
+        <source>Explore the latest global records and see how your most recent games are doing.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/home-page/home-page.html</context>
+          <context context-type="linenumber">5,8</context>
+        </context-group>
+      <target>Explora los últimos récords globales y mira cómo van tus partidas más recientes.</target></trans-unit>
+      <trans-unit id="home.recent.eyebrow" datatype="html">
+        <source>Global</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/home-page/home-page.html</context>
+          <context context-type="linenumber">12,13</context>
+        </context-group>
+      <target>Global</target></trans-unit>
+      <trans-unit id="home.recent.title" datatype="html">
+        <source>Recent scores</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/home-page/home-page.html</context>
+          <context context-type="linenumber">13,15</context>
+        </context-group>
+      <target>Puntuaciones recientes</target></trans-unit>
+      <trans-unit id="home.recent.loading" datatype="html">
+        <source>Loading…</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/home-page/home-page.html</context>
+          <context context-type="linenumber">16,20</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/home-page/home-page.html</context>
+          <context context-type="linenumber">43,47</context>
+        </context-group>
+      <target>Cargando…</target></trans-unit>
+      <trans-unit id="home.recent.empty" datatype="html">
+        <source>Be the first to record a score today.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/home-page/home-page.html</context>
+          <context context-type="linenumber">40,43</context>
+        </context-group>
+      <target>Sé el primero en registrar una puntuación hoy.</target></trans-unit>
+      <trans-unit id="home.mine.eyebrow" datatype="html">
+        <source>Your activity</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/home-page/home-page.html</context>
+          <context context-type="linenumber">50,51</context>
+        </context-group>
+      <target>Tu actividad</target></trans-unit>
+      <trans-unit id="home.mine.title" datatype="html">
+        <source>My recent scores</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/home-page/home-page.html</context>
+          <context context-type="linenumber">51,53</context>
+        </context-group>
+      <target>Mis puntuaciones recientes</target></trans-unit>
+      <trans-unit id="home.mine.loading" datatype="html">
+        <source>Loading…</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/home-page/home-page.html</context>
+          <context context-type="linenumber">54,58</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/home-page/home-page.html</context>
+          <context context-type="linenumber">82,85</context>
+        </context-group>
+      <target>Cargando…</target></trans-unit>
+      <trans-unit id="home.mine.empty" datatype="html">
+        <source>You haven't logged any recent games yet.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/home-page/home-page.html</context>
+          <context context-type="linenumber">79,82</context>
+        </context-group>
+      <target>No has registrado ninguna partida reciente aún.</target></trans-unit>
+      <trans-unit id="home.mine.signIn" datatype="html">
+        <source> Sign in to view your progress and unlock personalized details. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/home-page/home-page.html</context>
+          <context context-type="linenumber">86,89</context>
+        </context-group>
+      <target>Inicia sesión para ver tu progreso y desbloquear detalles personalizados.</target></trans-unit>
+      <trans-unit id="mySubmissions.title" datatype="html">
+        <source>📊 My Score Submissions</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/my-submissions/my-submissions.html</context>
+          <context context-type="linenumber">3,4</context>
+        </context-group>
+      <target>📊 Mis Envíos de Puntuaciones</target></trans-unit>
+      <trans-unit id="mySubmissions.subtitle" datatype="html">
+        <source>Track the status of your submitted scores</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/my-submissions/my-submissions.html</context>
+          <context context-type="linenumber">4,7</context>
+        </context-group>
+      <target>Rastrea el estado de tus puntuaciones enviadas</target></trans-unit>
+      <trans-unit id="mySubmissions.loading" datatype="html">
+        <source>Loading your submissions...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/my-submissions/my-submissions.html</context>
+          <context context-type="linenumber">9,11</context>
+        </context-group>
+      <target>Cargando tus envíos...</target></trans-unit>
+      <trans-unit id="mySubmissions.authRequired" datatype="html">
+        <source>You need to be logged in to view your submissions.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/my-submissions/my-submissions.html</context>
+          <context context-type="linenumber">13,14</context>
+        </context-group>
+      <target>Necesitas iniciar sesión para ver tus envíos.</target></trans-unit>
+      <trans-unit id="mySubmissions.login" datatype="html">
+        <source>Login</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/my-submissions/my-submissions.html</context>
+          <context context-type="linenumber">14,16</context>
+        </context-group>
+      <target>Iniciar sesión</target></trans-unit>
+      <trans-unit id="mySubmissions.tryAgain" datatype="html">
+        <source>Try Again</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/my-submissions/my-submissions.html</context>
+          <context context-type="linenumber">19,21</context>
+        </context-group>
+      <target>Intentar de Nuevo</target></trans-unit>
+      <trans-unit id="mySubmissions.noSubmissions" datatype="html">
+        <source>📝 You haven't submitted any scores yet.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/my-submissions/my-submissions.html</context>
+          <context context-type="linenumber">23,24</context>
+        </context-group>
+      <target>📝 Aún no has enviado ninguna puntuación.</target></trans-unit>
+      <trans-unit id="mySubmissions.hint" datatype="html">
+        <source>Play some games and submit your scores to see them here!</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/my-submissions/my-submissions.html</context>
+          <context context-type="linenumber">24,25</context>
+        </context-group>
+      <target>¡Juega algunos juegos y envía tus puntuaciones para verlas aquí!</target></trans-unit>
+      <trans-unit id="mySubmissions.browseGames" datatype="html">
+        <source>Browse Games</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/my-submissions/my-submissions.html</context>
+          <context context-type="linenumber">25,28</context>
+        </context-group>
+      <target>Explorar Juegos</target></trans-unit>
+      <trans-unit id="mySubmissions.totalSubmissions" datatype="html">
+        <source>Total Submissions</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/my-submissions/my-submissions.html</context>
+          <context context-type="linenumber">32,34</context>
+        </context-group>
+      <target>Total de Envíos</target></trans-unit>
+      <trans-unit id="mySubmissions.pending" datatype="html">
+        <source>Pending</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/my-submissions/my-submissions.html</context>
+          <context context-type="linenumber">36,38</context>
+        </context-group>
+      <target>Pendientes</target></trans-unit>
+      <trans-unit id="mySubmissions.approved" datatype="html">
+        <source>Approved</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/my-submissions/my-submissions.html</context>
+          <context context-type="linenumber">40,42</context>
+        </context-group>
+      <target>Aprobadas</target></trans-unit>
+      <trans-unit id="mySubmissions.rejected" datatype="html">
+        <source>Rejected</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/my-submissions/my-submissions.html</context>
+          <context context-type="linenumber">44,48</context>
+        </context-group>
+      <target>Rechazadas</target></trans-unit>
+      <trans-unit id="newGame.eyebrow" datatype="html">
+        <source>Game management</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/new-game/new-game.html</context>
+          <context context-type="linenumber">4,5</context>
+        </context-group>
+      <target>Gestión de Juegos</target></trans-unit>
+      <trans-unit id="newGame.title" datatype="html">
+        <source>Create a new game</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/new-game/new-game.html</context>
+          <context context-type="linenumber">5,6</context>
+        </context-group>
+      <target>Crear un nuevo juego</target></trans-unit>
+      <trans-unit id="newGame.lede" datatype="html">
+        <source>Add a game to the leaderboard and start collecting scores.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/new-game/new-game.html</context>
+          <context context-type="linenumber">6,9</context>
+        </context-group>
+      <target>Añade un juego a la clasificación y empieza a recopilar puntuaciones.</target></trans-unit>
+      <trans-unit id="newGame.nameLabel" datatype="html">
+        <source>Name</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/new-game/new-game.html</context>
+          <context context-type="linenumber">10,11</context>
+        </context-group>
+      <target>Nombre</target></trans-unit>
+      <trans-unit id="newGame.nameRequired" datatype="html">
+        <source>A game name is required.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/new-game/new-game.html</context>
+          <context context-type="linenumber">13,16</context>
+        </context-group>
+      <target>Se requiere un nombre de juego.</target></trans-unit>
+      <trans-unit id="newGame.descriptionLabel" datatype="html">
+        <source>Description</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/new-game/new-game.html</context>
+          <context context-type="linenumber">16,17</context>
+        </context-group>
+      <target>Descripción</target></trans-unit>
+      <trans-unit id="newGame.imageUrlLabel" datatype="html">
+        <source>Image URL</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/new-game/new-game.html</context>
+          <context context-type="linenumber">19,20</context>
+        </context-group>
+      <target>URL de Imagen</target></trans-unit>
+      <trans-unit id="newGame.ownerLabel" datatype="html">
+        <source>Game owner <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span class=&quot;optional&quot;&gt;" />(optional)<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;" /></source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/new-game/new-game.html</context>
+          <context context-type="linenumber">22,23</context>
+        </context-group>
+      <target>Propietario del Juego &lt;span class="optional"&gt;(opcional)&lt;/span&gt;</target></trans-unit>
+      <trans-unit id="newGame.removeOwner" datatype="html">
+        <source>Remove</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/new-game/new-game.html</context>
+          <context context-type="linenumber">26,28</context>
+        </context-group>
+      <target>Eliminar</target></trans-unit>
+      <trans-unit id="newGame.ownerSearchPlaceholder" datatype="html">
+        <source>Search by username</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/new-game/new-game.html</context>
+          <context context-type="linenumber">36,37</context>
+        </context-group>
+      <target>Buscar por nombre de usuario</target></trans-unit>
+      <trans-unit id="newGame.searching" datatype="html">
+        <source>Searching...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/new-game/new-game.html</context>
+          <context context-type="linenumber">40,42</context>
+        </context-group>
+      <target>Buscando...</target></trans-unit>
+      <trans-unit id="newGame.selectOwner" datatype="html">
+        <source>Select</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/new-game/new-game.html</context>
+          <context context-type="linenumber">47,49</context>
+        </context-group>
+      <target>Seleccionar</target></trans-unit>
+      <trans-unit id="newGame.cancel" datatype="html">
+        <source>Cancel</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/new-game/new-game.html</context>
+          <context context-type="linenumber">59,60</context>
+        </context-group>
+      <target>Cancelar</target></trans-unit>
+      <trans-unit id="pendingScores.backToGame" datatype="html">
+        <source>← Back to Game</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">3,4</context>
+        </context-group>
+      <target>← Volver al Juego</target></trans-unit>
+      <trans-unit id="pendingScores.titleGame" datatype="html">
+        <source>⏳ Pending Scores for <x id="INTERPOLATION" equiv-text="{{ gameData.name }}" /></source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">5,6</context>
+        </context-group>
+      <target>⏳ Puntuaciones Pendientes para {{ gameData.name }}</target></trans-unit>
+      <trans-unit id="pendingScores.subtitleGame" datatype="html">
+        <source>Review and approve or reject submitted scores for this game</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">6,8</context>
+        </context-group>
+      <target>Revisa y aprueba o rechaza las puntuaciones enviadas para este juego</target></trans-unit>
+      <trans-unit id="pendingScores.title" datatype="html">
+        <source>⏳ Pending Score Approvals</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">8,9</context>
+        </context-group>
+      <target>⏳ Aprobaciones de Puntuaciones Pendientes</target></trans-unit>
+      <trans-unit id="pendingScores.subtitle" datatype="html">
+        <source>Review and approve or reject submitted scores</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">9,13</context>
+        </context-group>
+      <target>Revisa y aprueba o rechaza las puntuaciones enviadas</target></trans-unit>
+      <trans-unit id="pendingScores.loading" datatype="html">
+        <source>Loading pending scores...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">15,17</context>
+        </context-group>
+      <target>Cargando puntuaciones pendientes...</target></trans-unit>
+      <trans-unit id="pendingScores.goHome" datatype="html">
+        <source>Go Home</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">20,22</context>
+        </context-group>
+      <target>Ir al Inicio</target></trans-unit>
+      <trans-unit id="pendingScores.noPending" datatype="html">
+        <source>🎉 No pending scores to review!</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">24,25</context>
+        </context-group>
+      <target>🎉 ¡No hay puntuaciones pendientes para revisar!</target></trans-unit>
+      <trans-unit id="pendingScores.allProcessed" datatype="html">
+        <source>All scores have been processed.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">25,28</context>
+        </context-group>
+      <target>Todas las puntuaciones han sido procesadas.</target></trans-unit>
+      <trans-unit id="pendingScores.thPost" datatype="html">
+        <source>Post</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">32,33</context>
+        </context-group>
+      <target>Entrada</target></trans-unit>
+      <trans-unit id="pendingScores.thPlayer" datatype="html">
+        <source>Player</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">33,34</context>
+        </context-group>
+      <target>Jugador</target></trans-unit>
+      <trans-unit id="pendingScores.thScore" datatype="html">
+        <source>Score</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">34,35</context>
+        </context-group>
+      <target>Puntuación</target></trans-unit>
+      <trans-unit id="pendingScores.thSubmitted" datatype="html">
+        <source>Submitted</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">35,36</context>
+        </context-group>
+      <target>Enviado</target></trans-unit>
+      <trans-unit id="pendingScores.thActions" datatype="html">
+        <source>Actions</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">36,38</context>
+        </context-group>
+      <target>Acciones</target></trans-unit>
+      <trans-unit id="pendingScores.processing" datatype="html">
+        <source>Processing...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">61,62</context>
+        </context-group>
+      <target>Procesando...</target></trans-unit>
+      <trans-unit id="pendingScores.selfScore" datatype="html">
+        <source>Self Score</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">63,65</context>
+        </context-group>
+      <target>Puntuación Propia</target></trans-unit>
+      <trans-unit id="pendingScores.approveTitle" datatype="html">
+        <source> ✅ Approve </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">66,67</context>
+        </context-group>
+      <target>Aprobar</target></trans-unit>
+      <trans-unit id="pendingScores.rejectBtn" datatype="html">
+        <source> ❌ Reject </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">69,70</context>
+        </context-group>
+      <target>Rechazar</target></trans-unit>
+      <trans-unit id="pendingScores.rejectTitle" datatype="html">
+        <source>Reject Score</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">84,85</context>
+        </context-group>
+      <target>Rechazar Puntuación</target></trans-unit>
+      <trans-unit id="pendingScores.rejectPrompt" datatype="html">
+        <source>Are you sure you want to reject this score?</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">85,88</context>
+        </context-group>
+      <target>¿Estás seguro de que quieres rechazar esta puntuación?</target></trans-unit>
+      <trans-unit id="pendingScores.reasonLabel" datatype="html">
+        <source>Reason (optional):</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">88,90</context>
+        </context-group>
+      <target>Motivo (opcional):</target></trans-unit>
+      <trans-unit id="pendingScores.reasonPlaceholder" datatype="html">
+        <source>Provide a reason for rejection...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">93,94</context>
+        </context-group>
+      <target>Proporciona un motivo para el rechazo...</target></trans-unit>
+      <trans-unit id="pendingScores.cancel" datatype="html">
+        <source>Cancel</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">100,101</context>
+        </context-group>
+      <target>Cancelar</target></trans-unit>
+      <trans-unit id="pendingScores.confirmReject" datatype="html">
+        <source>Reject Score</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/pending-scores/pending-scores.html</context>
+          <context context-type="linenumber">101,104</context>
+        </context-group>
+      <target>Rechazar Puntuación</target></trans-unit>
+      <trans-unit id="scorePost.back" datatype="html">
+        <source>← Back</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/score-post/score-post.html</context>
+          <context context-type="linenumber">2,4</context>
+        </context-group>
+      <target>← Volver</target></trans-unit>
+      <trans-unit id="scorePost.loading" datatype="html">
+        <source>Loading score post...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/score-post/score-post.html</context>
+          <context context-type="linenumber">6,8</context>
+        </context-group>
+      <target>Cargando entrada de puntuación...</target></trans-unit>
+      <trans-unit id="scorePost.goHome" datatype="html">
+        <source>Go Home</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/score-post/score-post.html</context>
+          <context context-type="linenumber">11,13</context>
+        </context-group>
+      <target>Ir al Inicio</target></trans-unit>
+      <trans-unit id="scorePost.by" datatype="html">
+        <source>by</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/score-post/score-post.html</context>
+          <context context-type="linenumber">26,27</context>
+        </context-group>
+      <target>por</target></trans-unit>
+      <trans-unit id="scorePost.scoreLabel" datatype="html">
+        <source>Score</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/score-post/score-post.html</context>
+          <context context-type="linenumber">44,45</context>
+        </context-group>
+      <target>Puntuación</target></trans-unit>
+      <trans-unit id="scorePost.approvedBy" datatype="html">
+        <source>Approved by</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/score-post/score-post.html</context>
+          <context context-type="linenumber">59</context>
+        </context-group>
+      <target>Aprobado por</target></trans-unit>
+      <trans-unit id="scorePost.on" datatype="html">
+        <source>on</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/score-post/score-post.html</context>
+          <context context-type="linenumber">61</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/score-post/score-post.html</context>
+          <context context-type="linenumber">71</context>
+        </context-group>
+      <target>el</target></trans-unit>
+      <trans-unit id="scorePost.rejectedBy" datatype="html">
+        <source>Rejected by</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/score-post/score-post.html</context>
+          <context context-type="linenumber">69</context>
+        </context-group>
+      <target>Rechazado por</target></trans-unit>
+      <trans-unit id="scorePost.moderation" datatype="html">
+        <source>Moderation</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/score-post/score-post.html</context>
+          <context context-type="linenumber">84,85</context>
+        </context-group>
+      <target>Moderación</target></trans-unit>
+      <trans-unit id="scorePost.processing" datatype="html">
+        <source>Processing...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/score-post/score-post.html</context>
+          <context context-type="linenumber">86,88</context>
+        </context-group>
+      <target>Procesando...</target></trans-unit>
+      <trans-unit id="scorePost.approve" datatype="html">
+        <source>✅ Approve</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/score-post/score-post.html</context>
+          <context context-type="linenumber">89,90</context>
+        </context-group>
+      <target>✅ Aprobar</target></trans-unit>
+      <trans-unit id="scorePost.reject" datatype="html">
+        <source>❌ Reject</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/score-post/score-post.html</context>
+          <context context-type="linenumber">90,92</context>
+        </context-group>
+      <target>❌ Rechazar</target></trans-unit>
+      <trans-unit id="scorePost.rejectTitle" datatype="html">
+        <source>Reject Score</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/score-post/score-post.html</context>
+          <context context-type="linenumber">102,103</context>
+        </context-group>
+      <target>Rechazar Puntuación</target></trans-unit>
+      <trans-unit id="scorePost.rejectPrompt" datatype="html">
+        <source>Are you sure you want to reject this score?</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/score-post/score-post.html</context>
+          <context context-type="linenumber">103,105</context>
+        </context-group>
+      <target>¿Estás seguro de que quieres rechazar esta puntuación?</target></trans-unit>
+      <trans-unit id="scorePost.reasonLabel" datatype="html">
+        <source>Reason (optional):</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/score-post/score-post.html</context>
+          <context context-type="linenumber">106,108</context>
+        </context-group>
+      <target>Motivo (opcional):</target></trans-unit>
+      <trans-unit id="scorePost.reasonPlaceholder" datatype="html">
+        <source>Provide a reason for rejection...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/score-post/score-post.html</context>
+          <context context-type="linenumber">111,112</context>
+        </context-group>
+      <target>Proporciona un motivo para el rechazo...</target></trans-unit>
+      <trans-unit id="scorePost.cancel" datatype="html">
+        <source>Cancel</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/score-post/score-post.html</context>
+          <context context-type="linenumber">118,119</context>
+        </context-group>
+      <target>Cancelar</target></trans-unit>
+      <trans-unit id="scorePost.confirmReject" datatype="html">
+        <source>Reject Score</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/score-post/score-post.html</context>
+          <context context-type="linenumber">119,122</context>
+        </context-group>
+      <target>Rechazar Puntuación</target></trans-unit>
+      <trans-unit id="searchResults.title" datatype="html">
+        <source>Search Results</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/search-results/search-results.html</context>
+          <context context-type="linenumber">2,5</context>
+        </context-group>
+      <target>Resultados de Búsqueda</target></trans-unit>
+      <trans-unit id="searchResults.searchingFor" datatype="html">
+        <source>Searching for: "<x id="INTERPOLATION" equiv-text="{{ searchQuery() }}" />"</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/search-results/search-results.html</context>
+          <context context-type="linenumber">5,8</context>
+        </context-group>
+      <target>Buscando: "{{ searchQuery() }}"</target></trans-unit>
+      <trans-unit id="searchResults.loading" datatype="html">
+        <source>Loading...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/search-results/search-results.html</context>
+          <context context-type="linenumber">9,11</context>
+        </context-group>
+      <target>Cargando...</target></trans-unit>
+      <trans-unit id="searchResults.noResults" datatype="html">
+        <source>No results found for "<x id="INTERPOLATION" equiv-text="{{ searchQuery() }}" />"</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/search-results/search-results.html</context>
+          <context context-type="linenumber">13,14</context>
+        </context-group>
+      <target>No se encontraron resultados para "{{ searchQuery() }}"</target></trans-unit>
+      <trans-unit id="searchResults.games" datatype="html">
+        <source>Games (<x id="INTERPOLATION" equiv-text="{{ filteredGames().length }}" />)</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/search-results/search-results.html</context>
+          <context context-type="linenumber">19,20</context>
+        </context-group>
+      <target>Juegos ({{ filteredGames().length }})</target></trans-unit>
+      <trans-unit id="searchResults.users" datatype="html">
+        <source>Users (<x id="INTERPOLATION" equiv-text="{{ filteredUsers().length }}" />)</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/search-results/search-results.html</context>
+          <context context-type="linenumber">34,35</context>
+        </context-group>
+      <target>Usuarios ({{ filteredUsers().length }})</target></trans-unit>
+      <trans-unit id="searchResults.profilePicture" datatype="html">
+        <source>Profile picture</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/search-results/search-results.html</context>
+          <context context-type="linenumber">39</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/search-results/search-results.html</context>
+          <context context-type="linenumber">41</context>
+        </context-group>
+      <target>Foto de perfil</target></trans-unit>
+      <trans-unit id="userProfile.loading" datatype="html">
+        <source>Loading profile...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/user-profile/user-profile.html</context>
+          <context context-type="linenumber">5,7</context>
+        </context-group>
+      <target>Cargando perfil...</target></trans-unit>
+      <trans-unit id="userProfile.goHome" datatype="html">
+        <source>Go Home</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/user-profile/user-profile.html</context>
+          <context context-type="linenumber">10,12</context>
+        </context-group>
+      <target>Ir al Inicio</target></trans-unit>
+      <trans-unit id="userProfile.profilePicture" datatype="html">
+        <source>Profile picture</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/user-profile/user-profile.html</context>
+          <context context-type="linenumber">17</context>
+        </context-group>
+      <target>Foto de perfil</target></trans-unit>
+      <trans-unit id="userProfile.scoresSubmitted" datatype="html">
+        <source>Scores Submitted</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/user-profile/user-profile.html</context>
+          <context context-type="linenumber">32,34</context>
+        </context-group>
+      <target>Puntuaciones Enviadas</target></trans-unit>
+      <trans-unit id="userProfile.gamesPlayed" datatype="html">
+        <source>Games Played</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/user-profile/user-profile.html</context>
+          <context context-type="linenumber">36,38</context>
+        </context-group>
+      <target>Juegos Jugados</target></trans-unit>
+      <trans-unit id="userProfile.joined" datatype="html">
+        <source>Joined</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/user-profile/user-profile.html</context>
+          <context context-type="linenumber">40,42</context>
+        </context-group>
+      <target>Se unió</target></trans-unit>
+      <trans-unit id="userProfile.gameRankings" datatype="html">
+        <source>🏆 Game Rankings</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/user-profile/user-profile.html</context>
+          <context context-type="linenumber">47,48</context>
+        </context-group>
+      <target>Clasificación de Juegos</target></trans-unit>
+      <trans-unit id="userProfile.bestScore" datatype="html">
+        <source>Best Score</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/user-profile/user-profile.html</context>
+          <context context-type="linenumber">60,62</context>
+        </context-group>
+      <target>Mejor Puntuación</target></trans-unit>
+      <trans-unit id="userProfile.submissions" datatype="html">
+        <source>Submissions</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/user-profile/user-profile.html</context>
+          <context context-type="linenumber">64,66</context>
+        </context-group>
+      <target>Envíos</target></trans-unit>
+      <trans-unit id="userProfile.recentActivity" datatype="html">
+        <source>📊 Recent Activity</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/user-profile/user-profile.html</context>
+          <context context-type="linenumber">76,78</context>
+        </context-group>
+      <target>Actividad Reciente</target></trans-unit>
+      <trans-unit id="userProfile.noScores" datatype="html">
+        <source>This user hasn't submitted any scores yet.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/user-profile/user-profile.html</context>
+          <context context-type="linenumber">94,98</context>
+        </context-group>
+      <target>Este usuario no ha enviado ninguna puntuación aún.</target></trans-unit>
+    <trans-unit id="errors.unauthorized" datatype="html"><source>Unauthorized access. Please log in.</source><target>Acceso no autorizado. Por favor, inicia sesión.</target></trans-unit><trans-unit id="errors.forbidden" datatype="html"><source>You do not have permission to perform this action.</source><target>No tienes permiso para realizar esta acción.</target></trans-unit><trans-unit id="errors.invalidToken" datatype="html"><source>Invalid or expired authentication token.</source><target>Token de autenticación inválido o expirado.</target></trans-unit><trans-unit id="errors.tokenExpired" datatype="html"><source>Your session has expired. Please log in again.</source><target>Tu sesión ha expirado. Por favor, inicia sesión de nuevo.</target></trans-unit><trans-unit id="errors.validationFailed" datatype="html"><source>Validation failed. Please check your input.</source><target>La validación ha fallado. Por favor, revisa tu entrada.</target></trans-unit><trans-unit id="errors.invalidRequest" datatype="html"><source>Invalid request. Please check your data.</source><target>Solicitud inválida. Por favor, revisa tus datos.</target></trans-unit><trans-unit id="errors.notFound" datatype="html"><source>The requested resource was not found.</source><target>El recurso solicitado no fue encontrado.</target></trans-unit><trans-unit id="errors.gameNotFound" datatype="html"><source>Game not found.</source><target>Juego no encontrado.</target></trans-unit><trans-unit id="errors.scoreNotFound" datatype="html"><source>Score not found.</source><target>Puntuación no encontrada.</target></trans-unit><trans-unit id="errors.userNotFound" datatype="html"><source>User not found.</source><target>Usuario no encontrado.</target></trans-unit><trans-unit id="errors.apiKeyNotFound" datatype="html"><source>API key not found.</source><target>Clave API no encontrada.</target></trans-unit><trans-unit id="errors.submissionsNotAllowed" datatype="html"><source>Submissions are not allowed for this game.</source><target>Los envíos no están permitidos para este juego.</target></trans-unit><trans-unit id="errors.scoreNotHigher" datatype="html"><source>Score must be higher than your current best.</source><target>La puntuación debe ser mayor que tu mejor actual.</target></trans-unit><trans-unit id="errors.duplicateSubmission" datatype="html"><source>A submission with this ID already exists.</source><target>Ya existe un envío con este ID.</target></trans-unit><trans-unit id="errors.cannotModerateOwnScore" datatype="html"><source>You cannot moderate your own score.</source><target>No puedes moderar tu propia puntuación.</target></trans-unit><trans-unit id="errors.alreadyModerator" datatype="html"><source>This user is already a moderator for this game.</source><target>Este usuario ya es moderador de este juego.</target></trans-unit><trans-unit id="errors.notModerator" datatype="html"><source>User is not a moderator for this game.</source><target>El usuario no es moderador de este juego.</target></trans-unit><trans-unit id="errors.cannotRemoveOwner" datatype="html"><source>Cannot remove the game owner as moderator.</source><target>No se puede eliminar al propietario del juego como moderador.</target></trans-unit><trans-unit id="errors.gameAlreadyExists" datatype="html"><source>A game with this name already exists.</source><target>Ya existe un juego con este nombre.</target></trans-unit><trans-unit id="errors.rateLimitExceeded" datatype="html"><source>Too many requests. Please try again later.</source><target>Demasiadas solicitudes. Por favor, intenta de nuevo más tarde.</target></trans-unit><trans-unit id="errors.internalError" datatype="html"><source>An unexpected error occurred. Please try again.</source><target>Ocurrió un error inesperado. Por favor, intenta de nuevo.</target></trans-unit><trans-unit id="errors.serviceUnavailable" datatype="html"><source>Service temporarily unavailable. Please try again later.</source><target>Servicio temporalmente no disponible. Por favor, intenta de nuevo más tarde.</target></trans-unit><trans-unit id="errors.databaseError" datatype="html"><source>Database error. Please try again later.</source><target>Error de base de datos. Por favor, intenta de nuevo más tarde.</target></trans-unit><trans-unit id="errors.externalServiceError" datatype="html"><source>External service error. Please try again later.</source><target>Error de servicio externo. Por favor, intenta de nuevo más tarde.</target></trans-unit><trans-unit id="errors.clerkError" datatype="html"><source>Authentication service error. Please try again.</source><target>Error del servicio de autenticación. Por favor, intenta de nuevo.</target></trans-unit><trans-unit id="errors.webhookVerificationFailed" datatype="html"><source>Webhook verification failed.</source><target>La verificación del webhook falló.</target></trans-unit><trans-unit id="errors.networkError" datatype="html"><source>Network error. Please check your connection.</source><target>Error de red. Por favor, verifica tu conexión.</target></trans-unit><trans-unit id="errors.badRequest" datatype="html"><source>Bad request. Please check your input.</source><target>Solicitud incorrecta. Por favor, revisa tu entrada.</target></trans-unit><trans-unit id="errors.unknown" datatype="html"><source>An unknown error occurred.</source><target>Ocurrió un error desconocido.</target></trans-unit></body>
+  </file>
+</xliff>

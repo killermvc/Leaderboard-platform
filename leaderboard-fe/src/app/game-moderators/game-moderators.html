@@ -1,24 +1,24 @@
 <div class="game-moderators-container">
-  <button class="back-btn" (click)="goBack()">← Back to Game</button>
+  <button class="back-btn" (click)="goBack()" i18n="@@gameModerators.backToGame">← Back to Game</button>
 
   @if (loading() && !game()) {
     <div class="loading-state">
-      <p>Loading...</p>
+      <p i18n="@@gameModerators.loading">Loading...</p>
     </div>
   } @else if (error()) {
     <div class="error-state">
       <p>{{ error() }}</p>
-      <button class="btn-primary" routerLink="/games">Go to Games</button>
+      <button class="btn-primary" routerLink="/games" i18n="@@gameModerators.goToGames">Go to Games</button>
     </div>
   } @else if (game(); as gameData) {
     <header class="page-header">
-      <h1>🛡️ Moderators for {{ gameData.name }}</h1>
-      <p class="subtitle">Manage who can approve or reject score submissions for this game</p>
+      <h1 i18n="@@gameModerators.title">🛡️ Moderators for {{ gameData.name }}</h1>
+      <p class="subtitle" i18n="@@gameModerators.subtitle">Manage who can approve or reject score submissions for this game</p>
     </header>
 
     <!-- Add Moderator Section -->
     <section class="add-moderator-section">
-      <h2>Add New Moderator</h2>
+      <h2 i18n="@@gameModerators.addModerator">Add New Moderator</h2>
       <div class="search-form">
         <input
           type="text"
@@ -26,9 +26,10 @@
           (ngModelChange)="searchQuery.set($event)"
           (input)="searchUsers()"
           placeholder="Search for a user by username..."
+          i18n-placeholder="@@gameModerators.searchPlaceholder"
         />
         @if (searching()) {
-          <span class="searching-indicator">Searching...</span>
+          <span class="searching-indicator" i18n="@@gameModerators.searching">Searching...</span>
         }
       </div>
 
@@ -43,9 +44,9 @@
                 [disabled]="addingUserId() === user.id"
               >
                 @if (addingUserId() === user.id) {
-                  Adding...
+                  <span i18n="@@gameModerators.adding">Adding...</span>
                 } @else {
-                  + Add as Moderator
+                  <span i18n="@@gameModerators.addAsModerator">+ Add as Moderator</span>
                 }
               </button>
             </li>
@@ -56,14 +57,14 @@
 
     <!-- Current Moderators -->
     <section class="moderators-section">
-      <h2>Current Moderators</h2>
+      <h2 i18n="@@gameModerators.currentModerators">Current Moderators</h2>
 
       @if (loading()) {
-        <p class="loading-text">Loading moderators...</p>
+        <p class="loading-text" i18n="@@gameModerators.loadingModerators">Loading moderators...</p>
       } @else if (moderators().length === 0) {
         <div class="empty-state">
-          <p>No moderators assigned to this game yet.</p>
-          <p class="hint">Global moderators will handle score approvals for this game.</p>
+          <p i18n="@@gameModerators.noModerators">No moderators assigned to this game yet.</p>
+          <p class="hint" i18n="@@gameModerators.globalModeratorsHint">Global moderators will handle score approvals for this game.</p>
         </div>
       } @else {
         <ul class="moderators-list">
@@ -75,7 +76,7 @@
                 } @else {
                   <span class="mod-name">User #{{ mod.userId }}</span>
                 }
-                <span class="assigned-date">Added {{ formatDate(mod.assignedAt) }}</span>
+                <span class="assigned-date">{{ assignedDateLabel() }} {{ formatDate(mod.assignedAt) }}</span>
               </div>
               <button
                 class="btn-remove"
@@ -84,9 +85,9 @@
                 aria-label="Remove moderator"
               >
                 @if (removingUserId() === mod.userId) {
-                  <span class="btn-label">✖ Removing...</span>
+                  <span class="btn-label" i18n="@@gameModerators.removing">✖ Removing...</span>
                 } @else {
-                  <span class="btn-label">✖ Remove</span>
+                  <span class="btn-label" i18n="@@gameModerators.remove">✖ Remove</span>
                 }
               </button>
             </li>

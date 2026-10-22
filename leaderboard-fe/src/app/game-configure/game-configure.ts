@@ -7,6 +7,7 @@ import { GameService, Game } from '../core/game-service';
 import { AuthService } from '../core/auth-service';
 import { ModerationService, GameModeratorInfo } from '../core/moderation-service';
 import { UserService, User } from '../core/user-service';
+import { TranslationService } from '../core/translation.service';
 
 @Component({
   selector: 'app-game-configure',
@@ -24,6 +25,7 @@ export class GameConfigure implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly moderationService = inject(ModerationService);
   private readonly userService = inject(UserService);
+  private readonly translationService = inject(TranslationService);
 
   game = signal<Game | null>(null);
   moderators = signal<GameModeratorInfo[]>([]);
@@ -40,6 +42,17 @@ export class GameConfigure implements OnInit {
   ownerResults = signal<User[]>([]);
   selectedOwner = signal<User | null>(null);
   searchingOwners = signal(false);
+
+  // i18n labels
+  openLabel = signal('Open for submissions');
+  closedLabel = signal('Submissions closed');
+  savingLabel = signal('Saving...');
+  saveLabel = signal('Save changes');
+  addingLabel = signal('Adding...');
+  addLabel = signal('Add');
+  removingLabel = signal('Removing...');
+  removeLabel = signal('Remove');
+  assignedLabel = signal('Added');
 
   isAdmin = computed(() => this.authService.hasRole('Admin'));
 
@@ -207,7 +220,8 @@ export class GameConfigure implements OnInit {
   }
 
   formatDate(date: string): string {
-    return new Date(date).toLocaleDateString('en-US', {
+    const locale = this.translationService.getLanguage() === 'es' ? 'es-ES' : 'en-US';
+    return new Date(date).toLocaleDateString(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',

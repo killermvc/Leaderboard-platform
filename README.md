@@ -335,5 +335,36 @@ The frontend is a standalone Angular 21 SPA using modern Angular features:
 | Script | Description |
 |---|---|
 | `npm start` | Start dev server (`http://localhost:4200`) |
-| `npm run build` | Production build to `dist/` |
+| `npm run build` | Production build to `dist/` (English) |
+| `npm run build:es` | Production build to `dist/` (Spanish) |
 | `npm run test` | Run Karma unit tests |
+| `npm run extract-i18n` | Extract translatable strings to XLF |
+
+## Localization
+
+The application supports **English (en)** and **Spanish (es)** with full internationalization support:
+
+### Features
+- **Compile-time translation**: Angular's built-in i18n with XLF translation files
+- **Runtime language switching**: Language selector in header with page reload
+- **Automatic detection**: Browser language detection with localStorage persistence
+- **Locale-aware formatting**: Dates, numbers, and currency adapt to current locale
+- **Backend error codes**: Machine-readable error codes with frontend translation
+
+### Supported Languages
+- **English (en)** - Default
+- **Spanish (es)** - Fully translated
+
+### Adding Translations
+1. Mark user-facing text in templates with `i18n="@@unique.id"` attributes
+2. Run `npm run extract-i18n` to update `src/locale/messages.xlf`
+3. Add Spanish translations in `src/locale/messages.es.xlf`
+4. Build for both locales: `npm run build && npm run build:es`
+
+### Language Selector
+The header includes an EN/ES toggle that persists the user's preference in localStorage and reloads the page to load the appropriate locale build.
+
+### Backend Error Codes
+The API returns standardized error codes (e.g., `GAME_NOT_FOUND`, `VALIDATION_FAILED`) instead of localized messages. The frontend maps these to translated user-facing messages.
+
+See [I18N_GUIDE.md](leaderboard-fe/I18N_GUIDE.md) for detailed documentation.

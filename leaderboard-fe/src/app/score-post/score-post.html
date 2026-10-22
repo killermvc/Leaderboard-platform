@@ -1,14 +1,14 @@
 <div class="score-post-shell">
-  <button class="back-btn" (click)="goBack()">← Back</button>
+  <button class="back-btn" (click)="goBack()" i18n="@@scorePost.back">← Back</button>
 
   @if (loading()) {
     <div class="loading-state">
-      <p>Loading score post...</p>
+      <p i18n="@@scorePost.loading">Loading score post...</p>
     </div>
   } @else if (error()) {
     <div class="error-state">
       <p>{{ error() }}</p>
-      <button class="btn-primary" routerLink="/">Go Home</button>
+      <button class="btn-primary" routerLink="/" i18n="@@scorePost.goHome">Go Home</button>
     </div>
   } @else if (score(); as s) {
     <article class="post-card">
@@ -23,11 +23,11 @@
         <h1 class="post-title">{{ s.title }}</h1>
         <div class="post-meta">
           <span class="meta-item">
-            by
+            <span i18n="@@scorePost.by">by</span>
             @if (s.user) {
-              <button class="link-btn" (click)="goToUser()">{{ s.user.username ?? 'Unknown' }}</button>
+              <button class="link-btn" (click)="goToUser()">{{ s.user.username ?? unknownUser() }}</button>
             } @else {
-              <span class="meta-item">{{ s.playerName ?? 'Unknown player' }}</span>
+              <span class="meta-item">{{ s.playerName ?? unknownPlayer() }}</span>
             }
           </span>
           <span class="meta-separator">·</span>
@@ -41,7 +41,7 @@
 
       <!-- Score Value -->
       <div class="score-highlight">
-        <span class="score-label">Score</span>
+        <span class="score-label" i18n="@@scorePost.scoreLabel">Score</span>
         <span class="score-value">{{ s.value | number }}</span>
       </div>
 
@@ -56,9 +56,9 @@
       @if (s.status === ScoreStatus.Approved && s.reviewedBy) {
         <div class="review-info approved">
           <p>
-            ✅ Approved by <strong>{{ s.reviewedBy.username }}</strong>
+            ✅ <span i18n="@@scorePost.approvedBy">Approved by</span> <strong>{{ s.reviewedBy.username }}</strong>
             @if (s.reviewedAt) {
-              on {{ formatDate(s.reviewedAt) }}
+              <span i18n="@@scorePost.on">on</span> {{ formatDate(s.reviewedAt) }}
             }
           </p>
         </div>
@@ -66,14 +66,14 @@
         <div class="review-info rejected">
           @if (s.reviewedBy) {
             <p>
-              ❌ Rejected by <strong>{{ s.reviewedBy.username }}</strong>
+              ❌ <span i18n="@@scorePost.rejectedBy">Rejected by</span> <strong>{{ s.reviewedBy.username }}</strong>
               @if (s.reviewedAt) {
-                on {{ formatDate(s.reviewedAt) }}
+                <span i18n="@@scorePost.on">on</span> {{ formatDate(s.reviewedAt) }}
               }
             </p>
           }
           @if (s.rejectionReason) {
-            <p class="rejection-reason">Reason: {{ s.rejectionReason }}</p>
+            <p class="rejection-reason">{{ rejectionReasonLabel() }} {{ s.rejectionReason }}</p>
           }
         </div>
       }
@@ -81,13 +81,13 @@
       <!-- Moderation Actions -->
       @if (isPending() && canModerate() && !isOwnScore()) {
         <div class="moderation-actions">
-          <h3>Moderation</h3>
+          <h3 i18n="@@scorePost.moderation">Moderation</h3>
           @if (processing()) {
-            <p class="processing-text">Processing...</p>
+            <p class="processing-text" i18n="@@scorePost.processing">Processing...</p>
           } @else {
             <div class="action-buttons">
-              <button class="btn-approve" (click)="approveScore()">✅ Approve</button>
-              <button class="btn-reject" (click)="openRejectModal()">❌ Reject</button>
+              <button class="btn-approve" (click)="approveScore()" i18n="@@scorePost.approve">✅ Approve</button>
+              <button class="btn-reject" (click)="openRejectModal()" i18n="@@scorePost.reject">❌ Reject</button>
             </div>
           }
         </div>
@@ -99,23 +99,24 @@
   @if (showRejectModal()) {
     <div class="modal-overlay" (click)="closeRejectModal()">
       <div class="modal-content" (click)="$event.stopPropagation()">
-        <h2>Reject Score</h2>
-        <p>Are you sure you want to reject this score?</p>
+        <h2 i18n="@@scorePost.rejectTitle">Reject Score</h2>
+        <p i18n="@@scorePost.rejectPrompt">Are you sure you want to reject this score?</p>
 
         <div class="form-group">
-          <label for="rejectionReason">Reason (optional):</label>
+          <label for="rejectionReason" i18n="@@scorePost.reasonLabel">Reason (optional):</label>
           <textarea
             id="rejectionReason"
             [ngModel]="rejectionReason()"
             (ngModelChange)="rejectionReason.set($event)"
             placeholder="Provide a reason for rejection..."
+            i18n-placeholder="@@scorePost.reasonPlaceholder"
             rows="3"
           ></textarea>
         </div>
 
         <div class="modal-actions">
-          <button class="btn-secondary" (click)="closeRejectModal()">Cancel</button>
-          <button class="btn-reject" (click)="confirmReject()">Reject Score</button>
+          <button class="btn-secondary" (click)="closeRejectModal()" i18n="@@scorePost.cancel">Cancel</button>
+          <button class="btn-reject" (click)="confirmReject()" i18n="@@scorePost.confirmReject">Reject Score</button>
         </div>
       </div>
     </div>

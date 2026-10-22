@@ -1,18 +1,18 @@
 <main class="configure-shell">
-  <button class="back-btn" type="button" (click)="goBack()">← Back to Game</button>
+  <button class="back-btn" type="button" (click)="goBack()" i18n="@@gameConfigure.backToGame">← Back to Game</button>
 
   @if (loading()) {
-    <section class="state-panel"><p>Loading game configuration...</p></section>
+    <section class="state-panel"><p i18n="@@gameConfigure.loading">Loading game configuration...</p></section>
   } @else if (error() && !game()) {
     <section class="state-panel error-panel">
       <p>{{ error() }}</p>
-      <button class="btn-primary" type="button" routerLink="/games">Go to Games</button>
+      <button class="btn-primary" type="button" routerLink="/games" i18n="@@gameConfigure.goToGames">Go to Games</button>
     </section>
   } @else if (game(); as gameData) {
     <header class="page-header">
-      <p class="eyebrow">Game owner workspace</p>
-      <h1>Configure {{ gameData.name }}</h1>
-      <p>Keep the game identity current and choose who can review score submissions.</p>
+      <p class="eyebrow" i18n="@@gameConfigure.eyebrow">Game owner workspace</p>
+      <h1 i18n="@@gameConfigure.title">Configure {{ gameData.name }}</h1>
+      <p i18n="@@gameConfigure.subtitle">Keep the game identity current and choose who can review score submissions.</p>
     </header>
 
     @if (error()) {
@@ -26,32 +26,32 @@
       <form class="panel settings-panel" [formGroup]="gameForm" (ngSubmit)="saveGame()">
         <div class="panel-heading">
           <div>
-            <p class="eyebrow">Game profile</p>
-            <h2>Settings</h2>
+            <p class="eyebrow" i18n="@@gameConfigure.gameProfile">Game profile</p>
+            <h2 i18n="@@gameConfigure.settings">Settings</h2>
           </div>
           <span class="status-chip" [class.closed]="!gameForm.controls.isSubmitAllowed.value">
-            {{ gameForm.controls.isSubmitAllowed.value ? 'Open for submissions' : 'Submissions closed' }}
+            {{ gameForm.controls.isSubmitAllowed.value ? openLabel() : closedLabel() }}
           </span>
         </div>
 
-        <label for="game-name">Name</label>
+        <label for="game-name" i18n="@@gameConfigure.nameLabel">Name</label>
         <input id="game-name" type="text" formControlName="name" />
         @if (gameForm.controls.name.invalid && gameForm.controls.name.touched) {
-          <span class="field-error">A name is required.</span>
+          <span class="field-error" i18n="@@gameConfigure.nameRequired">A name is required.</span>
         }
 
-        <label for="game-description">Description</label>
+        <label for="game-description" i18n="@@gameConfigure.descriptionLabel">Description</label>
         <textarea id="game-description" rows="6" formControlName="description"></textarea>
 
-        <label for="game-image">Image URL</label>
+        <label for="game-image" i18n="@@gameConfigure.imageUrlLabel">Image URL</label>
         <input id="game-image" type="url" formControlName="imageUrl" placeholder="https://..." />
 
         @if (isAdmin()) {
-          <label for="owner-search">Game owner</label>
+          <label for="owner-search" i18n="@@gameConfigure.ownerLabel">Game owner</label>
           @if (selectedOwner(); as owner) {
             <div class="selected-owner">
               <span>{{ owner.username }}</span>
-              <button class="text-action" type="button" (click)="clearOwner()">Remove</button>
+              <button class="text-action" type="button" (click)="clearOwner()" i18n="@@gameConfigure.removeOwner">Remove</button>
             </div>
           } @else {
             <input
@@ -62,16 +62,17 @@
               (ngModelChange)="ownerSearch.set($event)"
               (input)="searchOwners()"
               placeholder="Search by username"
+              i18n-placeholder="@@gameConfigure.ownerSearchPlaceholder"
             />
             @if (searchingOwners()) {
-              <p class="muted-text">Searching...</p>
+              <p class="muted-text" i18n="@@gameConfigure.searching">Searching...</p>
             }
             @if (ownerResults().length > 0) {
               <ul class="search-results">
                 @for (user of ownerResults(); track user.id) {
                   <li>
                     <span>{{ user.username }}</span>
-                    <button class="text-action" type="button" (click)="chooseOwner(user)">Select</button>
+                    <button class="text-action" type="button" (click)="chooseOwner(user)" i18n="@@gameConfigure.selectOwner">Select</button>
                   </li>
                 }
               </ul>
@@ -79,7 +80,7 @@
           }
         }
 
-        <label class="toggle-row" for="submits-allowed">
+        <label class="toggle-row" for="submits-allowed" i18n="@@gameConfigure.allowSubmissions">
           <input id="submits-allowed" type="checkbox" formControlName="isSubmitAllowed" />
           <span>
             <strong>Allow manual submissions</strong>
@@ -88,9 +89,9 @@
         </label>
 
         <div class="form-actions">
-          <button class="btn-secondary" type="button" (click)="goBack()">Cancel</button>
+          <button class="btn-secondary" type="button" (click)="goBack()" i18n="@@gameConfigure.cancel">Cancel</button>
           <button class="btn-primary" type="submit" [disabled]="gameForm.invalid || saving()">
-            {{ saving() ? 'Saving...' : 'Save changes' }}
+            {{ saving() ? savingLabel() : saveLabel() }}
           </button>
         </div>
       </form>
@@ -99,12 +100,12 @@
         <section class="panel add-panel">
           <div class="panel-heading">
             <div>
-              <p class="eyebrow">Review team</p>
-              <h2>Add moderator</h2>
+              <p class="eyebrow" i18n="@@gameConfigure.reviewTeam">Review team</p>
+              <h2 i18n="@@gameConfigure.addModerator">Add moderator</h2>
             </div>
           </div>
-          <p class="panel-copy">Search for a player and give them permission to approve or reject submissions for this game.</p>
-          <label class="sr-only" for="moderator-search">Search users</label>
+          <p class="panel-copy" i18n="@@gameConfigure.panelCopy">Search for a player and give them permission to approve or reject submissions for this game.</p>
+          <label class="sr-only" for="moderator-search" i18n="@@gameConfigure.searchUsers">Search users</label>
           <input
             id="moderator-search"
             type="search"
@@ -112,9 +113,10 @@
             (ngModelChange)="searchQuery.set($event)"
             (input)="searchUsers()"
             placeholder="Search by username"
+            i18n-placeholder="@@gameConfigure.moderatorSearchPlaceholder"
           />
           @if (searching()) {
-            <p class="muted-text">Searching...</p>
+            <p class="muted-text" i18n="@@gameConfigure.searching">Searching...</p>
           }
           @if (searchResults().length > 0) {
             <ul class="search-results">
@@ -122,7 +124,7 @@
                 <li>
                   <span>{{ user.username }}</span>
                   <button class="text-action" type="button" (click)="addModerator(user.id)" [disabled]="addingUserId() === user.id">
-                    {{ addingUserId() === user.id ? 'Adding...' : 'Add' }}
+                    {{ addingUserId() === user.id ? addingLabel() : addLabel() }}
                   </button>
                 </li>
               }
@@ -133,23 +135,23 @@
         <section class="panel moderators-panel">
           <div class="panel-heading">
             <div>
-              <p class="eyebrow">Assigned access</p>
-              <h2>Moderators</h2>
+              <p class="eyebrow" i18n="@@gameConfigure.assignedAccess">Assigned access</p>
+              <h2 i18n="@@gameConfigure.moderators">Moderators</h2>
             </div>
             <span class="count-chip">{{ moderators().length }}</span>
           </div>
           @if (moderators().length === 0) {
-            <p class="muted-text">No game-specific moderators yet.</p>
+            <p class="muted-text" i18n="@@gameConfigure.noModerators">No game-specific moderators yet.</p>
           } @else {
             <ul class="moderator-list">
               @for (moderator of moderators(); track moderator.userId) {
                 <li>
                   <div>
                     <a [routerLink]="['/user', moderator.userId]">{{ moderator.user.username }}</a>
-                    <small>Added {{ formatDate(moderator.assignedAt) }}</small>
+                    <small>{{ assignedLabel() }} {{ formatDate(moderator.assignedAt) }}</small>
                   </div>
                   <button class="remove-action" type="button" (click)="removeModerator(moderator.userId)" [disabled]="removingUserId() === moderator.userId">
-                    {{ removingUserId() === moderator.userId ? 'Removing...' : 'Remove' }}
+                    {{ removingUserId() === moderator.userId ? removingLabel() : removeLabel() }}
                   </button>
                 </li>
               }

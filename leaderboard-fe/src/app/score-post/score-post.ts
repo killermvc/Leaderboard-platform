@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ScoreService, ScoreRecord, ScoreStatus } from '../core/score-service';
 import { ModerationService } from '../core/moderation-service';
 import { AuthService } from '../core/auth-service';
+import { TranslationService } from '../core/translation.service';
 
 @Component({
   selector: 'app-score-post',
@@ -19,6 +20,7 @@ export class ScorePostComponent implements OnInit {
   private scoreService = inject(ScoreService);
   private moderationService = inject(ModerationService);
   private authService = inject(AuthService);
+  private translationService = inject(TranslationService);
 
   score = signal<ScoreRecord | null>(null);
   loading = signal(true);
@@ -32,6 +34,10 @@ export class ScorePostComponent implements OnInit {
 
   isAuthenticated = computed(() => this.authService.isAuthenticated());
   currentUserId = computed(() => this.authService.currentUserIdSig());
+
+  unknownUser = signal('Unknown');
+  unknownPlayer = signal('Unknown player');
+  rejectionReasonLabel = signal('Reason:');
 
   isPending = computed(() => this.score()?.status === ScoreStatus.Pending);
   isApproved = computed(() => this.score()?.status === ScoreStatus.Approved);
@@ -160,7 +166,8 @@ export class ScorePostComponent implements OnInit {
 
   formatDate(dateString: string): string {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    const locale = this.translationService.getLanguage() === 'es' ? 'es-ES' : 'en-US';
+    return date.toLocaleDateString(locale, {
       year: 'numeric',
       month: 'long',
       day: 'numeric',

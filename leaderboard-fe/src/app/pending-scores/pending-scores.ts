@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ModerationService, PendingScore } from '../core/moderation-service';
 import { AuthService } from '../core/auth-service';
 import { GameService, Game } from '../core/game-service';
+import { TranslationService } from '../core/translation.service';
 
 @Component({
   selector: 'app-pending-scores',
@@ -18,6 +19,7 @@ export class PendingScoresComponent implements OnInit {
   private authService = inject(AuthService);
   private gameService = inject(GameService);
   private route = inject(ActivatedRoute);
+  private translationService = inject(TranslationService);
   private router = inject(Router);
 
   gameId = signal<number | null>(null);
@@ -37,6 +39,7 @@ export class PendingScoresComponent implements OnInit {
     this.authService.hasRole('Moderator') || this.authService.hasRole('Admin')
   );
   currentUserId = computed(() => this.authService.currentUserIdSig());
+  unknownPlayer = signal('Unknown player');
 
   ngOnInit() {
     if (!this.isAuthenticated()) {
@@ -145,7 +148,8 @@ export class PendingScoresComponent implements OnInit {
 
   formatDate(dateString: string): string {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    const locale = this.translationService.getLanguage() === 'es' ? 'es-ES' : 'en-US';
+    return date.toLocaleDateString(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',

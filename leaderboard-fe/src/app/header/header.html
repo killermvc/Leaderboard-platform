@@ -1,26 +1,37 @@
 <div class="header-bar">
-	<button (click)="routeToHome()">Home</button>
-	<button (click)="routeToGames()">Games</button>
+	<button (click)="routeToHome()" i18n="@@header.home">Home</button>
+	<button (click)="routeToGames()" i18n="@@header.games">Games</button>
 	<div class = "header-spacer"></div>
 	<form class="header-search" (submit)="$event.preventDefault(); onSearch(searchInput.value)">
-		<input #searchInput type="search" placeholder="Search game or user" aria-label="Search" />
-		<button type="submit" aria-label="Search">
+		<input #searchInput type="search" placeholder="Search game or user" aria-label="Search" i18n-placeholder="@@header.searchPlaceholder" i18n-aria-label="@@header.searchAriaLabel" />
+		<button type="submit" aria-label="Search" i18n-aria-label="@@header.searchButtonAriaLabel">
 			<ng-icon name="octSearch" size="36px" ></ng-icon>
 		</button>
 	</form>
 	@if (authService.isAuthenticated()) {
-		<button (click)="routeToMySubmissions()">My Submissions</button>
+		<button (click)="routeToMySubmissions()" i18n="@@header.mySubmissions">My Submissions</button>
 		<button class="profile-button" (click)="routeToProfile()">
 			@if (profileImageUrl()) {
-				<img [src]="profileImageUrl()" alt="Profile" class="profile-avatar" />
+				<img [src]="profileImageUrl()" alt="Profile" class="profile-avatar" i18n-alt="@@header.profileAlt" />
 			} @else {
 				<ng-icon name="octFeedPerson" size="24px"></ng-icon>
 			}
-			<span class="username">  {{ username() ?? 'Account' }}</span>
+			<span class="username">  {{ username() ?? accountFallback() }} </span>
 		</button>
-		<button (click)="onLogout()">Logout</button>
+		<button (click)="onLogout()" i18n="@@header.logout">Logout</button>
 	} @else {
-		<button (click)="routeToRegister()">Register</button>
-		<button (click)="routeToLogin()">Login</button>
+		<button (click)="routeToRegister()" i18n="@@header.register">Register</button>
+		<button (click)="routeToLogin()" i18n="@@header.login">Login</button>
 	}
+	<!-- Language Selector -->
+	<div class="language-selector">
+		<button class="lang-btn" (click)="changeLanguage('en')" [class.active]="currentLanguage() === 'en'" aria-label="English">
+			<ng-icon name="octGlobe" size="20px"></ng-icon>
+			<span>EN</span>
+		</button>
+		<button class="lang-btn" (click)="changeLanguage('es')" [class.active]="currentLanguage() === 'es'" aria-label="Español">
+			<ng-icon name="octGlobe" size="20px"></ng-icon>
+			<span>ES</span>
+		</button>
+	</div>
 </div>

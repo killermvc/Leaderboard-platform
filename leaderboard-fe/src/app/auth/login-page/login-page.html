@@ -1,9 +1,9 @@
 <section class="auth-shell">
 	<div class="auth-panel">
 		<header>
-			<p class="eyebrow">Welcome back</p>
-			<h1>Sign in to keep competing</h1>
-			<p class="lede">Connect your account to record scores and view your rankings.</p>
+			<p class="eyebrow" i18n="@@auth.login.eyebrow">Welcome back</p>
+			<h1 i18n="@@auth.login.title">Sign in to keep competing</h1>
+			<p class="lede" i18n="@@auth.login.lede">Connect your account to record scores and view your rankings.</p>
 		</header>
 		<clerk-sign-in [props]="{ routing: 'path', path: '/auth/login', signUpUrl: '/auth/register', fallbackRedirectUrl: '/' }" />
 	</div>

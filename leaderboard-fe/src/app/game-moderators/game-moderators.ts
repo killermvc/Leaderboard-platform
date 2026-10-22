@@ -6,6 +6,7 @@ import { ModerationService, GameModeratorInfo } from '../core/moderation-service
 import { UserService, User } from '../core/user-service';
 import { GameService, Game } from '../core/game-service';
 import { AuthService } from '../core/auth-service';
+import { TranslationService } from '../core/translation.service';
 
 @Component({
   selector: 'app-game-moderators',
@@ -21,6 +22,7 @@ export class GameModeratorsComponent implements OnInit {
   private userService = inject(UserService);
   private gameService = inject(GameService);
   private authService = inject(AuthService);
+  private translationService = inject(TranslationService);
 
   game = signal<Game | null>(null);
   moderators = signal<GameModeratorInfo[]>([]);
@@ -35,6 +37,7 @@ export class GameModeratorsComponent implements OnInit {
   removingUserId = signal<number | null>(null);
 
   isAdmin = computed(() => this.authService.hasRole('Admin'));
+  assignedDateLabel = signal('Added');
 
   ngOnInit() {
     if (!this.isAdmin()) {
@@ -151,7 +154,8 @@ export class GameModeratorsComponent implements OnInit {
 
   formatDate(dateString: string): string {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    const locale = this.translationService.getLanguage() === 'es' ? 'es-ES' : 'en-US';
+    return date.toLocaleDateString(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric'

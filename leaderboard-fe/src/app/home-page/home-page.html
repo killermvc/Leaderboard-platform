@@ -1,21 +1,19 @@
 <div class="home-shell">
 	<section class="hero">
-		<p class="eyebrow">Near real-time activity</p>
-		<h1>Your position in the competitions</h1>
-		<p class="lede">
-			Explore the latest global records and see how your most recent games are doing.
-		</p>
+		<p class="eyebrow" i18n="@@home.hero.eyebrow">Near real-time activity</p>
+		<h1 i18n="@@home.hero.title">Your position in the competitions</h1>
+		<p class="lede" i18n="@@home.hero.lede">Explore the latest global records and see how your most recent games are doing.</p>
 	</section>
 
 	<div class="panels-grid">
 		<section class="panel recent">
 			<header class="panel-header">
 				<div>
-					<p class="eyebrow">Global</p>
-					<h2>Recent scores</h2>
+					<p class="eyebrow" i18n="@@home.recent.eyebrow">Global</p>
+					<h2 i18n="@@home.recent.title">Recent scores</h2>
 				</div>
 				@if (loadingRecent) {
-					<span class="state-chip">Loading…</span>
+					<span class="state-chip" i18n="@@home.recent.loading">Loading…</span>
 				}
 			</header>
 
@@ -29,31 +27,31 @@
 							<li class="clickable" (click)="viewScorePost(score.id)">
 								<div class="player-block">
 									<p class="post-title">{{ score.title || (score.game.name + ' - ' + score.value) }}</p>
-									<p class="player-name">{{ score.user?.username ?? score.playerName ?? 'Anonymous player' }} · {{ score.game.name }}</p>
+									<p class="player-name">{{ score.user?.username ?? score.playerName ?? anonymousPlayer() }} · {{ score.game.name }}</p>
 								</div>
 								<div class="score-meta">
 									<span class="score-value">{{ score.value | number }}</span>
-									<span class="score-date">{{ score.dateAchieved | date:'d/MM/yy, HH:mm' }}</span>
+									<span class="score-date">{{ score.dateAchieved | date:'short' }}</span>
 								</div>
 							</li>
 						}
 					</ul>
 				} @else {
-					<p class="empty-state">Be the first to record a score today.</p>
+					<p class="empty-state" i18n="@@home.recent.empty">Be the first to record a score today.</p>
 				}
 			} @else {
-				<div class="state-chip">Loading…</div>
+				<div class="state-chip" i18n="@@home.recent.loading">Loading…</div>
 			}
 		</section>
 
 		<section class="panel mine">
 			<header class="panel-header">
 				<div>
-					<p class="eyebrow">Your activity</p>
-					<h2>My recent scores</h2>
+					<p class="eyebrow" i18n="@@home.mine.eyebrow">Your activity</p>
+					<h2 i18n="@@home.mine.title">My recent scores</h2>
 				</div>
 				@if (loadingMine && authService.isAuthenticated()) {
-					<span class="state-chip">Loading…</span>
+					<span class="state-chip" i18n="@@home.mine.loading">Loading…</span>
 				}
 			</header>
 
@@ -68,8 +66,8 @@
 								<li class="clickable" (click)="viewScorePost(score.id)">
 									<div class="player-block">
 										<p class="post-title">{{ score.title || (score.game.name + ' - ' + score.value) }}</p>
-										<p class="player-name">Game: {{ score.game.name }}</p>
-										<p class="game-name">Recorded on {{ score.dateAchieved | date:'d/MM/yyyy \'at\' HH:mm' }}</p>
+										<p class="player-name">{{ gameLabel() }} {{ score.game.name }}</p>
+										<p class="game-name">{{ recordedOnLabel() }} {{ score.dateAchieved | date:'short' }}</p>
 									</div>
 									<div class="score-meta">
 										<span class="score-value">{{ score.value | number }}</span>
@@ -78,13 +76,13 @@
 							}
 						</ul>
 					} @else {
-						<p class="empty-state">You haven't logged any recent games yet.</p>
+						<p class="empty-state" i18n="@@home.mine.empty">You haven't logged any recent games yet.</p>
 					}
 				} @else {
-					<div class="state-chip">Loading…</div>
+					<div class="state-chip" i18n="@@home.mine.loading">Loading…</div>
 				}
 			} @else {
-				<p class="empty-state">
+				<p class="empty-state" i18n="@@home.mine.signIn">
 					Sign in to view your progress and unlock personalized details.
 				</p>
 			}

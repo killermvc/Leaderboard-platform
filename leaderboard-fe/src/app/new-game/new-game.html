@@ -1,29 +1,29 @@
 <main class="new-game-container">
   <section class="new-game-panel">
     <header>
-      <p class="eyebrow">Game management</p>
-      <h1>Create a new game</h1>
-      <p class="lede">Add a game to the leaderboard and start collecting scores.</p>
+      <p class="eyebrow" i18n="@@newGame.eyebrow">Game management</p>
+      <h1 i18n="@@newGame.title">Create a new game</h1>
+      <p class="lede" i18n="@@newGame.lede">Add a game to the leaderboard and start collecting scores.</p>
     </header>
 
     <form [formGroup]="gameForm" (ngSubmit)="submit()" novalidate>
-      <label for="name">Name</label>
+      <label for="name" i18n="@@newGame.nameLabel">Name</label>
       <input id="name" type="text" formControlName="name" required maxlength="100" />
       @if (gameForm.controls.name.touched && gameForm.controls.name.hasError('required')) {
-        <p class="field-error">A game name is required.</p>
+        <p class="field-error" i18n="@@newGame.nameRequired">A game name is required.</p>
       }
 
-      <label for="description">Description</label>
+      <label for="description" i18n="@@newGame.descriptionLabel">Description</label>
       <textarea id="description" formControlName="description" rows="5" maxlength="1000"></textarea>
 
-      <label for="imageUrl">Image URL</label>
+      <label for="imageUrl" i18n="@@newGame.imageUrlLabel">Image URL</label>
       <input id="imageUrl" type="url" formControlName="imageUrl" maxlength="500" />
 
-      <label for="owner-search">Game owner <span class="optional">(optional)</span></label>
+      <label for="owner-search" i18n="@@newGame.ownerLabel">Game owner <span class="optional">(optional)</span></label>
       @if (selectedOwner(); as owner) {
         <div class="selected-owner">
           <span>{{ owner.username }}</span>
-          <button type="button" class="clear-owner" (click)="clearOwner()">Remove</button>
+          <button type="button" class="clear-owner" (click)="clearOwner()" i18n="@@newGame.removeOwner">Remove</button>
         </div>
       } @else {
         <input
@@ -34,16 +34,17 @@
           (ngModelChange)="ownerSearch.set($event)"
           (input)="searchOwners()"
           placeholder="Search by username"
+          i18n-placeholder="@@newGame.ownerSearchPlaceholder"
         />
         @if (searchingOwners()) {
-          <p class="search-status">Searching...</p>
+          <p class="search-status" i18n="@@newGame.searching">Searching...</p>
         }
         @if (ownerResults().length > 0) {
           <ul class="owner-results">
             @for (user of ownerResults(); track user.id) {
               <li>
                 <span>{{ user.username }}</span>
-                <button type="button" (click)="chooseOwner(user)">Select</button>
+                <button type="button" (click)="chooseOwner(user)" i18n="@@newGame.selectOwner">Select</button>
               </li>
             }
           </ul>
@@ -55,9 +56,9 @@
       }
 
       <div class="form-actions">
-        <button type="button" (click)="cancel()" [disabled]="submitting()">Cancel</button>
+        <button type="button" (click)="cancel()" [disabled]="submitting()" i18n="@@newGame.cancel">Cancel</button>
         <button type="submit" [disabled]="submitting()">
-          {{ submitting() ? 'Creating...' : 'Create game' }}
+          {{ submitting() ? creatingLabel() : createGameLabel() }}
         </button>
       </div>
     </form>
