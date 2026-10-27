@@ -1,0 +1,32 @@
+<div class="dropdown-menu">
+	<button (click)="toggleMenu()">
+		@if (getSelectedElement(); as selectedElement) {
+			@if (selectedElement.icon) {
+				<span aria-hidden="true">{{ selectedElement.icon }}</span>
+			}
+			<span>{{ selectedElement.label }}</span>
+		}
+	</button>
+	@if(isMenuOpen()) {
+		<div class="dropdown-content">
+			@for (element of elements(); track element.value) {
+				@if (element.value == getSelectedElement()?.value) {
+					<button class="dropdown-item selected-item" (click)="selectElement(element)">
+						@if (element.icon) {
+							<span aria-hidden="true">{{ element.icon }}</span>
+						}
+						<span>{{ element.label }}</span>
+					</button>
+				}
+				@else {
+					<button class="dropdown-item" (click)="selectElement(element)">
+						@if (element.icon) {
+							<span aria-hidden="true">{{ element.icon }}</span>
+						}
+						<span>{{ element.label }}</span>
+					</button>
+				}
+			}
+		</div>
+	}
+</div>

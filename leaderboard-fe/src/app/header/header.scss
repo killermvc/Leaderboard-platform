@@ -103,3 +103,7 @@
 	flex-shrink: 0;
 	display: block;
 }
+
+.langSelector {
+	height: calc(var(--header-height) - 18px);
+}

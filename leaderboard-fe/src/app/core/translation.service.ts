@@ -2,6 +2,13 @@ import { Injectable, signal, computed } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { inject } from '@angular/core';
 
+export interface LanguageOption {
+  code: 'en' | 'es';
+  name: string;
+  nativeName: string;
+  flag: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class TranslationService {
   private document = inject(DOCUMENT);
@@ -302,10 +309,10 @@ export class TranslationService {
   }
 
   // Get all available languages
-  getAvailableLanguages(): Array<{ code: 'en' | 'es'; name: string; nativeName: string }> {
+  getAvailableLanguages(): LanguageOption[] {
     return [
-      { code: 'en', name: 'English', nativeName: 'English' },
-      { code: 'es', name: 'Spanish', nativeName: 'Español' }
+      { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
+      { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' }
     ];
   }
 }

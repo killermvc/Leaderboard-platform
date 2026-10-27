@@ -1,0 +1,38 @@
+.dropdown-menu {
+	position: relative;
+	display: inline-block;
+	height: 100%;
+}
+
+.dropdown-menu > button {
+	height: 100%;
+	min-height: 0;
+}
+
+.dropdown-content {
+	display: none;
+	position: absolute;
+	background-color: rgba(0, 0, 0, 0.2);
+	z-index: 1;
+}
+
+.dropdown-content button {
+	background-color: rgba(0, 0, 0, 0.2);
+	padding: 12px 16px;
+	text-decoration: none;
+	display: block;
+}
+
+.dropdown-content button:hover {
+	background: rgba(37, 223, 169, 0.18);
+	border-color: rgba(37, 223, 169, 0.5);
+}
+
+.dropdown-menu:hover .dropdown-content {
+	display: block;
+}
+
+.selected-item {
+	border-color: rgba(37, 223, 169, 0.5);
+	background: rgba(37, 223, 169, 0.18);
+}

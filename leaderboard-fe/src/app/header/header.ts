@@ -1,38 +1,40 @@
-import { Component, computed, inject, signal, effect } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { AuthService } from '../core/auth-service';
 import { Router } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { octSearch, octFeedPerson, octGlobe } from '@ng-icons/octicons';
+import { octSearch, octFeedPerson } from '@ng-icons/octicons';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ClerkService } from 'ngx-clerk';
 import { TranslationService } from '../core/translation.service';
+import { DropdownElement, DropdownMenu } from '../dropdown-menu/dropdown-menu';
 
 @Component({
   selector: 'app-header',
-  imports: [ NgIcon],
-	providers: [provideIcons({ octSearch, octFeedPerson, octGlobe })],
+  imports: [NgIcon, DropdownMenu],
+  providers: [provideIcons({ octSearch, octFeedPerson })],
   templateUrl: './header.html',
   styleUrls: ['./header.scss'],
 })
 export class Header {
-	public authService = inject(AuthService);
-	private clerk = inject(ClerkService);
-	private router = inject(Router);
+  public authService = inject(AuthService);
+  private clerk = inject(ClerkService);
+  private router = inject(Router);
   private translationService = inject(TranslationService);
 
-	username = toSignal(this.authService.username$);
-	profileImageUrl = computed(() => this.clerk.user()?.imageUrl ?? null);
+  username = toSignal(this.authService.username$);
+  profileImageUrl = computed(() => this.clerk.user()?.imageUrl ?? null);
   accountFallback = signal('Account');
 
   // Language selector
   availableLanguages = this.translationService.getAvailableLanguages();
+  availableLanguageOptions = computed<DropdownElement[]>(() =>
+    this.availableLanguages.map(language => ({
+      value: language.code,
+      label: language.nativeName,
+      icon: language.flag,
+    }))
+  );
   currentLanguage = computed(() => this.translationService.getLanguage());
-
-  constructor() {
-    if (this.authService.isAuthenticated()) {
-      this.authService.getCurrentUser().subscribe();
-    }
-  }
 
   onSearch(query: string) {
     if (query.trim()) {
@@ -69,8 +71,13 @@ export class Header {
     this.router.navigate(['/moderation/pending'])
   }
 
-  changeLanguage(lang: 'en' | 'es') {
-    this.translationService.setLanguage(lang);
+  onLanguageSelect(language: string): void {
+    const selectedLanguage = this.availableLanguages.find(({ code }) => code === language)?.code;
+    if (!selectedLanguage) {
+      throw new Error(`Unsupported language selected: ${language}`);
+    }
+
+    this.translationService.setLanguage(selectedLanguage);
     // Reload page to apply new locale build
     window.location.reload();
   }

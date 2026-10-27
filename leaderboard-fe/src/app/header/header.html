@@ -23,15 +23,8 @@
 		<button (click)="routeToRegister()" i18n="@@header.register">Register</button>
 		<button (click)="routeToLogin()" i18n="@@header.login">Login</button>
 	}
-	<!-- Language Selector -->
-	<div class="language-selector">
-		<button class="lang-btn" (click)="changeLanguage('en')" [class.active]="currentLanguage() === 'en'" aria-label="English">
-			<ng-icon name="octGlobe" size="20px"></ng-icon>
-			<span>EN</span>
-		</button>
-		<button class="lang-btn" (click)="changeLanguage('es')" [class.active]="currentLanguage() === 'es'" aria-label="Español">
-			<ng-icon name="octGlobe" size="20px"></ng-icon>
-			<span>ES</span>
-		</button>
-	</div>
+	<app-dropdown-menu class="langSelector"
+		[elements]="availableLanguageOptions()"
+		[selectedValue]="currentLanguage()"
+		(onSelect)="onLanguageSelect($event)"></app-dropdown-menu>
 </div>
