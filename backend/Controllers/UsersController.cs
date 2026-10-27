@@ -5,10 +5,11 @@ using Leaderboard.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-#pragma warning disable CS1591
-
 namespace Leaderboard.Controllers;
 
+/// <summary>
+/// Controller for user-related operations, including searching for users in the Clerk directory and retrieving user information from the local database.
+/// </summary>
 [ApiController]
 [Route("api/users")]
 public sealed class UsersController(
@@ -16,6 +17,13 @@ public sealed class UsersController(
 	IUserRepository userRepository,
 	IScoreRepository scoreRepository) : ControllerBase
 {
+	/// <summary>
+	/// Searches for users in the Clerk directory and retrieves their information from the local database.
+	/// </summary>
+	/// <param name="q">The search query.</param>
+	/// <param name="limit">The maximum number of results to return.</param>
+	/// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
+	/// <returns></returns>
 	[HttpGet("search")]
 	[Authorize]
 	public async Task<IActionResult> Search(
@@ -77,5 +85,3 @@ public sealed class UsersController(
 		}
 	}
 }
-
-#pragma warning restore CS1591

@@ -6,12 +6,18 @@ using Microsoft.Extensions.Logging;
 
 namespace Leaderboard.Middleware;
 
+/// <summary>
+/// Represents a middleware component that handles exceptions and errors occurring during the processing of HTTP requests. This middleware captures exceptions thrown by downstream components, logs them, and generates standardized error responses to be sent back to clients. It provides a consistent error handling mechanism for the application, ensuring that clients receive meaningful error information in a structured format.
+/// </summary>
 public class ErrorHandlingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<ErrorHandlingMiddleware> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="ErrorHandlingMiddleware"/> class with the specified request delegate and logger. This constructor sets up the middleware to handle exceptions and errors during HTTP request processing.
+	/// </summary>
     public ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger)
     {
         _next = next;
@@ -22,6 +28,11 @@ public class ErrorHandlingMiddleware
         };
     }
 
+	/// <summary>
+	/// Invokes the middleware to handle exceptions and errors during the processing of an HTTP request. This method captures exceptions thrown by downstream components, logs them, and generates standardized error responses to be sent back to clients. It ensures that clients receive meaningful error information in a structured format.
+	/// </summary>
+	/// <param name="context"></param>
+	/// <returns></returns>
     public async Task InvokeAsync(HttpContext context)
     {
         try

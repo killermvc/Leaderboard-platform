@@ -7,10 +7,11 @@ using Leaderboard.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-#pragma warning disable CS1591
-
 namespace Leaderboard.Services;
 
+/// <summary>
+/// Represents a service that processes Clerk webhook events. This service validates the signature of incoming webhook requests, extracts relevant user information from the payload, and updates the database accordingly. It ensures that only valid and timely webhook events are processed, preventing duplicate processing and maintaining the integrity of user data. The service also logs important events and errors for monitoring and debugging purposes.
+/// </summary>
 public sealed class ClerkWebhookService(
 	AppDbContext dbContext,
 	IOptions<ClerkOptions> options,
@@ -18,6 +19,15 @@ public sealed class ClerkWebhookService(
 {
 	private static readonly TimeSpan MaximumTimestampAge = TimeSpan.FromMinutes(5);
 
+	/// <summary>
+	/// Processes a Clerk webhook event by validating its signature, extracting user information from the payload, and updating the database accordingly. This method ensures that only valid and timely webhook events are processed, preventing duplicate processing and maintaining the integrity of user data. It logs important events and errors for monitoring and debugging purposes.
+	/// </summary>
+	/// <param name="payload">The JSON payload of the webhook event.</param>
+	/// <param name="eventId">The ID of the webhook event.</param>
+	/// <param name="timestamp">The timestamp of the webhook event.</param>
+	/// <param name="signature">The signature of the webhook event.</param>
+	/// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+	/// <returns></returns>
 	public async Task<ClerkWebhookResult> ProcessAsync(
 		string payload,
 		string eventId,
@@ -169,5 +179,3 @@ public sealed class ClerkWebhookService(
 				Encoding.UTF8.GetBytes(expectedSignature)));
 	}
 }
-
-#pragma warning restore CS1591
