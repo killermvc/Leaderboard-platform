@@ -14,6 +14,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 	public DbSet<GameModerator> GameModerators { get; set; } = null!;
 	public DbSet<ApiKey> ApiKeys { get; set; } = null!;
 	public DbSet<ClerkWebhookEvent> ClerkWebhookEvents { get; set; } = null!;
+	public DbSet<Leaderboard> Leaderboards { get; set; } = null!;
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -28,6 +29,19 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     {
 		modelBuilder.Entity<User>().HasIndex(u => u.ClerkUserId).IsUnique();
 		modelBuilder.Entity<Game>().HasIndex(g => g.Name).IsUnique();
+
+		modelBuilder.Entity<Leaderboard>()
+			.HasOne(leaderboard => leaderboard.Game)
+			.WithMany(game => game.Leaderboards)
+			.HasForeignKey(leaderboard => leaderboard.GameId)
+			.OnDelete(DeleteBehavior.Cascade);
+
+		modelBuilder.Entity<Leaderboard>()
+			.HasIndex(leaderboard => leaderboard.GameId);
+
+		modelBuilder.Entity<Leaderboard>()
+			.HasIndex(leaderboard => new { leaderboard.GameId, leaderboard.Name })
+			.IsUnique();
 
 		modelBuilder.Entity<Game>()
 			.HasOne(g => g.Owner)
@@ -81,7 +95,22 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 			.HasMaxLength(128);
 
 		modelBuilder.Entity<Score>()
-			.HasIndex(s => new { s.GameId, s.SubmissionId })
+			.HasOne(score => score.Leaderboard)
+			.WithMany()
+			.HasForeignKey(score => score.LeaderboardId)
+			.OnDelete(DeleteBehavior.Restrict);
+
+		modelBuilder.Entity<Score>()
+			.HasIndex(score => score.LeaderboardId);
+
+		modelBuilder.Entity<Score>()
+			.HasIndex(score => new { score.LeaderboardId, score.Status });
+
+		modelBuilder.Entity<Score>()
+			.HasIndex(score => new { score.LeaderboardId, score.UserId, score.Status });
+
+		modelBuilder.Entity<Score>()
+			.HasIndex(score => new { score.LeaderboardId, score.SubmissionId })
 			.IsUnique();
 
 		// The score owner is optional, scores from game clients only carry a PlayerName

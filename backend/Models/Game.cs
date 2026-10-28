@@ -35,4 +35,8 @@ public class Game
 	/// Wether or not the game is currently accepting score submissions.
 	///</summary>
 	public bool SubmitsAllowed {get; set;} = true;
+	/// <summary>
+	/// The leaderboards owned by this game.
+	/// </summary>
+	public List<Leaderboard> Leaderboards { get; set; } = [];
 }

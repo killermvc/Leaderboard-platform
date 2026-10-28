@@ -29,6 +29,14 @@ public class Score
 	/// </summary>
 	public int GameId { get; set; }
 	/// <summary>
+	/// The leaderboard this score belongs to.
+	/// </summary>
+	public int LeaderboardId { get; set; }
+	/// <summary>
+	/// The leaderboard this score belongs to.
+	/// </summary>
+	public Leaderboard Leaderboard { get; set; } = null!;
+	/// <summary>
 	/// The numeric value of the score.
 	/// </summary>
 	public int Value { get; set; }
