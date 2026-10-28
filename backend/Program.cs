@@ -29,6 +29,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IGameRepository, GameRepository>();
 builder.Services.AddScoped<IScoreRepository, ScoreRepository>();
 builder.Services.AddScoped<IGameModeratorRepository, GameModeratorRepository>();
+builder.Services.AddScoped<ILeaderboardRepository, LeaderboardRepository>();
 builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
 builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
 builder.Services.AddScoped<IApiKeyAuthorizationService, ApiKeyAuthorizationService>();
