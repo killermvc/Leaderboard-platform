@@ -37,6 +37,8 @@ public interface IScoreRepository
 	/// Gets leaderboard entries for a game up to the specified limit.
 	/// </summary>
 	public Task<List<LeaderboardEntry>> GetLeaderboardAsync(int game, int limit);
+	/// <summary>Gets the migrated Default board ID for a game.</summary>
+	public Task<int> GetDefaultLeaderboardIdAsync(int gameId);
 	/// <summary>
 	/// Gets the rank of a user in a game.
 	/// </summary>

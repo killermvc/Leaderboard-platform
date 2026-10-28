@@ -218,7 +218,8 @@ public class ScoreController(
 
 		try
 		{
-			List<LeaderboardEntry> leaderboard = await _scoreRepository.GetLeaderboardAsync(gameId, int.MaxValue);
+			int leaderboardId = await _scoreRepository.GetDefaultLeaderboardIdAsync(gameId);
+			List<LeaderboardEntry> leaderboard = await _scoreRepository.GetLeaderboardAsync(leaderboardId, int.MaxValue);
 			await EnrichLeaderboardAsync(leaderboard);
 			return Ok(leaderboard);
 		}

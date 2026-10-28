@@ -281,6 +281,9 @@ public class V1ScoreControllerTests
 		scoreRepository
 			.Setup(repository => repository.GetLeaderboardAsync(7, int.MaxValue))
 			.ReturnsAsync(leaderboard);
+		scoreRepository
+			.Setup(repository => repository.GetDefaultLeaderboardIdAsync(7))
+			.ReturnsAsync(7);
 
 		var controller = CreateController(scoreRepository, gameRepository, ApiKeyPermissions.ReadLeaderboard, 7);
 		var result = await controller.GetLeaderboard(7);

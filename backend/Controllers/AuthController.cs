@@ -102,14 +102,16 @@ public class AuthController : ControllerBase
 
 		foreach (var game in gamesPlayed)
 		{
-			var rank = await _scoreRepository.GetRankAsync(game.Id, userId);
-			var userBestScore = scores.Where(s => s.Game.Id == game.Id).Max(s => s.Value);
+			var gameScores = scores.Where(s => s.Game.Id == game.Id).ToList();
+			var bestScore = gameScores.OrderByDescending(s => s.Value).First();
+			var rank = await _scoreRepository.GetRankAsync(bestScore.LeaderboardId, userId);
+			var userBestScore = bestScore.Value;
 			gameRankings.Add(new {
 				GameId = game.Id,
 				GameName = game.Name,
 				Rank = rank,
 				BestScore = userBestScore,
-				ScoresSubmitted = scores.Count(s => s.Game.Id == game.Id)
+				ScoresSubmitted = gameScores.Count
 			});
 		}
 
@@ -134,4 +136,3 @@ public class AuthController : ControllerBase
 		});
 	}
 }
-

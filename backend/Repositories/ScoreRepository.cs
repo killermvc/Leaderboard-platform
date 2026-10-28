@@ -112,6 +112,9 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	{
 		Game game = await _context.Games.FirstOrDefaultAsync(g => g.Id == gameId)
 			?? throw new KeyNotFoundException($"Game with ID {gameId} not found.");
+		Leaderboard.Models.Leaderboard defaultLeaderboard = await _context.Leaderboards
+			.FirstOrDefaultAsync(l => l.GameId == gameId && l.Name == "Default")
+			?? throw new KeyNotFoundException($"Default leaderboard not found for game {gameId}.");
 
 		Score? existingScore = await _context.Scores
 			.Include(s => s.Game)
@@ -128,6 +131,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 		{
 			Value = scoreValue,
 			Game = game,
+			Leaderboard = defaultLeaderboard,
 			PlayerName = trimmedName,
 			SubmissionId = submissionId,
 			Title = string.IsNullOrWhiteSpace(title) ? $"{game.Name} - {scoreValue}" : title.Trim(),
@@ -240,7 +244,8 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 		}
 	}
 
-	private async Task<int> GetDefaultLeaderboardIdAsync(int gameId)
+	/// <summary>Gets the migrated Default board ID for a game.</summary>
+	public async Task<int> GetDefaultLeaderboardIdAsync(int gameId)
 	{
 		return await _context.Leaderboards
 			.Where(l => l.GameId == gameId && l.Name == "Default")
