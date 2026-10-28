@@ -17,7 +17,7 @@ namespace Leaderboard.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.1")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -69,7 +69,7 @@ namespace Leaderboard.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ApiKeys", (string)null);
+                    b.ToTable("ApiKeys");
                 });
 
             modelBuilder.Entity("Leaderboard.Models.ClerkWebhookEvent", b =>
@@ -83,7 +83,7 @@ namespace Leaderboard.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ClerkWebhookEvents", (string)null);
+                    b.ToTable("ClerkWebhookEvents");
                 });
 
             modelBuilder.Entity("Leaderboard.Models.Game", b =>
@@ -118,7 +118,7 @@ namespace Leaderboard.Migrations
 
                     b.HasIndex("OwnerId");
 
-                    b.ToTable("Games", (string)null);
+                    b.ToTable("Games");
                 });
 
             modelBuilder.Entity("Leaderboard.Models.GameModerator", b =>
@@ -145,7 +145,44 @@ namespace Leaderboard.Migrations
                     b.HasIndex("GameId", "UserId")
                         .IsUnique();
 
-                    b.ToTable("GameModerators", (string)null);
+                    b.ToTable("GameModerators");
+                });
+
+            modelBuilder.Entity("Leaderboard.Models.Leaderboard", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("GameId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GameId");
+
+                    b.HasIndex("GameId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("Leaderboards");
                 });
 
             modelBuilder.Entity("Leaderboard.Models.Role", b =>
@@ -162,7 +199,7 @@ namespace Leaderboard.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles", (string)null);
+                    b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("Leaderboard.Models.Score", b =>
@@ -182,6 +219,9 @@ namespace Leaderboard.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<int>("GameId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("LeaderboardId")
                         .HasColumnType("int");
 
                     b.Property<string>("PlayerName")
@@ -218,14 +258,22 @@ namespace Leaderboard.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("GameId");
+
+                    b.HasIndex("LeaderboardId");
+
                     b.HasIndex("ReviewedById");
 
                     b.HasIndex("UserId");
 
-                    b.HasIndex("GameId", "SubmissionId")
+                    b.HasIndex("LeaderboardId", "Status");
+
+                    b.HasIndex("LeaderboardId", "SubmissionId")
                         .IsUnique();
 
-                    b.ToTable("Scores", (string)null);
+                    b.HasIndex("LeaderboardId", "UserId", "Status");
+
+                    b.ToTable("Scores");
                 });
 
             modelBuilder.Entity("Leaderboard.Models.User", b =>
@@ -255,7 +303,7 @@ namespace Leaderboard.Migrations
                     b.HasIndex("ClerkUserId")
                         .IsUnique();
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Leaderboard.Models.UserRole", b =>
@@ -270,7 +318,7 @@ namespace Leaderboard.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("UserRoles", (string)null);
+                    b.ToTable("UserRoles");
                 });
 
             modelBuilder.Entity("Leaderboard.Models.ApiKey", b =>
@@ -319,12 +367,29 @@ namespace Leaderboard.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Leaderboard.Models.Leaderboard", b =>
+                {
+                    b.HasOne("Leaderboard.Models.Game", "Game")
+                        .WithMany("Leaderboards")
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Game");
+                });
+
             modelBuilder.Entity("Leaderboard.Models.Score", b =>
                 {
                     b.HasOne("Leaderboard.Models.Game", "Game")
                         .WithMany()
                         .HasForeignKey("GameId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Leaderboard.Models.Leaderboard", "Leaderboard")
+                        .WithMany()
+                        .HasForeignKey("LeaderboardId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Leaderboard.Models.User", "ReviewedBy")
@@ -337,6 +402,8 @@ namespace Leaderboard.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Game");
+
+                    b.Navigation("Leaderboard");
 
                     b.Navigation("ReviewedBy");
 
@@ -360,6 +427,11 @@ namespace Leaderboard.Migrations
                     b.Navigation("Role");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Leaderboard.Models.Game", b =>
+                {
+                    b.Navigation("Leaderboards");
                 });
 
             modelBuilder.Entity("Leaderboard.Models.Role", b =>
