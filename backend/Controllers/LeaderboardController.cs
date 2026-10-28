@@ -31,8 +31,6 @@ public class LeaderboardController(ILeaderboardRepository repository) : Controll
 		var board = await _repository.GetByIdAsync(gameId, leaderboardId, cancellationToken);
 		return board is null ? NotFound() : Ok(ToDto(board));
 	}
-	#pragma warning restore CS1591
-
 	[HttpPost]
 	[Authorize]
 	public async Task<ActionResult<LeaderboardDto>> Create(
@@ -43,7 +41,6 @@ public class LeaderboardController(ILeaderboardRepository repository) : Controll
 		{
 			return Forbid();
 		}
-
 		try
 		{
 			var board = await _repository.CreateAsync(gameId, request.Name, request.Description, cancellationToken);
@@ -111,7 +108,6 @@ public class LeaderboardController(ILeaderboardRepository repository) : Controll
 			_ => NoContent()
 		};
 	}
-
 	private async Task<bool> HasManagePermissionAsync(int gameId, CancellationToken cancellationToken)
 	{
 		if (!TryGetUserId(out var userId))
@@ -136,3 +132,4 @@ public class LeaderboardController(ILeaderboardRepository repository) : Controll
 		UpdatedAt = board.UpdatedAt
 	};
 }
+#pragma warning restore CS1591
