@@ -11,6 +11,8 @@ public interface IScoreRepository
 	/// Submits a score for a registered user.
 	/// </summary>
 	public Task SubmitScoreAsync(int userId, int gameId, int score, string? title = null, string? description = null);
+	/// <summary>Submits a score to a selected leaderboard.</summary>
+	public Task SubmitScoreAsync(int userId, int gameId, int leaderboardId, int score, string? title = null, string? description = null);
 
 	/// <summary>
 	/// Submits a score for a player that has a name but no user account, as game clients do through the api.
@@ -57,6 +59,8 @@ public interface IScoreRepository
 	/// Used to look up the score post from a leaderboard entry.
 	/// </summary>
 	public Task<Score?> GetTopScoreByUserAndGameAsync(int gameId, int userId);
+	/// <summary>Gets a user's top approved score on a selected leaderboard.</summary>
+	public Task<Score?> GetTopScoreByUserAndLeaderboardAsync(int leaderboardId, int userId);
 
 	/// <summary>
 	/// Gets all score submissions (posts) visible to everyone, regardless of status.

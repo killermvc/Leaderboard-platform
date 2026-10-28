@@ -27,6 +27,12 @@ public class ScoreDto
     /// </summary>
     public GameDto? Game { get; set; }
 
+    /// <summary>The leaderboard identifier.</summary>
+    public int LeaderboardId { get; set; }
+
+    /// <summary>The leaderboard name.</summary>
+    public string LeaderboardName { get; set; } = string.Empty;
+
     /// <summary>
     /// The score value.
     /// </summary>

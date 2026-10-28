@@ -32,7 +32,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// older build are never read back with the wrong member format. Keys without a version are
 	/// stale and can be dropped with: redis-cli --scan --pattern 'leaderboard:[0-9]*' | xargs -r redis-cli del
 	/// </summary>
-	private const string LeaderboardKeyPrefix = "leaderboard:v2:";
+	private const string LeaderboardKeyPrefix = "leaderboard:v3:";
 
 	/// <summary>
 	/// Submits a score for a user in a specific game.
@@ -49,14 +49,27 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// <exception cref="InvalidOperationException">Thrown when the new score is not higher than the existing highest approved score.</exception>
 	public async Task SubmitScoreAsync(int userId, int gameId, int scoreValue, string? title = null, string? description = null)
 	{
+		int leaderboardId = await GetDefaultLeaderboardIdAsync(gameId);
+		await SubmitScoreAsync(userId, gameId, leaderboardId, scoreValue, title, description);
+	}
+
+	/// <summary>Submits a score to a selected leaderboard.</summary>
+	public async Task SubmitScoreAsync(int userId, int gameId, int leaderboardId, int scoreValue, string? title = null, string? description = null)
+	{
 		Game game = await _context.Games.FirstOrDefaultAsync(g => g.Id == gameId)
 			?? throw new KeyNotFoundException($"Game with ID {gameId} not found.");
+		var leaderboard = await _context.Leaderboards.FirstOrDefaultAsync(l => l.Id == leaderboardId && l.GameId == gameId)
+			?? throw new KeyNotFoundException($"Leaderboard with ID {leaderboardId} not found for game {gameId}.");
+		if (!leaderboard.IsActive)
+		{
+			throw new InvalidOperationException($"Leaderboard with ID {leaderboardId} is inactive.");
+		}
 		User user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId)
 			?? throw new KeyNotFoundException($"User with ID {userId} not found");
 
 		// Check if the user already has a higher or equal approved score for this game
 		var existingHighScore = await _context.Scores
-			.Where(s => s.UserId == userId && s.Game.Id == gameId && s.Status == ScoreStatus.Approved)
+			.Where(s => s.UserId == userId && s.LeaderboardId == leaderboardId && s.Status == ScoreStatus.Approved)
 			.MaxAsync(s => (int?)s.Value);
 
 		if (existingHighScore.HasValue && scoreValue <= existingHighScore.Value)
@@ -69,6 +82,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			Value = scoreValue,
 			User = user,
 			Game = game,
+			Leaderboard = leaderboard,
 			Title = title ?? $"{game.Name} - {scoreValue}",
 			Description = description,
 			Status = ScoreStatus.Pending // Score starts as pending
@@ -101,6 +115,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 
 		Score? existingScore = await _context.Scores
 			.Include(s => s.Game)
+			.Include(s => s.Leaderboard)
 			.FirstOrDefaultAsync(s => s.GameId == gameId && s.SubmissionId == submissionId);
 		if (existingScore is not null)
 		{
@@ -141,8 +156,9 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 		}
 
 		// Game client scores are approved on submission, so they go straight to the leaderboard
-		var leaderboardKey = GetLeaderboardKey(gameId);
-		await EnsureLeaderboardCachedAsync(leaderboardKey, gameId);
+		int leaderboardId = await GetDefaultLeaderboardIdAsync(gameId);
+		var leaderboardKey = GetLeaderboardKey(leaderboardId);
+		await EnsureLeaderboardCachedAsync(leaderboardKey, leaderboardId);
 
 		string member = GetPlayerNameMember(trimmedName);
 		// ZADD overwrites the member so the latest submission becomes the player's current score.
@@ -162,6 +178,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 		return await _context.Scores
 			.Include(s => s.User)
 			.Include(s => s.Game)
+			.Include(s => s.Leaderboard)
 			.Include(s => s.ReviewedBy)
 			.FirstOrDefaultAsync(s => s.Id == id);
 	}
@@ -184,7 +201,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 
 		_context.Scores.RemoveRange(scores);
 		await _context.SaveChangesAsync();
-		await _redisDb.KeyDeleteAsync(GetLeaderboardKey(gameId));
+		await _redisDb.KeyDeleteAsync(GetLeaderboardKey(await GetDefaultLeaderboardIdAsync(gameId)));
 	}
 
 	/// <summary>Gets the latest approved score for a named player in a game.</summary>
@@ -198,6 +215,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 		return await _context.Scores
 			.AsNoTracking()
 			.Include(s => s.Game)
+			.Include(s => s.Leaderboard)
 			.Where(s => s.Game.Id == gameId
 				&& s.Status == ScoreStatus.Approved
 				&& s.PlayerName != null
@@ -207,19 +225,28 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.FirstOrDefaultAsync();
 	}
 
-	private static string GetLeaderboardKey(int gameId) => $"{LeaderboardKeyPrefix}{gameId}";
+	private static string GetLeaderboardKey(int leaderboardId) => $"{LeaderboardKeyPrefix}{leaderboardId}";
 
 	/// <summary>
 	/// Makes sure the cached leaderboard of a game is complete before an entry is written to it.
 	/// A score that creates the key would otherwise leave the rest of the game off the board until
 	/// the key is dropped.
 	/// </summary>
-	private async Task EnsureLeaderboardCachedAsync(string leaderboardKey, int gameId)
+	private async Task EnsureLeaderboardCachedAsync(string leaderboardKey, int leaderboardId)
 	{
 		if (!await _redisDb.KeyExistsAsync(leaderboardKey))
 		{
-			await UpdateRedisDbForGame(gameId);
+			await UpdateRedisDbForLeaderboardAsync(leaderboardId);
 		}
+	}
+
+	private async Task<int> GetDefaultLeaderboardIdAsync(int gameId)
+	{
+		return await _context.Leaderboards
+			.Where(l => l.GameId == gameId && l.Name == "Default")
+			.Select(l => (int?)l.Id)
+			.FirstOrDefaultAsync()
+			?? throw new KeyNotFoundException($"Default leaderboard not found for game {gameId}.");
 	}
 
 	private static string GetUserMember(int userId) => $"{UserMemberPrefix}{userId}";
@@ -267,12 +294,12 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// Only includes approved scores, keeping the best one per user account and the latest one per
 	/// name given by a game client.
 	/// </summary>
-	/// <param name="gameId">The ID of the game.</param>
-	private async Task UpdateRedisDbForGame(int gameId)
+	/// <param name="leaderboardId">The ID of the leaderboard.</param>
+	private async Task UpdateRedisDbForLeaderboardAsync(int leaderboardId)
 	{
 		var approvedScores = await _context.Scores
 			.AsNoTracking()
-			.Where(s => s.Game.Id == gameId && s.Status == ScoreStatus.Approved)
+			.Where(s => s.LeaderboardId == leaderboardId && s.Status == ScoreStatus.Approved)
 			.Select(s => new { s.Id, s.UserId, s.PlayerName, s.Value, s.DateAchieved })
 			.ToListAsync();
 
@@ -310,15 +337,16 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 
 		if (bestPerPlayer.Count == 0)
 		{
-			throw new KeyNotFoundException($"No approved scores found for game ID {gameId}");
+			await _redisDb.KeyDeleteAsync(GetLeaderboardKey(leaderboardId));
+			return;
 		}
 
 		// Replace the key so entries that no longer have an approved score disappear
-		await _redisDb.KeyDeleteAsync(GetLeaderboardKey(gameId));
+		await _redisDb.KeyDeleteAsync(GetLeaderboardKey(leaderboardId));
 
 		// Cache the leaderboard in Redis
 		var entries = bestPerPlayer.Select(entry => new SortedSetEntry(entry.Key, entry.Value)).ToArray();
-		await _redisDb.SortedSetAddAsync(GetLeaderboardKey(gameId), entries);
+		await _redisDb.SortedSetAddAsync(GetLeaderboardKey(leaderboardId), entries);
 	}
 
 	/// <summary>
@@ -326,33 +354,25 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// Only approved scores are included.
 	/// If the leaderboard doesn't exist or is empty in redis, it is cached from the sql database.
 	/// </summary>
-	/// <param name="gameId">The ID of the game.</param>
+	/// <param name="leaderboardId">The ID of the leaderboard.</param>
 	/// <param name="limit">The number of top players to retrieve.</param>
 	/// <returns>A list of leaderboard entries.</returns>
 	/// <exception cref="KeyNotFoundException">Thrown when no approved scores are found for the specified game ID.</exception>
-	public async Task<List<LeaderboardEntry>> GetLeaderboardAsync(int gameId, int limit)
+	public async Task<List<LeaderboardEntry>> GetLeaderboardAsync(int leaderboardId, int limit)
 	{
-		var leaderboardKey = GetLeaderboardKey(gameId);
+		var leaderboardKey = GetLeaderboardKey(leaderboardId);
 
 		// If the leaderboard doesn't exist or is empty, update it
-		if (
-			!await _redisDb.KeyExistsAsync(leaderboardKey)
+		if (!await _redisDb.KeyExistsAsync(leaderboardKey)
 			|| await _redisDb.SortedSetLengthAsync(leaderboardKey) == 0)
 		{
-			try
-			{
-				await UpdateRedisDbForGame(gameId);
-			}
-			catch (KeyNotFoundException)
-			{
-				throw new KeyNotFoundException($"No approved scores found for game ID {gameId}");
-			}
+			await UpdateRedisDbForLeaderboardAsync(leaderboardId);
 		}
 
 		// Fetch the top players from Redis
 		var leaderboardEntries = await _redisDb.SortedSetRangeByRankWithScoresAsync(leaderboardKey, 0, limit - 1, order: Order.Descending);
 
-		return await MapRedisEntriesAsync(gameId, leaderboardEntries);
+		return await MapRedisEntriesAsync(leaderboardId, leaderboardEntries);
 	}
 
 	/// <summary>
@@ -360,7 +380,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// player from the SQL database. A single query per kind of player keeps this off the hot path
 	/// of a per entry lookup.
 	/// </summary>
-	private async Task<List<LeaderboardEntry>> MapRedisEntriesAsync(int gameId, IEnumerable<SortedSetEntry> redisEntries)
+	private async Task<List<LeaderboardEntry>> MapRedisEntriesAsync(int leaderboardId, IEnumerable<SortedSetEntry> redisEntries)
 	{
 		var parsedEntries = new List<(SortedSetEntry Entry, int? UserId, string? PlayerName)>();
 		foreach (var entry in redisEntries)
@@ -374,7 +394,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 		var userIds = parsedEntries.Where(e => e.UserId.HasValue).Select(e => e.UserId!.Value).Distinct().ToList();
 		var playerNames = parsedEntries.Where(e => e.PlayerName is not null).Select(e => e.PlayerName!).Distinct(StringComparer.Ordinal).ToList();
 		var usernames = await GetUsernamesAsync(userIds);
-		var playerNameDisplayNames = await GetPlayerNameDisplayNamesAsync(gameId, playerNames);
+		var playerNameDisplayNames = await GetPlayerNameDisplayNamesAsync(leaderboardId, playerNames);
 
 		var leaderboard = new List<LeaderboardEntry>();
 		foreach (var (entry, userId, playerName) in parsedEntries)
@@ -453,7 +473,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// Looks up the display name to show for the normalized player names of a leaderboard page in a
 	/// single query, keeping the name behind the player's best approved score.
 	/// </summary>
-	private async Task<Dictionary<string, string>> GetPlayerNameDisplayNamesAsync(int gameId, List<string> playerNames)
+	private async Task<Dictionary<string, string>> GetPlayerNameDisplayNamesAsync(int leaderboardId, List<string> playerNames)
 	{
 		if (playerNames.Count == 0)
 		{
@@ -463,7 +483,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 		var bestScores = await _context.Scores
 			.AsNoTracking()
 			.Where(IsAnyOf<Score, string?>(
-				s => s.Game.Id == gameId && s.Status == ScoreStatus.Approved && s.PlayerName != null,
+				s => s.LeaderboardId == leaderboardId && s.Status == ScoreStatus.Approved && s.PlayerName != null,
 				playerNames,
 				s => s.PlayerName!.ToLower()))
 			.OrderByDescending(s => s.Value)
@@ -496,18 +516,18 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// If the leaderboard is not available in Redis, it is cached from the sql database first.
 	/// If the game has no approved scores, a KeyNotFoundException is thrown.
 	/// </summary>
-	/// <param name="gameId">The ID of the game.</param>
+	/// <param name="leaderboardId">The ID of the leaderboard.</param>
 	/// <param name="userId">The ID of the user whose rank is being retrieved.</param>
 	/// <returns>The rank of the user in the leaderboard, or null if the user is not ranked.</returns>
 	/// <exception cref="KeyNotFoundException">Thrown when the specified game has no approved scores.</exception>
-	public async Task<long?> GetRankAsync(int gameId, int userId)
+	public async Task<long?> GetRankAsync(int leaderboardId, int userId)
 	{
-		var leaderboardKey = GetLeaderboardKey(gameId);
+		var leaderboardKey = GetLeaderboardKey(leaderboardId);
 
 		// If the leaderboard doesn't exist in Redis, cache the whole game, a single user is not a leaderboard
 		if (!await _redisDb.KeyExistsAsync(leaderboardKey))
 		{
-			await UpdateRedisDbForGame(gameId);
+			await UpdateRedisDbForLeaderboardAsync(leaderboardId);
 		}
 
 		// Fetch the rank of the user from Redis
@@ -553,6 +573,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.AsNoTracking()
 			.Include(s => s.User)
 			.Include(s => s.Game)
+			.Include(s => s.Leaderboard)
 			.Where(s => s.UserId == userId && s.Status == ScoreStatus.Approved)
 			.OrderByDescending(s => s.DateAchieved)
 			.Skip(offset)
@@ -570,6 +591,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.AsNoTracking()
 			.Include(s => s.User)
 			.Include(s => s.Game)
+			.Include(s => s.Leaderboard)
 			.Include(s => s.ReviewedBy)
 			.Where(s => s.UserId == userId)
 			.OrderByDescending(s => s.DateAchieved)
@@ -587,6 +609,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.AsNoTracking()
 			.Include(s => s.User)
 			.Include(s => s.Game)
+			.Include(s => s.Leaderboard)
 			.Where(s => s.Status == ScoreStatus.Approved)
 			.OrderByDescending(s => s.DateAchieved)
 			.Skip(offset)
@@ -603,10 +626,23 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.AsNoTracking()
 			.Include(s => s.User)
 			.Include(s => s.Game)
+			.Include(s => s.Leaderboard)
 			.Where(s => s.Game.Id == gameId && s.UserId == userId && s.Status == ScoreStatus.Approved)
 			.OrderByDescending(s => s.Value)
 			.FirstOrDefaultAsync();
 	}
+
+	/// <summary>Gets a user's top approved score on a selected leaderboard.</summary>
+	public Task<Score?> GetTopScoreByUserAndLeaderboardAsync(int leaderboardId, int userId)
+		=> _context.Scores
+			.AsNoTracking()
+			.Include(s => s.User)
+			.Include(s => s.Game)
+			.Include(s => s.Leaderboard)
+			.Include(s => s.Leaderboard)
+			.Where(s => s.LeaderboardId == leaderboardId && s.UserId == userId && s.Status == ScoreStatus.Approved)
+			.OrderByDescending(s => s.Value)
+			.FirstOrDefaultAsync();
 
 	/// <summary>
 	/// Gets all score submissions (posts) visible to everyone, regardless of status.
@@ -617,6 +653,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.AsNoTracking()
 			.Include(s => s.User)
 			.Include(s => s.Game)
+			.Include(s => s.Leaderboard)
 			.Include(s => s.ReviewedBy)
 			.OrderByDescending(s => s.DateAchieved)
 			.Skip(offset)
@@ -635,6 +672,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 		var score = await _context.Scores
 			.Include(s => s.User)
 			.Include(s => s.Game)
+			.Include(s => s.Leaderboard)
 			.FirstOrDefaultAsync(s => s.Id == scoreId)
 			?? throw new KeyNotFoundException($"Score with ID {scoreId} not found.");
 
@@ -659,12 +697,12 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 		await _context.SaveChangesAsync();
 
 		// Add the approved score to Redis leaderboard
-		var leaderboardKey = GetLeaderboardKey(score.Game.Id);
-		await EnsureLeaderboardCachedAsync(leaderboardKey, score.Game.Id);
+		var leaderboardKey = GetLeaderboardKey(score.LeaderboardId);
+		await EnsureLeaderboardCachedAsync(leaderboardKey, score.LeaderboardId);
 
 		// Get the user's current highest approved score for this game
 		var highestScore = await _context.Scores
-			.Where(s => s.UserId == score.UserId && s.Game.Id == score.Game.Id && s.Status == ScoreStatus.Approved)
+			.Where(s => s.UserId == score.UserId && s.LeaderboardId == score.LeaderboardId && s.Status == ScoreStatus.Approved)
 			.MaxAsync(s => (int?)s.Value) ?? 0;
 
 		// Update Redis with the highest score
@@ -679,6 +717,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 		var score = await _context.Scores
 			.Include(s => s.User)
 			.Include(s => s.Game)
+			.Include(s => s.Leaderboard)
 			.FirstOrDefaultAsync(s => s.Id == scoreId)
 			?? throw new KeyNotFoundException($"Score with ID {scoreId} not found.");
 
@@ -710,6 +749,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.AsNoTracking()
 			.Include(s => s.User)
 			.Include(s => s.Game)
+			.Include(s => s.Leaderboard)
 			.Where(s => s.Game.Id == gameId && s.Status == ScoreStatus.Pending)
 			.OrderBy(s => s.DateAchieved)
 			.Skip(offset)
@@ -726,6 +766,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.AsNoTracking()
 			.Include(s => s.User)
 			.Include(s => s.Game)
+			.Include(s => s.Leaderboard)
 			.Where(s => s.Status == ScoreStatus.Pending)
 			.OrderBy(s => s.DateAchieved)
 			.Skip(offset)
@@ -743,6 +784,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.AsNoTracking()
 			.Include(s => s.User)
 			.Include(s => s.Game)
+			.Include(s => s.Leaderboard)
 			.Where(s => s.Status == ScoreStatus.Pending &&
 				!_context.GameModerators.Any(gm => gm.GameId == s.Game.Id))
 			.OrderBy(s => s.DateAchieved)

@@ -23,7 +23,8 @@ public class ScoreController(
 		IGameRepository gameRepository,
 		IUserRepository userRepository,
 		IClerkDirectoryService clerkDirectoryService,
-		ILogger<ScoreController> logger
+		ILogger<ScoreController> logger,
+		ILeaderboardRepository? leaderboardRepository = null
 	) : ControllerBase
 {
 
@@ -32,6 +33,7 @@ public class ScoreController(
 	private readonly IUserRepository _userRepository = userRepository;
 	private readonly IClerkDirectoryService _clerkDirectory = clerkDirectoryService;
 	private readonly ILogger _logger = logger;
+	private readonly ILeaderboardRepository? _leaderboardRepository = leaderboardRepository;
 
 	/// <summary>
 	/// Submits a score for a specific game. Accessible by any authenticated user.
@@ -63,22 +65,28 @@ public class ScoreController(
             throw new ValidationException(ErrorCodes.SubmissionsNotAllowed, "Submissions are not allowed for this game.");
         }
 
-        // Submit the score through the repository
-        await _scoreRepository.SubmitScoreAsync(userId, request.GameId, request.Score, request.Title, request.Description);
+        var board = await ResolveBoardAsync(request.GameId, request.LeaderboardId, requireActive: true);
+        await _scoreRepository.SubmitScoreAsync(userId, request.GameId, board.Id, request.Score, request.Title, request.Description);
         return Ok("Score submitted successfully.");
     }
 
-	/// <summary>
-	/// Gets the leaderboard for a specific game, limited to a certain number of top players. Accessible by any authenticated user.
-	/// </summary>
-	//GET /leaderboard/<game_id>
+    /// <summary>Gets the default board leaderboard for a game.</summary>
     [HttpGet]
     [Route("leaderboard/{gameId}")]
     public async Task<IActionResult> GetLeaderboard(int gameId, [FromQuery] int limit = 10)
     {
+        var board = await ResolveDefaultBoardAsync(gameId);
+        return await GetLeaderboardByLeaderboard(board.Id, limit);
+    }
+
+    /// <summary>Gets a board-scoped leaderboard.</summary>
+    [HttpGet]
+    [Route("leaderboard/board/{leaderboardId}")]
+    public async Task<IActionResult> GetLeaderboardByLeaderboard(int leaderboardId, [FromQuery] int limit = 10)
+    {
         try
         {
-            var leaderboard = await _scoreRepository.GetLeaderboardAsync(gameId, limit);
+            var leaderboard = await _scoreRepository.GetLeaderboardAsync(leaderboardId, limit);
 			await EnrichLeaderboardAsync(leaderboard);
 			return Ok(leaderboard);
         }
@@ -96,14 +104,23 @@ public class ScoreController(
 	[Route("leaderboard/{gameId}/rank/{userId}")]
 	public async Task<IActionResult> GetRank(int gameId, int userId)
 	{
-		var rank = await _scoreRepository.GetRankAsync(gameId, userId);
+		var board = await ResolveDefaultBoardAsync(gameId);
+		return await GetRankByLeaderboard(board.Id, userId);
+	}
+
+	/// <summary>Gets a user's rank in a board-scoped leaderboard.</summary>
+	[HttpGet]
+	[Route("leaderboard/board/{leaderboardId}/rank/{userId}")]
+	public async Task<IActionResult> GetRankByLeaderboard(int leaderboardId, int userId)
+	{
+		var rank = await _scoreRepository.GetRankAsync(leaderboardId, userId);
 		if(rank == null)
 		{
 			throw new NotFoundException(ErrorCodes.ScoreNotFound, "User not found in leaderboard.");
 		}
 		return Ok(new
         {
-            gameId,
+            leaderboardId,
             userId,
             rank
         });
@@ -116,7 +133,8 @@ public class ScoreController(
 	[Route("leaderboard/{gameId}/top/{limit}")]
 	public async Task<IActionResult> GetTopPlayers(int gameId, int limit)
 	{
-		var leaderboard = await _scoreRepository.GetLeaderboardAsync(gameId, limit);
+		var board = await ResolveDefaultBoardAsync(gameId);
+		var leaderboard = await _scoreRepository.GetLeaderboardAsync(board.Id, limit);
 		await EnrichLeaderboardAsync(leaderboard);
 		return Ok(new
         {
@@ -141,6 +159,8 @@ public class ScoreController(
 			User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User?.ClerkUserId, displayNames) },
 			PlayerName = s.PlayerName,
 			Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
+			LeaderboardId = s.LeaderboardId,
+			LeaderboardName = s.Leaderboard?.Name ?? string.Empty,
 			Value = s.Value,
 			DateAchieved = s.DateAchieved,
 			Title = s.Title,
@@ -165,6 +185,8 @@ public class ScoreController(
 			User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User?.ClerkUserId, displayNames) },
 			PlayerName = s.PlayerName,
 			Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
+			LeaderboardId = s.LeaderboardId,
+			LeaderboardName = s.Leaderboard?.Name ?? string.Empty,
 			Value = s.Value,
 			DateAchieved = s.DateAchieved,
 			Title = s.Title,
@@ -198,6 +220,8 @@ public class ScoreController(
 			User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User?.ClerkUserId, displayNames) },
 			PlayerName = s.PlayerName,
 			Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
+			LeaderboardId = s.LeaderboardId,
+			LeaderboardName = s.Leaderboard?.Name ?? string.Empty,
 			Value = s.Value,
 			DateAchieved = s.DateAchieved,
 			Title = s.Title,
@@ -219,13 +243,49 @@ public class ScoreController(
 	[Route("scores/lookup")]
 	public async Task<IActionResult> LookupScore([FromQuery] int gameId, [FromQuery] int userId)
 	{
-		var score = await _scoreRepository.GetTopScoreByUserAndGameAsync(gameId, userId);
+		var board = await ResolveDefaultBoardAsync(gameId);
+		var score = await _scoreRepository.GetTopScoreByUserAndLeaderboardAsync(board.Id, userId);
 		if (score == null)
 		{
 			throw new NotFoundException(ErrorCodes.ScoreNotFound, "No approved score found for this user in this game.");
 		}
 
 		return Ok(new { scoreId = score.Id });
+	}
+
+	private async Task<Leaderboard.Models.Leaderboard> ResolveBoardAsync(int gameId, int leaderboardId, bool requireActive)
+	{
+		if (_leaderboardRepository is null)
+		{
+			return new Leaderboard.Models.Leaderboard { Id = leaderboardId, GameId = gameId, Name = "Default", IsActive = true };
+		}
+
+		var board = await _leaderboardRepository.GetByIdAsync(gameId, leaderboardId);
+		if (board is null)
+		{
+			throw new NotFoundException(ErrorCodes.GameNotFound, "Leaderboard not found for this game.");
+		}
+		if (requireActive && !board.IsActive)
+		{
+			throw new ValidationException(ErrorCodes.SubmissionsNotAllowed, "Submissions are not allowed for this leaderboard.");
+		}
+		return board;
+	}
+
+	private async Task<Leaderboard.Models.Leaderboard> ResolveDefaultBoardAsync(int gameId)
+	{
+		if (_leaderboardRepository is null)
+		{
+			return new Leaderboard.Models.Leaderboard { Id = gameId, GameId = gameId, Name = "Default", IsActive = true };
+		}
+
+		var board = (await _leaderboardRepository.GetByGameIdAsync(gameId))
+			.FirstOrDefault(b => string.Equals(b.Name, "Default", StringComparison.OrdinalIgnoreCase));
+		if (board is null)
+		{
+			throw new NotFoundException(ErrorCodes.GameNotFound, "Default leaderboard not found.");
+		}
+		return board;
 	}
 
 	/// <summary>
@@ -243,6 +303,8 @@ public class ScoreController(
 			User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User?.ClerkUserId, displayNames) },
 			PlayerName = s.PlayerName,
 			Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
+			LeaderboardId = s.LeaderboardId,
+			LeaderboardName = s.Leaderboard?.Name ?? string.Empty,
 			Value = s.Value,
 			DateAchieved = s.DateAchieved,
 			Title = s.Title,
@@ -278,6 +340,8 @@ public class ScoreController(
 			User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User?.ClerkUserId, displayNames) },
 			PlayerName = s.PlayerName,
 			Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
+			LeaderboardId = s.LeaderboardId,
+			LeaderboardName = s.Leaderboard?.Name ?? string.Empty,
 			Value = s.Value,
 			DateAchieved = s.DateAchieved,
 			Title = s.Title,
@@ -346,6 +410,8 @@ public class ScoreRequest
     /// The ID of the game for which the score is being submitted.
     /// </summary>
     public required int GameId { get; set; }
+    /// <summary>The leaderboard receiving the score.</summary>
+    public required int LeaderboardId { get; set; }
     /// <summary>
     /// The score achieved.
     /// </summary>

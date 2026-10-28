@@ -44,6 +44,7 @@ public class ScoreControllerTests
 		var result = await controller.SubmitScore(new ScoreRequest
 		{
 			GameId = 7,
+			LeaderboardId = 3,
 			Score = 9000,
 			Title = "New record",
 			Description = "First attempt"
@@ -51,7 +52,21 @@ public class ScoreControllerTests
 
 		var response = Assert.IsType<OkObjectResult>(result);
 		Assert.Equal("Score submitted successfully.", response.Value);
-		scores.Verify(repository => repository.SubmitScoreAsync(4, 7, 9000, "New record", "First attempt"), Times.Once);
+		scores.Verify(repository => repository.SubmitScoreAsync(4, 7, 3, 9000, "New record", "First attempt"), Times.Once);
+	}
+
+	[Fact]
+	public async Task GetLeaderboardByLeaderboard_UsesBoardScopedRepositoryMethod()
+	{
+		var scores = new Mock<IScoreRepository>();
+		var entries = new List<LeaderboardEntry> { new() { UserId = 4, UserName = "Ryu", Score = 9000 } };
+		scores.Setup(repository => repository.GetLeaderboardAsync(3, 10)).ReturnsAsync(entries);
+		var controller = CreateController(scores.Object);
+
+		var result = await controller.GetLeaderboardByLeaderboard(3);
+
+		var response = Assert.IsType<OkObjectResult>(result);
+		Assert.Same(entries, response.Value);
 	}
 
 	[Fact]
@@ -61,7 +76,7 @@ public class ScoreControllerTests
 		var controller = CreateController(scores.Object, userId: "not-a-user");
 
 		var exception = await Assert.ThrowsAsync<UnauthorizedException>(() => 
-			controller.SubmitScore(new ScoreRequest { GameId = 7, Score = 100 }));
+			controller.SubmitScore(new ScoreRequest { GameId = 7, LeaderboardId = 3, Score = 100 }));
 
 		Assert.Equal(ErrorCodes.InvalidToken, exception.ErrorCode);
 		scores.Verify(repository => repository.SubmitScoreAsync(
