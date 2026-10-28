@@ -43,7 +43,15 @@ public class LeaderboardRepository(AppDbContext context, IGameModeratorRepositor
 			IsActive = true
 		};
 		_context.Leaderboards.Add(leaderboard);
-		await _context.SaveChangesAsync(cancellationToken);
+		try
+		{
+			await _context.SaveChangesAsync(cancellationToken);
+		}
+		catch (DbUpdateException exception) when (IsConstraintConflict(exception))
+		{
+			throw new InvalidOperationException(
+				"A leaderboard with this name already exists for the game.", exception);
+		}
 		return leaderboard;
 	}
 
@@ -67,7 +75,15 @@ public class LeaderboardRepository(AppDbContext context, IGameModeratorRepositor
 		leaderboard.Description = description;
 		leaderboard.IsActive = isActive;
 		leaderboard.UpdatedAt = DateTime.UtcNow;
-		await _context.SaveChangesAsync(cancellationToken);
+		try
+		{
+			await _context.SaveChangesAsync(cancellationToken);
+		}
+		catch (DbUpdateException exception) when (IsConstraintConflict(exception))
+		{
+			throw new InvalidOperationException(
+				"A leaderboard with this name already exists for the game.", exception);
+		}
 		return leaderboard;
 	}
 
@@ -86,7 +102,14 @@ public class LeaderboardRepository(AppDbContext context, IGameModeratorRepositor
 		}
 
 		_context.Leaderboards.Remove(leaderboard);
-		await _context.SaveChangesAsync(cancellationToken);
+		try
+		{
+			await _context.SaveChangesAsync(cancellationToken);
+		}
+		catch (DbUpdateException exception) when (IsConstraintConflict(exception))
+		{
+			return LeaderboardDeleteResult.HasScores;
+		}
 		return LeaderboardDeleteResult.Deleted;
 	}
 
@@ -113,6 +136,15 @@ public class LeaderboardRepository(AppDbContext context, IGameModeratorRepositor
 		}
 
 		return trimmedName;
+	}
+
+	private static bool IsConstraintConflict(DbUpdateException exception)
+	{
+		var message = exception.ToString();
+		return message.Contains("duplicate", StringComparison.OrdinalIgnoreCase) ||
+			message.Contains("unique", StringComparison.OrdinalIgnoreCase) ||
+			message.Contains("foreign key", StringComparison.OrdinalIgnoreCase) ||
+			message.Contains("constraint", StringComparison.OrdinalIgnoreCase);
 	}
 }
 #pragma warning restore CS1591
