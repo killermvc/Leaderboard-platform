@@ -21,11 +21,13 @@ public class ScoreController(
 		IScoreRepository scoreRepository,
 		IGameRepository gameRepository,
 		IClerkDirectoryService clerkDirectoryService,
-		ILogger<ScoreController> logger
+		ILogger<ScoreController> logger,
+		ILeaderboardRepository? leaderboardRepository = null
 	) : ControllerBase
 {
 	private readonly IScoreRepository _scoreRepository = scoreRepository;
 	private readonly IGameRepository _gameRepository = gameRepository;
+	private readonly ILeaderboardRepository? _leaderboardRepository = leaderboardRepository;
 	private readonly IClerkDirectoryService _clerkDirectory = clerkDirectoryService;
 	private readonly ILogger _logger = logger;
 
@@ -81,17 +83,34 @@ public class ScoreController(
 
 		try
 		{
-			Score score = await _scoreRepository.SubmitNamedScoreAsync(
-				keyGameId,
-				request.Name!,
-				request.Score,
-				request.SubmissionId!,
-				request.Title,
-				request.Description);
+			if (_leaderboardRepository is not null)
+			{
+				Leaderboard.Models.Leaderboard? leaderboard =
+					await _leaderboardRepository.GetByIdAsync(request.LeaderboardId);
+				if (leaderboard is null)
+				{
+					return NotFound(new { Message = "Leaderboard not found." });
+				}
+				if (leaderboard.GameId != keyGameId)
+				{
+					return Forbid();
+				}
+				if (!leaderboard.IsActive)
+				{
+					return BadRequest(new { Message = "Leaderboard is inactive." });
+				}
+			}
+
+			Score score = _leaderboardRepository is null
+				? await _scoreRepository.SubmitNamedScoreAsync(
+					keyGameId, request.Name!, request.Score, request.SubmissionId!, request.Title, request.Description)
+				: await _scoreRepository.SubmitNamedScoreAsync(
+					keyGameId, request.LeaderboardId, request.Name!, request.Score,
+					request.SubmissionId!, request.Title, request.Description);
 
 			_logger.LogInformation(
-				"Api key {ApiKeyId} submitted score {ScoreValue} of player {PlayerName} for game {GameId}, score {ScoreId}.",
-				User.GetApiKeyId(), score.Value, score.PlayerName, keyGameId, score.Id);
+				"Api key {ApiKeyId} submitted score {ScoreValue} of player {PlayerName} for game {GameId}, leaderboard {LeaderboardId}, score {ScoreId}.",
+				User.GetApiKeyId(), score.Value, score.PlayerName, keyGameId, request.LeaderboardId, score.Id);
 
 			return StatusCode(StatusCodes.Status201Created, await ToScoreDtoAsync(score));
 		}
@@ -123,9 +142,9 @@ public class ScoreController(
 	[ProducesResponseType(StatusCodes.Status403Forbidden)]
 	[ProducesResponseType(StatusCodes.Status404NotFound)]
 	[ProducesResponseType(StatusCodes.Status500InternalServerError)]
-	[HttpDelete("game/{gameId}/player/{playerName}")]
+	[HttpDelete("game/{gameId}/leaderboard/{leaderboardId}/player/{playerName}")]
 	[Authorize]
-	public async Task<IActionResult> DeleteScore(int gameId, string playerName)
+	public async Task<IActionResult> DeleteScore(int gameId, int leaderboardId, string playerName)
 	{
 		if (!TryAuthorizeGameRead(gameId, ApiKeyPermissions.DeleteScores, out IActionResult? authorizationResult))
 		{
@@ -134,7 +153,13 @@ public class ScoreController(
 
 		try
 		{
-			await _scoreRepository.DeleteNamedScoresAsync(gameId, playerName);
+			IActionResult? boardError = await ValidateLeaderboardAsync(gameId, leaderboardId);
+			if (boardError is not null)
+			{
+				return boardError;
+			}
+
+			await _scoreRepository.DeleteNamedScoresAsync(gameId, leaderboardId, playerName);
 			return NoContent();
 		}
 		catch (KeyNotFoundException ex)
@@ -172,16 +197,22 @@ public class ScoreController(
 	[ProducesResponseType(StatusCodes.Status404NotFound)]
 	[ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
 	[ProducesResponseType(StatusCodes.Status500InternalServerError)]
-	[HttpGet("game/{gameId}/player/{playerName}")]
+	[HttpGet("game/{gameId}/leaderboard/{leaderboardId}/player/{playerName}")]
 	[Authorize]
-	public async Task<IActionResult> GetScoreByPlayerName(int gameId, string playerName)
+	public async Task<IActionResult> GetScoreByPlayerName(int gameId, int leaderboardId, string playerName)
 	{
 		if (!TryAuthorizeGameRead(gameId, ApiKeyPermissions.ReadScores, out IActionResult? authorizationResult))
 		{
 			return authorizationResult!;
 		}
 
-		Score? score = await _scoreRepository.GetBestNamedScoreByGameAsync(gameId, playerName);
+		IActionResult? boardError = await ValidateLeaderboardAsync(gameId, leaderboardId);
+		if (boardError is not null)
+		{
+			return boardError;
+		}
+
+		Score? score = await _scoreRepository.GetBestNamedScoreByLeaderboardAsync(leaderboardId, playerName);
 		return score is null
 			? NotFound(new { Message = "Score not found." })
 			: Ok(await ToScoreDtoAsync(score));
@@ -207,9 +238,9 @@ public class ScoreController(
 	[ProducesResponseType(StatusCodes.Status404NotFound)]
 	[ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
 	[ProducesResponseType(StatusCodes.Status500InternalServerError)]
-	[HttpGet("game/{gameId}/leaderboard")]
+	[HttpGet("game/{gameId}/leaderboard/{leaderboardId}")]
 	[Authorize]
-	public async Task<IActionResult> GetLeaderboard(int gameId)
+	public async Task<IActionResult> GetLeaderboard(int gameId, int leaderboardId)
 	{
 		if (!TryAuthorizeGameRead(gameId, ApiKeyPermissions.ReadLeaderboard, out IActionResult? authorizationResult))
 		{
@@ -218,7 +249,12 @@ public class ScoreController(
 
 		try
 		{
-			int leaderboardId = await _scoreRepository.GetDefaultLeaderboardIdAsync(gameId);
+			IActionResult? boardError = await ValidateLeaderboardAsync(gameId, leaderboardId);
+			if (boardError is not null)
+			{
+				return boardError;
+			}
+
 			List<LeaderboardEntry> leaderboard = await _scoreRepository.GetLeaderboardAsync(leaderboardId, int.MaxValue);
 			await EnrichLeaderboardAsync(leaderboard);
 			return Ok(leaderboard);
@@ -232,6 +268,68 @@ public class ScoreController(
 			_logger.LogError(ex, "Error retrieving leaderboard for game {GameId}.", gameId);
 			return StatusCode(500, new { Message = "An error occurred while retrieving the leaderboard." });
 		}
+	}
+
+	private async Task<IActionResult?> ValidateLeaderboardAsync(int gameId, int leaderboardId)
+	{
+		if (_leaderboardRepository is null)
+		{
+			return null;
+		}
+
+		Leaderboard.Models.Leaderboard? leaderboard =
+			await _leaderboardRepository.GetByIdAsync(leaderboardId);
+		if (leaderboard is null)
+		{
+			return NotFound(new { Message = "Leaderboard not found." });
+		}
+
+		return leaderboard.GameId == gameId
+			? null
+			: Forbid();
+	}
+
+	/// <summary>Compatibility helper for callers that still use the migrated default board.</summary>
+	public Task<IActionResult> DeleteScore(int gameId, string playerName) =>
+		DeleteLegacyScoreAsync(gameId, playerName);
+
+	private async Task<IActionResult> DeleteLegacyScoreAsync(int gameId, string playerName)
+	{
+		if (!TryAuthorizeGameRead(gameId, ApiKeyPermissions.DeleteScores, out IActionResult? authorizationResult))
+		{
+			return authorizationResult!;
+		}
+
+		await _scoreRepository.DeleteNamedScoresAsync(gameId, playerName);
+		return NoContent();
+	}
+
+	/// <summary>Compatibility helper for callers that still use the migrated default board.</summary>
+	public async Task<IActionResult> GetScoreByPlayerName(int gameId, string playerName)
+	{
+		if (!TryAuthorizeGameRead(gameId, ApiKeyPermissions.ReadScores, out IActionResult? authorizationResult))
+		{
+			return authorizationResult!;
+		}
+
+		Score? score = await _scoreRepository.GetBestNamedScoreByGameAsync(gameId, playerName);
+		return score is null
+			? NotFound(new { Message = "Score not found." })
+			: Ok(await ToScoreDtoAsync(score));
+	}
+
+	/// <summary>Compatibility helper for callers that still use the migrated default board.</summary>
+	public async Task<IActionResult> GetLeaderboard(int gameId)
+	{
+		if (!TryAuthorizeGameRead(gameId, ApiKeyPermissions.ReadLeaderboard, out IActionResult? authorizationResult))
+		{
+			return authorizationResult!;
+		}
+
+		int leaderboardId = await _scoreRepository.GetDefaultLeaderboardIdAsync(gameId);
+		List<LeaderboardEntry> leaderboard = await _scoreRepository.GetLeaderboardAsync(leaderboardId, int.MaxValue);
+		await EnrichLeaderboardAsync(leaderboard);
+		return Ok(leaderboard);
 	}
 
 	private bool TryAuthorizeGameRead(int gameId, ApiKeyPermissions permission, out IActionResult? result)
@@ -280,6 +378,8 @@ public class ScoreController(
 			User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User.ClerkUserId) },
 		PlayerName = s.PlayerName,
 		Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed},
+		LeaderboardId = s.LeaderboardId,
+		LeaderboardName = s.Leaderboard?.Name ?? string.Empty,
 		Value = s.Value,
 		DateAchieved = s.DateAchieved,
 		Title = s.Title,
@@ -325,6 +425,13 @@ public class SubmitScoreRequest
 	/// and must match it when given.
 	/// </summary>
 	public int? GameId { get; set; }
+
+	/// <summary>
+	/// The leaderboard the score belongs to. It must belong to the game scoped to the api key.
+	/// </summary>
+	[Required]
+	[Range(1, int.MaxValue)]
+	public int LeaderboardId { get; set; }
 
 	/// <summary>
 	/// The score value reported by the game.

@@ -110,19 +110,33 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// <exception cref="KeyNotFoundException">Thrown when the specified game ID is not found.</exception>
 	public async Task<Score> SubmitNamedScoreAsync(int gameId, string playerName, int scoreValue, string submissionId, string? title = null, string? description = null)
 	{
+		int leaderboardId = await GetDefaultLeaderboardIdAsync(gameId);
+		return await SubmitNamedScoreAsync(
+			gameId, leaderboardId, playerName, scoreValue, submissionId, title, description);
+	}
+
+	/// <summary>Submits an approved named score to a selected active leaderboard.</summary>
+	public async Task<Score> SubmitNamedScoreAsync(
+		int gameId, int leaderboardId, string playerName, int scoreValue, string submissionId,
+		string? title = null, string? description = null)
+	{
 		Game game = await _context.Games.FirstOrDefaultAsync(g => g.Id == gameId)
 			?? throw new KeyNotFoundException($"Game with ID {gameId} not found.");
-		Leaderboard.Models.Leaderboard defaultLeaderboard = await _context.Leaderboards
-			.FirstOrDefaultAsync(l => l.GameId == gameId && l.Name == "Default")
-			?? throw new KeyNotFoundException($"Default leaderboard not found for game {gameId}.");
+		Leaderboard.Models.Leaderboard leaderboard = await _context.Leaderboards
+			.FirstOrDefaultAsync(l => l.Id == leaderboardId && l.GameId == gameId)
+			?? throw new KeyNotFoundException($"Leaderboard with ID {leaderboardId} not found for game {gameId}.");
+		if (!leaderboard.IsActive)
+		{
+			throw new InvalidOperationException($"Leaderboard with ID {leaderboardId} is inactive.");
+		}
 
 		Score? existingScore = await _context.Scores
 			.Include(s => s.Game)
 			.Include(s => s.Leaderboard)
-			.FirstOrDefaultAsync(s => s.GameId == gameId && s.SubmissionId == submissionId);
+			.FirstOrDefaultAsync(s => s.LeaderboardId == leaderboardId && s.SubmissionId == submissionId);
 		if (existingScore is not null)
 		{
-			throw new InvalidOperationException($"Submission ID '{submissionId}' has already been used for this game.");
+			throw new InvalidOperationException($"Submission ID '{submissionId}' has already been used for this leaderboard.");
 		}
 
 		string trimmedName = playerName.Trim();
@@ -131,7 +145,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 		{
 			Value = scoreValue,
 			Game = game,
-			Leaderboard = defaultLeaderboard,
+			Leaderboard = leaderboard,
 			PlayerName = trimmedName,
 			SubmissionId = submissionId,
 			Title = string.IsNullOrWhiteSpace(title) ? $"{game.Name} - {scoreValue}" : title.Trim(),
@@ -150,17 +164,16 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 		{
 			_context.Entry(score).State = EntityState.Detached;
 			bool submissionExists = await _context.Scores
-				.AnyAsync(s => s.GameId == gameId && s.SubmissionId == submissionId);
+				.AnyAsync(s => s.LeaderboardId == leaderboardId && s.SubmissionId == submissionId);
 			if (!submissionExists)
 			{
 				throw;
 			}
 
-			throw new InvalidOperationException($"Submission ID '{submissionId}' has already been used for this game.");
+			throw new InvalidOperationException($"Submission ID '{submissionId}' has already been used for this leaderboard.");
 		}
 
 		// Game client scores are approved on submission, so they go straight to the leaderboard
-		int leaderboardId = await GetDefaultLeaderboardIdAsync(gameId);
 		var leaderboardKey = GetLeaderboardKey(leaderboardId);
 		await EnsureLeaderboardCachedAsync(leaderboardKey, leaderboardId);
 
@@ -192,9 +205,17 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// </summary>
 	public async Task DeleteNamedScoresAsync(int gameId, string playerName)
 	{
+		int leaderboardId = await GetDefaultLeaderboardIdAsync(gameId);
+		await DeleteNamedScoresAsync(gameId, leaderboardId, playerName);
+	}
+
+	/// <summary>Deletes named scores from a selected leaderboard and invalidates its cache.</summary>
+	public async Task DeleteNamedScoresAsync(int gameId, int leaderboardId, string playerName)
+	{
 		string normalizedName = NormalizePlayerName(playerName);
 		List<Score> scores = await _context.Scores
 			.Where(s => s.GameId == gameId
+				&& s.LeaderboardId == leaderboardId
 				&& s.PlayerName != null
 				&& s.PlayerName.ToLower() == normalizedName)
 			.ToListAsync();
@@ -205,7 +226,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 
 		_context.Scores.RemoveRange(scores);
 		await _context.SaveChangesAsync();
-		await _redisDb.KeyDeleteAsync(GetLeaderboardKey(await GetDefaultLeaderboardIdAsync(gameId)));
+		await _redisDb.KeyDeleteAsync(GetLeaderboardKey(leaderboardId));
 	}
 
 	/// <summary>Gets the latest approved score for a named player in a game.</summary>
@@ -214,13 +235,20 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// <returns>The latest approved score, or null when none exists.</returns>
 	public async Task<Score?> GetBestNamedScoreByGameAsync(int gameId, string playerName)
 	{
+		return await GetBestNamedScoreByLeaderboardAsync(
+			await GetDefaultLeaderboardIdAsync(gameId), playerName);
+	}
+
+	/// <summary>Gets the latest approved named score from a selected leaderboard.</summary>
+	public async Task<Score?> GetBestNamedScoreByLeaderboardAsync(int leaderboardId, string playerName)
+	{
 		string normalizedName = NormalizePlayerName(playerName);
 
 		return await _context.Scores
 			.AsNoTracking()
 			.Include(s => s.Game)
 			.Include(s => s.Leaderboard)
-			.Where(s => s.Game.Id == gameId
+			.Where(s => s.LeaderboardId == leaderboardId
 				&& s.Status == ScoreStatus.Approved
 				&& s.PlayerName != null
 				&& s.PlayerName.ToLower() == normalizedName)

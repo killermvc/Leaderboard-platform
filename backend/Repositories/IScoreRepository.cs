@@ -20,6 +20,8 @@ public interface IScoreRepository
 	/// </summary>
 	/// <remarks>Throws <see cref="InvalidOperationException"/> when the submission ID was already used for the game.</remarks>
 	public Task<Score> SubmitNamedScoreAsync(int gameId, string playerName, int score, string submissionId, string? title = null, string? description = null);
+	/// <summary>Submits an approved named score to a selected active leaderboard.</summary>
+	public Task<Score> SubmitNamedScoreAsync(int gameId, int leaderboardId, string playerName, int score, string submissionId, string? title = null, string? description = null);
 
 	/// <summary>
 	/// Gets a score by its identifier.
@@ -29,10 +31,14 @@ public interface IScoreRepository
 	/// Deletes all scores submitted by a named game client player and invalidates the game's leaderboard cache.
 	/// </summary>
 	public Task DeleteNamedScoresAsync(int gameId, string playerName);
+	/// <summary>Deletes named scores from a selected leaderboard.</summary>
+	public Task DeleteNamedScoresAsync(int gameId, int leaderboardId, string playerName);
 	/// <summary>
 	/// Gets the latest named score submitted for a game by a player.
 	/// </summary>
 	public Task<Score?> GetBestNamedScoreByGameAsync(int gameId, string playerName);
+	/// <summary>Gets the latest approved named score from a selected leaderboard.</summary>
+	public Task<Score?> GetBestNamedScoreByLeaderboardAsync(int leaderboardId, string playerName);
 	/// <summary>
 	/// Gets leaderboard entries for a game up to the specified limit.
 	/// </summary>

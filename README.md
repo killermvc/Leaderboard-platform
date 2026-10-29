@@ -139,7 +139,10 @@ Key settings in `backend/appsettings.json`:
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| POST | `/submit` | API key | Submit a score for a player, approved immediately |
+| POST | `/submit` | API key | Submit a score for a player on a selected leaderboard, approved immediately |
+| DELETE | `/game/{gameId}/leaderboard/{leaderboardId}/player/{playerName}` | API key | Delete a player's scores from a leaderboard |
+| GET | `/game/{gameId}/leaderboard/{leaderboardId}/player/{playerName}` | API key | Get a player's approved score on a leaderboard |
+| GET | `/game/{gameId}/leaderboard/{leaderboardId}` | API key | Get a leaderboard's approved entries |
 
 ### Moderation (`/api/moderation`)
 
@@ -206,8 +209,8 @@ Behaviour:
 ## Game Client Scores
 
 `POST /api/v1/scores/submit` is the endpoint a game integration calls to report a score for one of its
-players. It requires an API key with the `SubmitScores` permission, and the key's game — there is no
-`gameId` in the URL, a key is already scoped to one game.
+players. It requires an API key with the `SubmitScores` permission and an explicit `leaderboardId`.
+The selected board must belong to the game scoped to the key.
 
 ```http
 POST /api/v1/scores/submit
@@ -215,6 +218,7 @@ X-API-Key: <key>
 Content-Type: application/json
 
 {
+  "leaderboardId": 4,
   "name": "Ryu",
   "score": 9000,
   "submissionId": "match-2026-09-28-0001",
@@ -225,6 +229,7 @@ Content-Type: application/json
 
 | Field | Type | Rules |
 |---|---|---|
+| `leaderboardId` | int, required | Target leaderboard. It must belong to the API key's game and be active. |
 | `name` | string, required | Player name, max 64 characters, trimmed. Identifies the player. |
 | `score` | int, required | The score value. |
 | `submissionId` | string, required | Client-generated idempotency key, max 128 characters. Retrying with the same ID returns the original submission. |
@@ -244,11 +249,11 @@ Behaviour:
 - The submission is added to the cached leaderboard immediately and the board is completed from the
   database when its cache entry is missing, so the first submission of a game never yields a partial
   leaderboard.
-- `201` with the stored score, `400` for a validation error or when the game has submissions
-  disabled, `401` without a valid key, `403` for a key without the permission or for another game.
+- `201` with the stored score, `400` for a validation error or inactive board, `401` without a valid key,
+  `403` for a key without the permission or a board from another game, and `404` for a missing board.
 - Guest entries have no score post to open, so the frontend shows them without a profile link.
 
-Leaderboard cache layout in Redis, `leaderboard:v2:<gameId>`:
+Leaderboard cache layout in Redis, `leaderboard:v3:<leaderboardId>`:
 
 | Member | Meaning |
 |---|---|

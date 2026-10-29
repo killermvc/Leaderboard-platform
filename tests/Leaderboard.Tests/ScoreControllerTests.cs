@@ -16,6 +16,89 @@ namespace Leaderboard.Tests;
 public class V1ScoreControllerTests
 {
 	[Fact]
+	public async Task SubmitScore_WithSelectedBoard_UsesThatBoard()
+	{
+		var scoreRepository = new Mock<IScoreRepository>();
+		var gameRepository = new Mock<IGameRepository>();
+		var leaderboardRepository = new Mock<ILeaderboardRepository>();
+		var game = new Game { Id = 7, Name = "Arcade", Description = "Test game" };
+		var board = new Leaderboard.Models.Leaderboard { Id = 11, GameId = 7, Name = "Season", IsActive = true };
+		var score = new Score
+		{
+			Id = 42, Game = game, Leaderboard = board, LeaderboardId = board.Id,
+			PlayerName = "Ryu", Value = 9000, Status = ScoreStatus.Approved
+		};
+		gameRepository.Setup(repository => repository.GetGameByIdAsync(7)).ReturnsAsync(game);
+		leaderboardRepository.Setup(repository => repository.GetByIdAsync(11))
+			.ReturnsAsync(board);
+		scoreRepository
+			.Setup(repository => repository.SubmitNamedScoreAsync(7, 11, "Ryu", 9000, "submission-1", null, null))
+			.ReturnsAsync(score);
+
+		var controller = CreateController(
+			scoreRepository, gameRepository, ApiKeyPermissions.SubmitScores, 7, leaderboardRepository);
+		var result = await controller.SubmitScore(new SubmitScoreRequest
+		{
+			LeaderboardId = 11, Name = "Ryu", Score = 9000, SubmissionId = "submission-1"
+		});
+
+		Assert.Equal(StatusCodes.Status201Created, Assert.IsType<ObjectResult>(result).StatusCode);
+		scoreRepository.Verify(
+			repository => repository.SubmitNamedScoreAsync(7, 11, "Ryu", 9000, "submission-1", null, null),
+			Times.Once);
+	}
+
+	[Fact]
+	public async Task SubmitScore_WithBoardFromAnotherGame_ReturnsForbidden()
+	{
+		var leaderboardRepository = new Mock<ILeaderboardRepository>();
+		leaderboardRepository.Setup(repository => repository.GetByIdAsync(11))
+			.ReturnsAsync(new Leaderboard.Models.Leaderboard { Id = 11, GameId = 8, Name = "Other" });
+		var gameRepository = new Mock<IGameRepository>();
+		gameRepository.Setup(repository => repository.GetGameByIdAsync(7))
+			.ReturnsAsync(new Game { Id = 7, Name = "Arcade", Description = "Test game" });
+		var scoreRepository = new Mock<IScoreRepository>();
+		var controller = CreateController(
+			scoreRepository, gameRepository, ApiKeyPermissions.SubmitScores, 7, leaderboardRepository);
+
+		var result = await controller.SubmitScore(new SubmitScoreRequest
+		{
+			LeaderboardId = 11, Name = "Ryu", Score = 100, SubmissionId = "submission-1"
+		});
+
+		Assert.IsType<ForbidResult>(result);
+		scoreRepository.Verify(
+			repository => repository.SubmitNamedScoreAsync(
+				It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<int>(),
+				It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>()),
+			Times.Never);
+	}
+
+	[Fact]
+	public async Task SubmitScore_WithInactiveBoard_ReturnsBadRequest()
+	{
+		var leaderboardRepository = new Mock<ILeaderboardRepository>();
+		leaderboardRepository.Setup(repository => repository.GetByIdAsync(11))
+			.ReturnsAsync(new Leaderboard.Models.Leaderboard
+			{
+				Id = 11, GameId = 7, Name = "Closed", IsActive = false
+			});
+		var gameRepository = new Mock<IGameRepository>();
+		gameRepository.Setup(repository => repository.GetGameByIdAsync(7))
+			.ReturnsAsync(new Game { Id = 7, Name = "Arcade", Description = "Test game" });
+		var controller = CreateController(
+			new Mock<IScoreRepository>(), gameRepository,
+			ApiKeyPermissions.SubmitScores, 7, leaderboardRepository);
+
+		var result = await controller.SubmitScore(new SubmitScoreRequest
+		{
+			LeaderboardId = 11, Name = "Ryu", Score = 100, SubmissionId = "submission-1"
+		});
+
+		Assert.IsType<BadRequestObjectResult>(result);
+	}
+
+	[Fact]
 	public async Task SubmitScore_WithApiKeyAndPermission_CreatesApprovedAnonymousScore()
 	{
 		var scoreRepository = new Mock<IScoreRepository>();
@@ -346,6 +429,17 @@ public class V1ScoreControllerTests
 	}
 
 	[Fact]
+	public void SubmitScoreRequest_RequiresLeaderboardId()
+	{
+		var request = new SubmitScoreRequest { Name = "Ryu", Score = 100, SubmissionId = "submission-1" };
+		var validationContext = new ValidationContext(request);
+		var errors = new List<ValidationResult>();
+
+		Assert.False(Validator.TryValidateObject(request, validationContext, errors, validateAllProperties: true));
+		Assert.Contains(errors, error => error.MemberNames.Contains(nameof(SubmitScoreRequest.LeaderboardId)));
+	}
+
+	[Fact]
 	public void SubmitScoreRequest_RejectsOversizedNameAndSubmissionId()
 	{
 		var request = new SubmitScoreRequest
@@ -367,13 +461,15 @@ public class V1ScoreControllerTests
 		Mock<IGameRepository> gameRepository,
 		ApiKeyPermissions permissions,
 		int gameId,
+		Mock<ILeaderboardRepository>? leaderboardRepository = null,
 		bool authenticated = true)
 	{
 		var controller = new ScoreController(
 			scoreRepository.Object,
 			gameRepository.Object,
 			Mock.Of<Leaderboard.Services.IClerkDirectoryService>(),
-			NullLogger<ScoreController>.Instance);
+			NullLogger<ScoreController>.Instance,
+			leaderboardRepository?.Object);
 
 		var claims = authenticated
 			? new[]

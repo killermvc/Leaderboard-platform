@@ -14,6 +14,7 @@ public interface ILeaderboardRepository
 {
 	Task<IReadOnlyList<LeaderboardEntity>> GetByGameIdAsync(int gameId, CancellationToken cancellationToken = default);
 	Task<LeaderboardEntity?> GetByIdAsync(int gameId, int leaderboardId, CancellationToken cancellationToken = default);
+	Task<LeaderboardEntity?> GetByIdAsync(int leaderboardId, CancellationToken cancellationToken = default);
 	Task<LeaderboardEntity> CreateAsync(int gameId, string name, string? description, CancellationToken cancellationToken = default);
 	Task<LeaderboardEntity?> UpdateAsync(int gameId, int leaderboardId, string name, string? description, bool isActive, CancellationToken cancellationToken = default);
 	Task<LeaderboardDeleteResult> DeleteAsync(int gameId, int leaderboardId, CancellationToken cancellationToken = default);

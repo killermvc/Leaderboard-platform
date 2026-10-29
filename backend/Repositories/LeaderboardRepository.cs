@@ -22,6 +22,11 @@ public class LeaderboardRepository(AppDbContext context, IGameModeratorRepositor
 		_context.Leaderboards.FirstOrDefaultAsync(
 			board => board.GameId == gameId && board.Id == leaderboardId, cancellationToken);
 
+	public Task<LeaderboardEntity?> GetByIdAsync(
+		int leaderboardId, CancellationToken cancellationToken = default) =>
+		_context.Leaderboards.FirstOrDefaultAsync(
+			board => board.Id == leaderboardId, cancellationToken);
+
 	public async Task<LeaderboardEntity> CreateAsync(
 		int gameId, string name, string? description, CancellationToken cancellationToken = default)
 	{
