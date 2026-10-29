@@ -365,6 +365,11 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// <exception cref="KeyNotFoundException">Thrown when no approved scores are found for the specified game ID.</exception>
 	public async Task<List<LeaderboardEntry>> GetLeaderboardAsync(int leaderboardId, int limit)
 	{
+		if (!await _context.Leaderboards.AnyAsync(board => board.Id == leaderboardId))
+		{
+			throw new KeyNotFoundException($"Leaderboard with ID {leaderboardId} not found.");
+		}
+
 		var leaderboardKey = GetLeaderboardKey(leaderboardId);
 
 		// If the leaderboard doesn't exist or is empty, update it
@@ -527,6 +532,11 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// <exception cref="KeyNotFoundException">Thrown when the specified game has no approved scores.</exception>
 	public async Task<long?> GetRankAsync(int leaderboardId, int userId)
 	{
+		if (!await _context.Leaderboards.AnyAsync(board => board.Id == leaderboardId))
+		{
+			throw new KeyNotFoundException($"Leaderboard with ID {leaderboardId} not found.");
+		}
+
 		var leaderboardKey = GetLeaderboardKey(leaderboardId);
 
 		// If the leaderboard doesn't exist in Redis, cache the whole game, a single user is not a leaderboard
@@ -549,11 +559,15 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// <param name="start_date">The start date of the time period for which to retrieve top players.</param>
 	/// <param name="end_date">The end date of the time period for which to retrieve top players.</param>
 	/// <param name="limit">The number of top players to retrieve.</param>
+	/// <param name="leaderboardId">Optional leaderboard filter.</param>
 	/// <returns>A list of leaderboard entries containing the user ID, username, and score of each player.</returns>
-	public async Task<List<LeaderboardEntry>> GetTopPlayersAsync(DateTime start_date, DateTime end_date, int limit)
+	public async Task<List<LeaderboardEntry>> GetTopPlayersAsync(
+		DateTime start_date, DateTime end_date, int limit, int? leaderboardId = null)
 	{
 		var topPlayers = await _context.Scores
-			.Where(s => s.DateAchieved >= start_date && s.DateAchieved <= end_date && s.Status == ScoreStatus.Approved)
+			.Where(s => s.DateAchieved >= start_date && s.DateAchieved <= end_date &&
+				s.Status == ScoreStatus.Approved &&
+				(!leaderboardId.HasValue || s.LeaderboardId == leaderboardId.Value))
 			.OrderByDescending(s => s.Value)
 			.Take(limit)
 			.Select(s => new LeaderboardEntry
@@ -572,14 +586,16 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// <param name="userId">The user's ID.</param>
 	/// <param name="limit">The maximum number of scores to return.</param>
 	/// <param name="offset">The number of scores to skip.</param>
-	public Task<List<Score>> GetScoresByUserAsync(int userId, int limit, int offset)
+	/// <param name="leaderboardId">Optional leaderboard filter.</param>
+	public Task<List<Score>> GetScoresByUserAsync(int userId, int limit, int offset, int? leaderboardId = null)
 	{
 		return _context.Scores
 			.AsNoTracking()
 			.Include(s => s.User)
 			.Include(s => s.Game)
 			.Include(s => s.Leaderboard)
-			.Where(s => s.UserId == userId && s.Status == ScoreStatus.Approved)
+			.Where(s => s.UserId == userId && s.Status == ScoreStatus.Approved &&
+				(!leaderboardId.HasValue || s.LeaderboardId == leaderboardId.Value))
 			.OrderByDescending(s => s.DateAchieved)
 			.Skip(offset)
 			.Take(limit)
@@ -590,7 +606,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// Gets all scores by a user, including pending and rejected ones.
 	/// For the user to see their own submissions.
 	/// </summary>
-	public Task<List<Score>> GetAllScoresByUserAsync(int userId, int limit, int offset)
+	public Task<List<Score>> GetAllScoresByUserAsync(int userId, int limit, int offset, int? leaderboardId = null)
 	{
 		return _context.Scores
 			.AsNoTracking()
@@ -598,7 +614,8 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.Include(s => s.Game)
 			.Include(s => s.Leaderboard)
 			.Include(s => s.ReviewedBy)
-			.Where(s => s.UserId == userId)
+			.Where(s => s.UserId == userId &&
+				(!leaderboardId.HasValue || s.LeaderboardId == leaderboardId.Value))
 			.OrderByDescending(s => s.DateAchieved)
 			.Skip(offset)
 			.Take(limit)
@@ -608,14 +625,16 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// <summary>Gets recent approved scores.</summary>
 	/// <param name="limit">The maximum number of scores to return.</param>
 	/// <param name="offset">The number of scores to skip.</param>
-	public Task<List<Score>> GetRecentScoresAsync(int limit, int offset)
+	/// <param name="leaderboardId">Optional leaderboard filter.</param>
+	public Task<List<Score>> GetRecentScoresAsync(int limit, int offset, int? leaderboardId = null)
 	{
 		return _context.Scores
 			.AsNoTracking()
 			.Include(s => s.User)
 			.Include(s => s.Game)
 			.Include(s => s.Leaderboard)
-			.Where(s => s.Status == ScoreStatus.Approved)
+			.Where(s => s.Status == ScoreStatus.Approved &&
+				(!leaderboardId.HasValue || s.LeaderboardId == leaderboardId.Value))
 			.OrderByDescending(s => s.DateAchieved)
 			.Skip(offset)
 			.Take(limit)
@@ -644,7 +663,6 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.Include(s => s.User)
 			.Include(s => s.Game)
 			.Include(s => s.Leaderboard)
-			.Include(s => s.Leaderboard)
 			.Where(s => s.LeaderboardId == leaderboardId && s.UserId == userId && s.Status == ScoreStatus.Approved)
 			.OrderByDescending(s => s.Value)
 			.FirstOrDefaultAsync();
@@ -652,7 +670,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// <summary>
 	/// Gets all score submissions (posts) visible to everyone, regardless of status.
 	/// </summary>
-	public Task<List<Score>> GetAllSubmissionsAsync(int limit, int offset)
+	public Task<List<Score>> GetAllSubmissionsAsync(int limit, int offset, int? leaderboardId = null)
 	{
 		return _context.Scores
 			.AsNoTracking()
@@ -660,6 +678,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.Include(s => s.Game)
 			.Include(s => s.Leaderboard)
 			.Include(s => s.ReviewedBy)
+			.Where(s => !leaderboardId.HasValue || s.LeaderboardId == leaderboardId.Value)
 			.OrderByDescending(s => s.DateAchieved)
 			.Skip(offset)
 			.Take(limit)

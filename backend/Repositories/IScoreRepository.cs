@@ -46,15 +46,16 @@ public interface IScoreRepository
 	/// <summary>
 	/// Gets the top players within a specified date range.
 	/// </summary>
-	public Task<List<LeaderboardEntry>> GetTopPlayersAsync(DateTime start_date, DateTime end_date, int limit);
+	public Task<List<LeaderboardEntry>> GetTopPlayersAsync(
+		DateTime start_date, DateTime end_date, int limit, int? leaderboardId = null);
 	/// <summary>
 	/// Gets scores submitted by a user with pagination.
 	/// </summary>
-	public Task<List<Score>> GetScoresByUserAsync(int userId, int limit, int offset);
+	public Task<List<Score>> GetScoresByUserAsync(int userId, int limit, int offset, int? leaderboardId = null);
 	/// <summary>
 	/// Gets recent scores with pagination.
 	/// </summary>
-	public Task<List<Score>> GetRecentScoresAsync(int limit, int offset);
+	public Task<List<Score>> GetRecentScoresAsync(int limit, int offset, int? leaderboardId = null);
 
 	/// <summary>
 	/// Gets the top approved score for a user in a specific game.
@@ -67,13 +68,13 @@ public interface IScoreRepository
 	/// <summary>
 	/// Gets all score submissions (posts) visible to everyone, regardless of status.
 	/// </summary>
-	public Task<List<Score>> GetAllSubmissionsAsync(int limit, int offset);
+	public Task<List<Score>> GetAllSubmissionsAsync(int limit, int offset, int? leaderboardId = null);
 
 	/// <summary>
 	/// Gets all scores by a user, including pending and rejected ones.
 	/// For the user to see their own submissions.
 	/// </summary>
-	public Task<List<Score>> GetAllScoresByUserAsync(int userId, int limit, int offset);
+	public Task<List<Score>> GetAllScoresByUserAsync(int userId, int limit, int offset, int? leaderboardId = null);
 
 	// Score approval methods
 	/// <summary>

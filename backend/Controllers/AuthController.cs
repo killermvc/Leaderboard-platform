@@ -96,29 +96,41 @@ public class AuthController : ControllerBase
 
 		var scores = await _scoreRepository.GetScoresByUserAsync(userId, 1000, 0);
 
-		// Get rankings for each game the user has played
+		// Keep rankings separate for each board; different boards may use different scoring systems.
 		var gameRankings = new List<object>();
-		var gamesPlayed = scores.Select(s => s.Game).DistinctBy(g => g.Id).ToList();
+		var gamesPlayed = scores
+			.Select(s => s.Game)
+			.DistinctBy(g => g.Id)
+			.ToList();
 
 		foreach (var game in gamesPlayed)
 		{
-			var gameScores = scores.Where(s => s.Game.Id == game.Id).ToList();
-			var bestScore = gameScores.OrderByDescending(s => s.Value).First();
-			var rank = await _scoreRepository.GetRankAsync(bestScore.LeaderboardId, userId);
-			var userBestScore = bestScore.Value;
-			gameRankings.Add(new {
-				GameId = game.Id,
-				GameName = game.Name,
-				Rank = rank,
-				BestScore = userBestScore,
-				ScoresSubmitted = gameScores.Count
-			});
+			var boards = scores
+				.Where(s => s.Game.Id == game.Id)
+				.GroupBy(s => new { s.LeaderboardId, Name = s.Leaderboard?.Name ?? string.Empty });
+
+			foreach (var board in boards)
+			{
+				var bestScore = board.OrderByDescending(s => s.Value).First();
+				var rank = await _scoreRepository.GetRankAsync(bestScore.LeaderboardId, userId);
+				gameRankings.Add(new {
+					GameId = game.Id,
+					GameName = game.Name,
+					LeaderboardId = bestScore.LeaderboardId,
+					LeaderboardName = board.Key.Name,
+					Rank = rank,
+					BestScore = bestScore.Value,
+					ScoresSubmitted = board.Count()
+				});
+			}
 		}
 
 		var recentScores = scores.OrderByDescending(s => s.DateAchieved).Take(10).Select(s => new {
 			Id = s.Id,
 			GameId = s.Game.Id,
 			GameName = s.Game.Name,
+			LeaderboardId = s.LeaderboardId,
+			LeaderboardName = s.Leaderboard?.Name,
 			Value = s.Value,
 			DateAchieved = s.DateAchieved
 		}).ToList();

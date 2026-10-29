@@ -95,10 +95,37 @@ public class ScoreControllerTests
 		Assert.Equal(ErrorCodes.ScoreNotFound, exception.ErrorCode);
 	}
 
+	[Fact]
+	public async Task LookupScore_UsesRequestedLeaderboard()
+	{
+		var scores = new Mock<IScoreRepository>();
+		scores.Setup(repository => repository.GetTopScoreByUserAndLeaderboardAsync(3, 4))
+			.ReturnsAsync(new Score
+			{
+				Id = 19,
+				Game = new Game { Id = 7, Name = "Arcade", Description = "Test game" },
+				LeaderboardId = 3
+			});
+		var leaderboards = new Mock<ILeaderboardRepository>();
+		leaderboards.Setup(repository => repository.GetByIdAsync(7, 3, It.IsAny<CancellationToken>()))
+			.ReturnsAsync(new Leaderboard.Models.Leaderboard
+			{
+				Id = 3, GameId = 7, Name = "Ranked", IsActive = false
+			});
+		var controller = CreateController(scores.Object, leaderboardRepository: leaderboards.Object);
+
+		var result = await controller.LookupScore(7, 4, 3);
+
+		var response = Assert.IsType<OkObjectResult>(result);
+		Assert.Contains("19", response.Value?.ToString());
+		scores.Verify(repository => repository.GetTopScoreByUserAndLeaderboardAsync(3, 4), Times.Once);
+	}
+
 	private static ScoreController CreateController(
 		IScoreRepository scores,
 		IGameRepository? games = null,
-		string userId = "4")
+		string userId = "4",
+		ILeaderboardRepository? leaderboardRepository = null)
 	{
 		var directory = new Mock<IClerkDirectoryService>();
 		directory.Setup(d => d.GetDisplayNamesAsync(
@@ -110,7 +137,8 @@ public class ScoreControllerTests
 			games ?? Mock.Of<IGameRepository>(),
 			Mock.Of<IUserRepository>(),
 			directory.Object,
-			NullLogger<ScoreController>.Instance);
+			NullLogger<ScoreController>.Instance,
+			leaderboardRepository);
 		controller.ControllerContext = new ControllerContext
 		{
 			HttpContext = new DefaultHttpContext

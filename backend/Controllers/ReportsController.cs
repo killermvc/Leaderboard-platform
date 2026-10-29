@@ -24,7 +24,9 @@ public class ReportsController(IScoreRepository scoreRepository, IClerkDirectory
 	/// </summary>
     [HttpGet("top-players")]
 	[Authorize(Roles = "Admin")]
-    public async Task<IActionResult> GetTopPlayersReport([FromQuery] DateTime start_date, [FromQuery] DateTime end_date, [FromQuery] int limit = 10)
+    public async Task<IActionResult> GetTopPlayersReport(
+		[FromQuery] DateTime start_date, [FromQuery] DateTime end_date,
+		[FromQuery] int limit = 10, [FromQuery] int? leaderboardId = null)
     {
         try
         {
@@ -33,7 +35,9 @@ public class ReportsController(IScoreRepository scoreRepository, IClerkDirectory
                 return BadRequest(new { message = "Start date must be before end date." });
             }
 
-            var topPlayers = await _scoreRepository.GetTopPlayersAsync(start_date, end_date, limit);
+            var topPlayers = leaderboardId.HasValue
+				? await _scoreRepository.GetTopPlayersAsync(start_date, end_date, limit, leaderboardId)
+				: await _scoreRepository.GetTopPlayersAsync(start_date, end_date, limit);
             var clerkIds = topPlayers
                 .Where(tp => tp.UserId.HasValue && !string.IsNullOrWhiteSpace(tp.UserName))
                 .Select(tp => tp.UserName!)
@@ -55,6 +59,7 @@ public class ReportsController(IScoreRepository scoreRepository, IClerkDirectory
             {
                 start_date,
                 end_date,
+				leaderboardId,
                 top_players = dto
             });
         }

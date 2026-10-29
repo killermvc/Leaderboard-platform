@@ -149,9 +149,11 @@ public class ScoreController(
 	/// </summary>
 	[HttpGet]
 	[Route("scores/user/{userId}")]
-	public async Task<IActionResult> GetScoresByUser(int userId, [FromQuery] int limit = 10, [FromQuery] int offset = 0)
+	public async Task<IActionResult> GetScoresByUser(
+		int userId, [FromQuery] int limit = 10, [FromQuery] int offset = 0,
+		[FromQuery] int? leaderboardId = null)
 	{
-		var scores = await _scoreRepository.GetScoresByUserAsync(userId, limit, offset);
+		var scores = await _scoreRepository.GetScoresByUserAsync(userId, limit, offset, leaderboardId);
 		var displayNames = await GetDisplayNamesAsync(scores.SelectMany(s => new[] { s.User?.ClerkUserId }));
 		var dtos = scores.Select(s => new ScoreDto
 		{
@@ -175,9 +177,11 @@ public class ScoreController(
 	/// </summary>
 	[HttpGet]
 	[Route("scores/recent")]
-	public async Task<IActionResult> GetRecentScores([FromQuery] int limit = 10, [FromQuery] int offset = 0)
+	public async Task<IActionResult> GetRecentScores(
+		[FromQuery] int limit = 10, [FromQuery] int offset = 0,
+		[FromQuery] int? leaderboardId = null)
 	{
-		var scores = await _scoreRepository.GetRecentScoresAsync(limit, offset);
+		var scores = await _scoreRepository.GetRecentScoresAsync(limit, offset, leaderboardId);
 		var displayNames = await GetDisplayNamesAsync(scores.SelectMany(s => new[] { s.User?.ClerkUserId, s.ReviewedBy?.ClerkUserId }));
 		var dtos = scores.Select(s => new ScoreDto
 		{
@@ -241,13 +245,16 @@ public class ScoreController(
 	/// </summary>
 	[HttpGet]
 	[Route("scores/lookup")]
-	public async Task<IActionResult> LookupScore([FromQuery] int gameId, [FromQuery] int userId)
+	public async Task<IActionResult> LookupScore(
+		[FromQuery] int gameId, [FromQuery] int userId, [FromQuery] int? leaderboardId = null)
 	{
-		var board = await ResolveDefaultBoardAsync(gameId);
+		var board = leaderboardId.HasValue
+			? await ResolveBoardAsync(gameId, leaderboardId.Value, requireActive: false)
+			: await ResolveDefaultBoardAsync(gameId);
 		var score = await _scoreRepository.GetTopScoreByUserAndLeaderboardAsync(board.Id, userId);
 		if (score == null)
 		{
-			throw new NotFoundException(ErrorCodes.ScoreNotFound, "No approved score found for this user in this game.");
+			throw new NotFoundException(ErrorCodes.ScoreNotFound, "No approved score found for this user in this leaderboard.");
 		}
 
 		return Ok(new { scoreId = score.Id });
@@ -293,9 +300,11 @@ public class ScoreController(
 	/// </summary>
 	[HttpGet]
 	[Route("scores/submissions")]
-	public async Task<IActionResult> GetAllSubmissions([FromQuery] int limit = 20, [FromQuery] int offset = 0)
+	public async Task<IActionResult> GetAllSubmissions(
+		[FromQuery] int limit = 20, [FromQuery] int offset = 0,
+		[FromQuery] int? leaderboardId = null)
 	{
-		var scores = await _scoreRepository.GetAllSubmissionsAsync(limit, offset);
+		var scores = await _scoreRepository.GetAllSubmissionsAsync(limit, offset, leaderboardId);
 		var displayNames = await GetDisplayNamesAsync(scores.SelectMany(s => new[] { s.User?.ClerkUserId, s.ReviewedBy?.ClerkUserId }));
 		var dtos = scores.Select(s => new ScoreDto
 		{
@@ -324,7 +333,9 @@ public class ScoreController(
 	[HttpGet]
 	[Route("scores/my-submissions")]
 	[Authorize]
-	public async Task<IActionResult> GetMySubmissions([FromQuery] int limit = 20, [FromQuery] int offset = 0)
+	public async Task<IActionResult> GetMySubmissions(
+		[FromQuery] int limit = 20, [FromQuery] int offset = 0,
+		[FromQuery] int? leaderboardId = null)
 	{
 		var userIdClaim = User.Identity?.Name;
 		if (!int.TryParse(userIdClaim, out int userId))
@@ -332,7 +343,7 @@ public class ScoreController(
 			throw new UnauthorizedException(ErrorCodes.InvalidToken, "Invalid user token.");
 		}
 
-		var scores = await _scoreRepository.GetAllScoresByUserAsync(userId, limit, offset);
+		var scores = await _scoreRepository.GetAllScoresByUserAsync(userId, limit, offset, leaderboardId);
 		var displayNames = await GetDisplayNamesAsync(scores.SelectMany(s => new[] { s.User?.ClerkUserId, s.ReviewedBy?.ClerkUserId }));
 		var dtos = scores.Select(s => new ScoreDto
 		{
