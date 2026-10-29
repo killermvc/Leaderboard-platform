@@ -96,15 +96,15 @@ public interface IScoreRepository
 	/// <summary>
 	/// Gets all pending scores for a specific game.
 	/// </summary>
-	public Task<List<Score>> GetPendingScoresForGameAsync(int gameId, int limit, int offset);
+	public Task<List<Score>> GetPendingScoresForGameAsync(int gameId, int limit, int offset, int? leaderboardId = null);
 
 	/// <summary>
 	/// Gets all pending scores across all games (for global moderators).
 	/// </summary>
-	public Task<List<Score>> GetAllPendingScoresAsync(int limit, int offset);
+	public Task<List<Score>> GetAllPendingScoresAsync(int limit, int offset, int? leaderboardId = null);
 
 	/// <summary>
 	/// Gets pending scores for games that have no specific moderators.
 	/// </summary>
-	public Task<List<Score>> GetPendingScoresForUnmoderatedGamesAsync(int limit, int offset);
+	public Task<List<Score>> GetPendingScoresForUnmoderatedGamesAsync(int limit, int offset, int? leaderboardId = null);
 }

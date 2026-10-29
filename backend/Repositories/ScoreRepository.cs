@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Linq.Expressions;
+using System.Collections.Concurrent;
 using Leaderboard.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
@@ -33,6 +34,7 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// stale and can be dropped with: redis-cli --scan --pattern 'leaderboard:[0-9]*' | xargs -r redis-cli del
 	/// </summary>
 	private const string LeaderboardKeyPrefix = "leaderboard:v3:";
+	private static readonly ConcurrentDictionary<int, SemaphoreSlim> LeaderboardCacheLocks = new();
 
 	/// <summary>
 	/// Submits a score for a user in a specific game.
@@ -175,11 +177,13 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 
 		// Game client scores are approved on submission, so they go straight to the leaderboard
 		var leaderboardKey = GetLeaderboardKey(leaderboardId);
-		await EnsureLeaderboardCachedAsync(leaderboardKey, leaderboardId);
-
-		string member = GetPlayerNameMember(trimmedName);
-		// ZADD overwrites the member so the latest submission becomes the player's current score.
-		await _redisDb.SortedSetAddAsync(leaderboardKey, member, scoreValue);
+		await WithLeaderboardCacheLockAsync(leaderboardId, async () =>
+		{
+			await EnsureLeaderboardCachedAsync(leaderboardKey, leaderboardId);
+			string member = GetPlayerNameMember(trimmedName);
+			// ZADD overwrites the member so the latest submission becomes the player's current score.
+			await _redisDb.SortedSetAddAsync(leaderboardKey, member, scoreValue);
+		});
 
 		return score;
 	}
@@ -226,7 +230,8 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 
 		_context.Scores.RemoveRange(scores);
 		await _context.SaveChangesAsync();
-		await _redisDb.KeyDeleteAsync(GetLeaderboardKey(leaderboardId));
+		await WithLeaderboardCacheLockAsync(
+			leaderboardId, () => UpdateRedisDbForLeaderboardAsync(leaderboardId));
 	}
 
 	/// <summary>Gets the latest approved score for a named player in a game.</summary>
@@ -748,17 +753,10 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 
 		await _context.SaveChangesAsync();
 
-		// Add the approved score to Redis leaderboard
-		var leaderboardKey = GetLeaderboardKey(score.LeaderboardId);
-		await EnsureLeaderboardCachedAsync(leaderboardKey, score.LeaderboardId);
-
-		// Get the user's current highest approved score for this game
-		var highestScore = await _context.Scores
-			.Where(s => s.UserId == score.UserId && s.LeaderboardId == score.LeaderboardId && s.Status == ScoreStatus.Approved)
-			.MaxAsync(s => (int?)s.Value) ?? 0;
-
-		// Update Redis with the highest score
-		await _redisDb.SortedSetAddAsync(leaderboardKey, GetUserMember(score.UserId.Value), highestScore);
+		// Rebuild the selected board from SQL so concurrent approvals cannot leave a stale
+		// lower score in Redis.
+		await WithLeaderboardCacheLockAsync(
+			score.LeaderboardId, () => UpdateRedisDbForLeaderboardAsync(score.LeaderboardId));
 	}
 
 	/// <summary>
@@ -795,14 +793,16 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// <summary>
 	/// Gets all pending scores for a specific game.
 	/// </summary>
-	public async Task<List<Score>> GetPendingScoresForGameAsync(int gameId, int limit, int offset)
+	public async Task<List<Score>> GetPendingScoresForGameAsync(
+		int gameId, int limit, int offset, int? leaderboardId = null)
 	{
 		return await _context.Scores
 			.AsNoTracking()
 			.Include(s => s.User)
 			.Include(s => s.Game)
 			.Include(s => s.Leaderboard)
-			.Where(s => s.Game.Id == gameId && s.Status == ScoreStatus.Pending)
+			.Where(s => s.Game.Id == gameId && s.Status == ScoreStatus.Pending &&
+				(!leaderboardId.HasValue || s.LeaderboardId == leaderboardId.Value))
 			.OrderBy(s => s.DateAchieved)
 			.Skip(offset)
 			.Take(limit)
@@ -812,14 +812,16 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// <summary>
 	/// Gets all pending scores across all games.
 	/// </summary>
-	public async Task<List<Score>> GetAllPendingScoresAsync(int limit, int offset)
+	public async Task<List<Score>> GetAllPendingScoresAsync(
+		int limit, int offset, int? leaderboardId = null)
 	{
 		return await _context.Scores
 			.AsNoTracking()
 			.Include(s => s.User)
 			.Include(s => s.Game)
 			.Include(s => s.Leaderboard)
-			.Where(s => s.Status == ScoreStatus.Pending)
+			.Where(s => s.Status == ScoreStatus.Pending &&
+				(!leaderboardId.HasValue || s.LeaderboardId == leaderboardId.Value))
 			.OrderBy(s => s.DateAchieved)
 			.Skip(offset)
 			.Take(limit)
@@ -829,7 +831,8 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 	/// <summary>
 	/// Gets pending scores for games that have no specific moderators.
 	/// </summary>
-	public async Task<List<Score>> GetPendingScoresForUnmoderatedGamesAsync(int limit, int offset)
+	public async Task<List<Score>> GetPendingScoresForUnmoderatedGamesAsync(
+		int limit, int offset, int? leaderboardId = null)
 	{
 		// Use a subquery to find games without moderators - this translates to SQL properly
 		return await _context.Scores
@@ -838,11 +841,27 @@ public class ScoreRepository(AppDbContext context, ConnectionMultiplexer multipl
 			.Include(s => s.Game)
 			.Include(s => s.Leaderboard)
 			.Where(s => s.Status == ScoreStatus.Pending &&
+				(!leaderboardId.HasValue || s.LeaderboardId == leaderboardId.Value) &&
 				!_context.GameModerators.Any(gm => gm.GameId == s.Game.Id))
 			.OrderBy(s => s.DateAchieved)
 			.Skip(offset)
 			.Take(limit)
 			.ToListAsync();
+	}
+
+	private static async Task WithLeaderboardCacheLockAsync(
+		int leaderboardId, Func<Task> action)
+	{
+		var cacheLock = LeaderboardCacheLocks.GetOrAdd(leaderboardId, _ => new SemaphoreSlim(1, 1));
+		await cacheLock.WaitAsync();
+		try
+		{
+			await action();
+		}
+		finally
+		{
+			cacheLock.Release();
+		}
 	}
 }
 

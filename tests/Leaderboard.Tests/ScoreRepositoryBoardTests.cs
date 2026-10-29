@@ -101,6 +101,35 @@ public class ScoreRepositoryBoardTests
 		Assert.Equal(second.Id, ownScores[0].LeaderboardId);
 	}
 
+	[Fact]
+	public async Task Pending_scores_can_filter_to_selected_board()
+	{
+		await using var context = CreateContext();
+		var game = new Game { Id = 1, Name = "One", Description = "One" };
+		var first = new LeaderboardEntity { Id = 10, GameId = 1, Name = "First" };
+		var second = new LeaderboardEntity { Id = 11, GameId = 1, Name = "Second" };
+		var user = new User { Id = 4, ClerkUserId = "user-4" };
+		context.AddRange(game, first, second, user);
+		context.Scores.AddRange(
+			new Score
+			{
+				Game = game, Leaderboard = first, LeaderboardId = first.Id, User = user,
+				Value = 100, Status = ScoreStatus.Pending
+			},
+			new Score
+			{
+				Game = game, Leaderboard = second, LeaderboardId = second.Id, User = user,
+				Value = 200, Status = ScoreStatus.Pending
+			});
+		await context.SaveChangesAsync();
+		var repository = CreateRepository(context);
+
+		var scores = await repository.GetPendingScoresForGameAsync(game.Id, 10, 0, second.Id);
+
+		Assert.Single(scores);
+		Assert.Equal(second.Id, scores[0].LeaderboardId);
+	}
+
 	private static AppDbContext CreateContext() =>
 		new(new DbContextOptionsBuilder<AppDbContext>()
 			.UseInMemoryDatabase(Guid.NewGuid().ToString())

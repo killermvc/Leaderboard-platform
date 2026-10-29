@@ -66,6 +66,9 @@ public class ModerationController(
             }
 
             await _scoreRepository.ApproveScoreAsync(scoreId, userId);
+            _logger.LogInformation(
+                "Moderator {ModeratorId} approved score {ScoreId} for game {GameId}, leaderboard {LeaderboardId}.",
+                userId, scoreId, score.Game.Id, score.LeaderboardId);
             return Ok(new { Message = "Score approved successfully." });
         }
         catch (KeyNotFoundException ex)
@@ -78,7 +81,7 @@ public class ModerationController(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error approving score.");
+            _logger.LogError(ex, "Error approving score {ScoreId}.", scoreId);
             return StatusCode(500, "An error occurred while approving the score.");
         }
     }
@@ -90,7 +93,6 @@ public class ModerationController(
     [Authorize]
     public async Task<IActionResult> RejectScore(int scoreId, [FromBody] RejectScoreRequest? request = null)
     {
-        Console.WriteLine($"RejectScore called. Request is null: {request == null}, Reason: {request?.Reason ?? "(null)"}");
         var userIdClaim = User.Identity?.Name;
         if (!int.TryParse(userIdClaim, out int userId))
         {
@@ -119,6 +121,9 @@ public class ModerationController(
             }
 
             await _scoreRepository.RejectScoreAsync(scoreId, userId, request?.Reason);
+            _logger.LogInformation(
+                "Moderator {ModeratorId} rejected score {ScoreId} for game {GameId}, leaderboard {LeaderboardId}.",
+                userId, scoreId, score.Game.Id, score.LeaderboardId);
             return Ok(new { Message = "Score rejected successfully." });
         }
         catch (KeyNotFoundException ex)
@@ -131,7 +136,7 @@ public class ModerationController(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error rejecting score.");
+            _logger.LogError(ex, "Error rejecting score {ScoreId}.", scoreId);
             return StatusCode(500, "An error occurred while rejecting the score.");
         }
     }
@@ -141,7 +146,9 @@ public class ModerationController(
     /// </summary>
     [HttpGet("games/{gameId}/pending-scores")]
     [Authorize]
-    public async Task<IActionResult> GetPendingScoresForGame(int gameId, [FromQuery] int limit = 20, [FromQuery] int offset = 0)
+    public async Task<IActionResult> GetPendingScoresForGame(
+        int gameId, [FromQuery] int? leaderboardId = null,
+        [FromQuery] int limit = 20, [FromQuery] int offset = 0)
     {
         var userIdClaim = User.Identity?.Name;
         if (!int.TryParse(userIdClaim, out int userId))
@@ -157,7 +164,7 @@ public class ModerationController(
                 return Forbid("You are not authorized to view pending scores for this game.");
             }
 
-            var scores = await _scoreRepository.GetPendingScoresForGameAsync(gameId, limit, offset);
+            var scores = await _scoreRepository.GetPendingScoresForGameAsync(gameId, limit, offset, leaderboardId);
             var dtos = await MapToScoreDtosAsync(scores);
 
             return Ok(dtos);
@@ -176,7 +183,9 @@ public class ModerationController(
     /// </summary>
     [HttpGet("pending-scores")]
     [Authorize]
-    public async Task<IActionResult> GetPendingScores([FromQuery] int limit = 20, [FromQuery] int offset = 0)
+    public async Task<IActionResult> GetPendingScores(
+        [FromQuery] int? leaderboardId = null,
+        [FromQuery] int limit = 20, [FromQuery] int offset = 0)
     {
         var userIdClaim = User.Identity?.Name;
         if (!int.TryParse(userIdClaim, out int userId))
@@ -193,14 +202,16 @@ public class ModerationController(
 
             foreach (var gm in moderatedGames)
             {
-                var gamePendingScores = await _scoreRepository.GetPendingScoresForGameAsync(gm.GameId, limit, offset);
+                var gamePendingScores = await _scoreRepository.GetPendingScoresForGameAsync(
+                    gm.GameId, limit, offset, leaderboardId);
                 allPendingScores.AddRange(gamePendingScores);
             }
 
             // If user is a global moderator, also get scores for unmoderated games
             if (await _gameModeratorRepository.IsGlobalModeratorAsync(userId))
             {
-                var unmoderatedScores = await _scoreRepository.GetPendingScoresForUnmoderatedGamesAsync(limit, offset);
+                var unmoderatedScores = await _scoreRepository.GetPendingScoresForUnmoderatedGamesAsync(
+                    limit, offset, leaderboardId);
                 allPendingScores.AddRange(unmoderatedScores);
             }
 
@@ -416,6 +427,8 @@ public class ModerationController(
             User = s.User == null ? null : new UserDto { Id = s.User.Id, Username = DisplayOrId(s.User.ClerkUserId, displayNames) },
             PlayerName = s.PlayerName,
             Game = s.Game == null ? null : new GameDto { Id = s.Game.Id, Name = s.Game.Name, IsSubmitAllowed = s.Game.SubmitsAllowed },
+            LeaderboardId = s.LeaderboardId,
+            LeaderboardName = s.Leaderboard?.Name ?? string.Empty,
             Value = s.Value,
             DateAchieved = s.DateAchieved,
             Title = s.Title,

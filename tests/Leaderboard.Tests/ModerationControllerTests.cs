@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Leaderboard.Controllers;
+using Leaderboard.Dtos;
 using Leaderboard.Models;
 using Leaderboard.Repositories;
 using Leaderboard.Services;
@@ -51,6 +52,35 @@ public class ModerationControllerTests
 		var result = await controller.CanModerateGame(7);
 
 		Assert.IsType<UnauthorizedObjectResult>(result);
+	}
+
+	[Fact]
+	public async Task GetPendingScoresForGame_PassesLeaderboardFilterAndMapsBoard()
+	{
+		var scores = new Mock<IScoreRepository>();
+		var moderators = new Mock<IGameModeratorRepository>();
+		var board = new Leaderboard.Models.Leaderboard { Id = 11, GameId = 7, Name = "Season" };
+		var pending = new Score
+		{
+			Id = 30,
+			UserId = 2,
+			Game = new Game { Id = 7, Name = "Arcade", Description = "Classic game" },
+			Leaderboard = board,
+			LeaderboardId = board.Id,
+			Value = 100,
+			Status = ScoreStatus.Pending
+		};
+		moderators.Setup(item => item.CanModerateGameAsync(7, 8)).ReturnsAsync(true);
+		scores.Setup(item => item.GetPendingScoresForGameAsync(7, 10, 0, 11))
+			.ReturnsAsync([pending]);
+		var controller = CreateController(scores.Object, moderators.Object, "8");
+
+		var result = await controller.GetPendingScoresForGame(7, 11, 10, 0);
+
+		var response = Assert.IsType<OkObjectResult>(result);
+		var dto = Assert.IsType<List<ScoreDto>>(response.Value).Single();
+		Assert.Equal(11, dto.LeaderboardId);
+		Assert.Equal("Season", dto.LeaderboardName);
 	}
 
 	private static ModerationController CreateController(IScoreRepository scores, IGameModeratorRepository moderators, string userId)
