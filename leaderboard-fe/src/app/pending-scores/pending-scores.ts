@@ -28,6 +28,7 @@ export class PendingScoresComponent implements OnInit {
   loading = signal(true);
   error = signal<string | null>(null);
   processingScoreId = signal<number | null>(null);
+  leaderboardId = signal<number | undefined>(undefined);
 
   // For rejection modal
   showRejectModal = signal(false);
@@ -55,6 +56,10 @@ export class PendingScoresComponent implements OnInit {
     }
 
     this.gameId.set(id);
+    const requestedLeaderboardId = Number(this.route.snapshot.queryParamMap.get('leaderboardId'));
+    if (Number.isInteger(requestedLeaderboardId) && requestedLeaderboardId > 0) {
+      this.leaderboardId.set(requestedLeaderboardId);
+    }
     this.loadGame(id);
     this.loadPendingScores(id);
   }
@@ -77,7 +82,7 @@ export class PendingScoresComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.moderationService.getPendingScoresForGame(id, 50, 0).subscribe({
+    this.moderationService.getPendingScoresForGame(id, 50, 0, this.leaderboardId()).subscribe({
       next: (scores) => {
         this.pendingScores.set(scores);
         this.loading.set(false);

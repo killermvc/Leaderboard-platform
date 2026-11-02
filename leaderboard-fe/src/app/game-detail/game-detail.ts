@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { GameService, Game } from '../core/game-service';
 import { ScoreService, LeaderboardEntry } from '../core/score-service';
+import { Leaderboard, LeaderboardService } from '../core/leaderboard-service';
 import { AuthService } from '../core/auth-service';
 import { ModerationService } from '../core/moderation-service';
 import { ApiKeyService } from '../core/api-key-service';
@@ -20,6 +21,7 @@ export class GameDetail implements OnInit {
   private router = inject(Router);
   private gameService = inject(GameService);
   private scoreService = inject(ScoreService);
+  private leaderboardService = inject(LeaderboardService);
   private authService = inject(AuthService);
   private moderationService = inject(ModerationService);
   private apiKeyService = inject(ApiKeyService);
@@ -27,6 +29,8 @@ export class GameDetail implements OnInit {
 
   game = signal<Game | null>(null);
   leaderboard = signal<LeaderboardEntry[]>([]);
+  leaderboards = signal<Leaderboard[]>([]);
+  selectedLeaderboardId = signal<number | null>(null);
   loading = signal(true);
   loadingLeaderboard = signal(true);
   error = signal<string | null>(null);
@@ -35,6 +39,10 @@ export class GameDetail implements OnInit {
   submitting = signal(false);
   canModerate = signal(false);
   canManageKeys = signal(false);
+  selectedLeaderboard = computed(() =>
+    this.leaderboards().find(board => board.id === this.selectedLeaderboardId()) ?? null
+  );
+  activeLeaderboards = computed(() => this.leaderboards().filter(board => board.isActive));
 
   isLoggedIn = computed(() => this.authService.isAuthenticated());
   isAdmin = computed(() => this.authService.hasRole('Admin'));
@@ -62,8 +70,18 @@ export class GameDetail implements OnInit {
       return;
     }
 
+    this.route.queryParamMap.subscribe(params => {
+      const requestedId = Number(params.get('leaderboardId'));
+      if (Number.isInteger(requestedId) && requestedId > 0) {
+        this.selectedLeaderboardId.set(requestedId);
+        if (this.leaderboards().some(board => board.id === requestedId)) {
+          this.selectLeaderboard(requestedId, false);
+        }
+      }
+    });
+
     this.loadGame(gameId);
-    this.loadLeaderboard(gameId);
+    this.loadLeaderboards(gameId);
     this.checkModerationRights(gameId);
     this.checkApiKeyRights(gameId);
   }
@@ -83,9 +101,29 @@ export class GameDetail implements OnInit {
     });
   }
 
-  private loadLeaderboard(gameId: number) {
+  private loadLeaderboards(gameId: number) {
+    this.leaderboardService.getByGame(gameId).subscribe({
+      next: boards => {
+        this.leaderboards.set(boards);
+        const requestedId = this.selectedLeaderboardId();
+        const selected = boards.find(board => board.id === requestedId);
+        const initial = selected ?? boards.find(board => board.isActive) ?? boards[0];
+        if (initial) {
+          this.selectLeaderboard(initial.id, false);
+        } else {
+          this.loadingLeaderboard.set(false);
+        }
+      },
+      error: err => {
+        console.error('Failed to load leaderboards', err);
+        this.loadingLeaderboard.set(false);
+      }
+    });
+  }
+
+  private loadLeaderboard(leaderboardId: number) {
     this.loadingLeaderboard.set(true);
-    this.scoreService.getLeaderboard(gameId, 20).subscribe({
+    this.scoreService.getLeaderboard(leaderboardId, 20).subscribe({
       next: (entries) => {
         this.leaderboard.set(entries);
         this.loadingLeaderboard.set(false);
@@ -95,6 +133,38 @@ export class GameDetail implements OnInit {
         this.loadingLeaderboard.set(false);
       }
     });
+  }
+
+  selectLeaderboard(leaderboardId: number, updateUrl = true) {
+    const board = this.leaderboards().find(item => item.id === leaderboardId);
+    if (!board) {
+      return;
+    }
+
+    this.selectedLeaderboardId.set(leaderboardId);
+    this.submitSuccess.set(null);
+    this.submitError.set(null);
+    this.loadLeaderboard(leaderboardId);
+
+    if (updateUrl) {
+      void this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { leaderboardId },
+        queryParamsHandling: 'merge'
+      });
+    }
+  }
+
+  onLeaderboardChange(event: Event) {
+    const target = event.target;
+    if (!(target instanceof HTMLSelectElement)) {
+      return;
+    }
+
+    const leaderboardId = Number(target.value);
+    if (Number.isInteger(leaderboardId) && leaderboardId > 0) {
+      this.selectLeaderboard(leaderboardId);
+    }
   }
 
   private checkModerationRights(gameId: number) {
@@ -128,7 +198,8 @@ export class GameDetail implements OnInit {
   }
 
   submitScore() {
-    if (this.scoreForm.invalid || !this.game()) {
+    const board = this.selectedLeaderboard();
+    if (this.scoreForm.invalid || !this.game() || !board?.isActive) {
       return;
     }
 
@@ -142,7 +213,7 @@ export class GameDetail implements OnInit {
     this.submitSuccess.set(null);
     this.submitError.set(null);
 
-    this.scoreService.submitScore(gameId, scoreValue, title, description).subscribe({
+    this.scoreService.submitScore(gameId, board.id, scoreValue, title, description).subscribe({
       next: () => {
         this.submitSuccess.set('Score submitted successfully! It will appear on the leaderboard once approved by a moderator.');
         this.submitting.set(false);
@@ -200,6 +271,13 @@ export class GameDetail implements OnInit {
     }
   }
 
+  goToLeaderboards() {
+    const gameId = this.game()?.id;
+    if (gameId) {
+      this.router.navigate(['/games', gameId, 'leaderboards']);
+    }
+  }
+
   viewScorePost(userId: number | null) {
     // A score sent by a game client belongs to a player name, there is no score post to open
     if (userId === null) return;
@@ -207,7 +285,10 @@ export class GameDetail implements OnInit {
     const gameId = this.game()?.id;
     if (!gameId) return;
 
-    this.scoreService.lookupScore(gameId, userId).subscribe({
+    const leaderboardId = this.selectedLeaderboardId();
+    if (!leaderboardId) return;
+
+    this.scoreService.lookupScore(gameId, leaderboardId, userId).subscribe({
       next: (result) => {
         this.router.navigate(['/scores', result.scoreId]);
       },

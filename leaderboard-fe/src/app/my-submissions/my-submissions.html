@@ -52,9 +52,10 @@
           <div class="submission-main">
             <div class="game-info">
               <button class="post-title-link" (click)="viewScorePost(score.id)">{{ score.title }}</button>
-              <button class="game-link" (click)="viewGame(score.game.id)">
+              <button class="game-link" (click)="viewGame(score.game.id, score.leaderboardId)">
                 {{ score.game.name }}
               </button>
+              <span class="leaderboard-link">{{ score.leaderboardName }}</span>
               <span class="date">{{ formatDate(score.dateAchieved) }}</span>
             </div>
             <div class="score-value">{{ score.value | number }}</div>

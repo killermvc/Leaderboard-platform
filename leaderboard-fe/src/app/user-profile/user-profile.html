@@ -46,10 +46,11 @@
       <section class="section">
         <h2 i18n="@@userProfile.gameRankings">🏆 Game Rankings</h2>
         <div class="rankings-grid">
-          @for (ranking of userProfile()!.gameRankings; track ranking.gameId) {
-            <div class="ranking-card" (click)="viewGame(ranking.gameId)">
+          @for (ranking of userProfile()!.gameRankings; track ranking.leaderboardId) {
+            <div class="ranking-card" (click)="viewLeaderboard(ranking.gameId, ranking.leaderboardId)">
               <div class="ranking-header">
                 <span class="game-name">{{ ranking.gameName }}</span>
+                <span class="leaderboard-name">{{ ranking.leaderboardName }}</span>
                 <span class="rank" [class]="getRankClass(ranking.rank)">
                   {{ getRankDisplay(ranking.rank) }}
                 </span>
@@ -76,9 +77,10 @@
         <h2 i18n="@@userProfile.recentActivity">📊 Recent Activity</h2>
         <div class="scores-list">
           @for (score of userProfile()!.recentScores; track score.id) {
-            <div class="score-item" (click)="viewGame(score.gameId)">
+            <div class="score-item" (click)="viewLeaderboard(score.gameId, score.leaderboardId)">
               <div class="score-game">
                 <span class="game-name">{{ score.gameName }}</span>
+                <span class="leaderboard-name">{{ score.leaderboardName }}</span>
                 <span class="score-date">{{ getTimeAgo(score.dateAchieved) }}</span>
               </div>
               <div class="score-value">{{ score.value | number }}</div>

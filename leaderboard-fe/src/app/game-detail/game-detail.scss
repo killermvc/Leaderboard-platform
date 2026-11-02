@@ -212,6 +212,23 @@
   gap: 1rem;
 }
 
+.board-selector {
+  margin-bottom: 1rem;
+
+  select {
+    padding: 0.7rem 0.8rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.04);
+    color: #f8fbff;
+    font: inherit;
+  }
+}
+
+.inactive-hint {
+  color: #ffb38f;
+}
+
 .form-group {
   display: flex;
   flex-direction: column;

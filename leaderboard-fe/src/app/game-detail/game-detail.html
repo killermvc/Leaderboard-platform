@@ -26,6 +26,9 @@
           @if (canConfigure()) {
             <button class="btn-secondary" (click)="goToConfigure()" i18n="@@gameDetail.configureGame">⚙ Configure Game</button>
           }
+          @if (canModerate() || isAdmin()) {
+            <button class="btn-secondary" (click)="goToLeaderboards()" i18n="@@gameDetail.manageLeaderboards">🏆 Manage Leaderboards</button>
+          }
           @if (isAdmin()) {
             <button class="btn-secondary" (click)="goToModerators()" i18n="@@gameDetail.manageModerators">🛡️ Manage Moderators</button>
           }
@@ -48,6 +51,37 @@
             <span class="state-chip">{{ topLabel() }} {{ leaderboard().length }}</span>
           }
         </div>
+
+        @if (leaderboards().length > 0) {
+          <div class="board-selector form-group">
+            <label for="leaderboard-select" i18n="@@gameDetail.selectLeaderboard">Leaderboard</label>
+            <select
+              id="leaderboard-select"
+              [value]="selectedLeaderboardId() ?? ''"
+              (change)="onLeaderboardChange($event)"
+            >
+              @for (board of leaderboards(); track board.id) {
+                <option [value]="board.id">
+                  {{ board.name }}@if (!board.isActive) {
+                    <ng-container i18n="@@gameDetail.inactiveSuffix"> (Inactive)</ng-container>
+                  }
+                </option>
+              }
+            </select>
+            @if (selectedLeaderboard(); as board) {
+              @if (board.description) {
+                <span class="hint">{{ board.description }}</span>
+              }
+              @if (!board.isActive) {
+                <span class="hint inactive-hint" i18n="@@gameDetail.inactiveLeaderboard">
+                  This leaderboard is inactive and does not accept submissions.
+                </span>
+              }
+            }
+          </div>
+        } @else if (!loadingLeaderboard()) {
+          <p class="empty-text" i18n="@@gameDetail.noLeaderboards">No leaderboards are available.</p>
+        }
 
         @if (loadingLeaderboard()) {
           <p class="loading-text" i18n="@@gameDetail.loadingLeaderboard">Loading leaderboard...</p>
@@ -80,7 +114,7 @@
             <h2 i18n="@@gameDetail.submitScore">🎮 Submit Score</h2>
           </div>
 
-          @if (isLoggedIn()) {
+          @if (isLoggedIn() && selectedLeaderboard(); as board) {
             <form [formGroup]="scoreForm" (ngSubmit)="submitScore()" class="score-form">
             <div class="form-group">
               <label for="score" i18n="@@gameDetail.yourScore">Your Score</label>
@@ -127,7 +161,7 @@
             <button
               type="submit"
               class="btn-primary"
-              [disabled]="scoreForm.invalid || submitting()"
+              [disabled]="scoreForm.invalid || submitting() || !board.isActive"
             >
               @if (submitting()) {
                 <span i18n="@@gameDetail.submitting">Submitting...</span>
@@ -135,6 +169,11 @@
                 <span i18n="@@gameDetail.submitScoreBtn">Submit Score</span>
               }
             </button>
+            @if (!board.isActive) {
+              <p class="empty-text" i18n="@@gameDetail.selectActiveLeaderboard">
+                Select an active leaderboard to submit a score.
+              </p>
+            }
             </form>
           } @else {
             <div class="login-prompt">

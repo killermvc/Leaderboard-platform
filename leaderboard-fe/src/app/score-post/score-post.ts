@@ -182,8 +182,9 @@ export class ScorePostComponent implements OnInit {
 
   goToGame() {
     const gameId = this.score()?.game?.id;
-    if (gameId) {
-      this.router.navigate(['/games', gameId]);
+    const leaderboardId = this.score()?.leaderboardId;
+    if (gameId && leaderboardId) {
+      this.router.navigate(['/games', gameId], { queryParams: { leaderboardId } });
     }
   }
 

@@ -1,0 +1,92 @@
+<main class="management-shell">
+  <button class="back-btn" type="button" (click)="goBack()" i18n="@@leaderboardManagement.backToGame">← Back to Game</button>
+
+  @if (loading()) {
+    <section class="state-panel"><p i18n="@@leaderboardManagement.loading">Loading leaderboards...</p></section>
+  } @else if (error() && !game()) {
+    <section class="state-panel error-panel"><p>{{ error() }}</p></section>
+  } @else if (game(); as gameData) {
+    <header class="page-header">
+      <p class="eyebrow" i18n="@@leaderboardManagement.eyebrow">Game configuration</p>
+      <h1 i18n="@@leaderboardManagement.title">Leaderboards for {{ gameData.name }}</h1>
+      <p i18n="@@leaderboardManagement.subtitle">Create separate scoring systems and control whether each accepts new submissions.</p>
+    </header>
+
+    @if (!canManage()) {
+      <section class="state-panel error-panel">
+        <p i18n="@@leaderboardManagement.noPermission">You do not have permission to manage leaderboards for this game.</p>
+      </section>
+    } @else {
+      @if (error()) { <div class="message error-message">{{ error() }}</div> }
+      @if (success()) { <div class="message success-message">{{ success() }}</div> }
+
+      <section class="management-grid">
+        <form class="panel board-form" [formGroup]="leaderboardForm" (ngSubmit)="save()">
+          <h2>
+            @if (editingId() === null) {
+              <ng-container i18n="@@leaderboardManagement.createLeaderboard">Create leaderboard</ng-container>
+            } @else {
+              <ng-container i18n="@@leaderboardManagement.editLeaderboard">Edit leaderboard</ng-container>
+            }
+          </h2>
+          <label for="leaderboard-name" i18n="@@leaderboardManagement.nameLabel">Name</label>
+          <input id="leaderboard-name" type="text" formControlName="name" />
+          @if (leaderboardForm.controls.name.invalid && leaderboardForm.controls.name.touched) {
+            <span class="field-error" i18n="@@leaderboardManagement.nameRequired">A name is required.</span>
+          }
+          <label for="leaderboard-description" i18n="@@leaderboardManagement.descriptionLabel">Description</label>
+          <textarea id="leaderboard-description" rows="5" formControlName="description"></textarea>
+          <label class="toggle-row" for="leaderboard-active">
+            <input id="leaderboard-active" type="checkbox" formControlName="isActive" />
+            <span i18n="@@leaderboardManagement.acceptSubmissions">Accept new submissions</span>
+          </label>
+          <div class="form-actions">
+            @if (editingId() !== null) {
+              <button class="btn-secondary" type="button" (click)="cancelEdit()" i18n="@@leaderboardManagement.cancel">Cancel</button>
+            }
+            <button class="btn-primary" type="submit" [disabled]="saving()">
+              @if (saving()) {
+                <ng-container i18n="@@leaderboardManagement.saving">Saving...</ng-container>
+              } @else if (editingId() === null) {
+                <ng-container i18n="@@leaderboardManagement.createLeaderboard">Create leaderboard</ng-container>
+              } @else {
+                <ng-container i18n="@@leaderboardManagement.saveChanges">Save changes</ng-container>
+              }
+            </button>
+          </div>
+        </form>
+
+        <section class="panel board-list">
+          <h2 i18n="@@leaderboardManagement.existingLeaderboards">Existing leaderboards</h2>
+          @if (leaderboards().length === 0) {
+            <p class="muted-text" i18n="@@leaderboardManagement.noLeaderboards">No leaderboards found.</p>
+          } @else {
+            <ul>
+              @for (board of leaderboards(); track board.id) {
+                <li>
+                  <div>
+                    <strong>{{ board.name }}</strong>
+                    <span class="status" [class.inactive]="!board.isActive">
+                      @if (board.isActive) {
+                        <ng-container i18n="@@leaderboardManagement.active">Active</ng-container>
+                      } @else {
+                        <ng-container i18n="@@leaderboardManagement.inactive">Inactive</ng-container>
+                      }
+                    </span>
+                    @if (board.description) { <p>{{ board.description }}</p> }
+                  </div>
+                  <div class="actions">
+                    <button class="text-action" type="button" (click)="edit(board)" i18n="@@leaderboardManagement.edit">Edit</button>
+                    @if (isAdmin()) {
+                      <button class="remove-action" type="button" (click)="delete(board)" i18n="@@leaderboardManagement.delete">Delete</button>
+                    }
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+      </section>
+    }
+  }
+</main>

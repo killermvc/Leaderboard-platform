@@ -1583,6 +1583,90 @@
           <context context-type="linenumber">94,98</context>
         </context-group>
       <target>Este usuario no ha enviado ninguna puntuación aún.</target></trans-unit>
-    <trans-unit id="errors.unauthorized" datatype="html"><source>Unauthorized access. Please log in.</source><target>Acceso no autorizado. Por favor, inicia sesión.</target></trans-unit><trans-unit id="errors.forbidden" datatype="html"><source>You do not have permission to perform this action.</source><target>No tienes permiso para realizar esta acción.</target></trans-unit><trans-unit id="errors.invalidToken" datatype="html"><source>Invalid or expired authentication token.</source><target>Token de autenticación inválido o expirado.</target></trans-unit><trans-unit id="errors.tokenExpired" datatype="html"><source>Your session has expired. Please log in again.</source><target>Tu sesión ha expirado. Por favor, inicia sesión de nuevo.</target></trans-unit><trans-unit id="errors.validationFailed" datatype="html"><source>Validation failed. Please check your input.</source><target>La validación ha fallado. Por favor, revisa tu entrada.</target></trans-unit><trans-unit id="errors.invalidRequest" datatype="html"><source>Invalid request. Please check your data.</source><target>Solicitud inválida. Por favor, revisa tus datos.</target></trans-unit><trans-unit id="errors.notFound" datatype="html"><source>The requested resource was not found.</source><target>El recurso solicitado no fue encontrado.</target></trans-unit><trans-unit id="errors.gameNotFound" datatype="html"><source>Game not found.</source><target>Juego no encontrado.</target></trans-unit><trans-unit id="errors.scoreNotFound" datatype="html"><source>Score not found.</source><target>Puntuación no encontrada.</target></trans-unit><trans-unit id="errors.userNotFound" datatype="html"><source>User not found.</source><target>Usuario no encontrado.</target></trans-unit><trans-unit id="errors.apiKeyNotFound" datatype="html"><source>API key not found.</source><target>Clave API no encontrada.</target></trans-unit><trans-unit id="errors.submissionsNotAllowed" datatype="html"><source>Submissions are not allowed for this game.</source><target>Los envíos no están permitidos para este juego.</target></trans-unit><trans-unit id="errors.scoreNotHigher" datatype="html"><source>Score must be higher than your current best.</source><target>La puntuación debe ser mayor que tu mejor actual.</target></trans-unit><trans-unit id="errors.duplicateSubmission" datatype="html"><source>A submission with this ID already exists.</source><target>Ya existe un envío con este ID.</target></trans-unit><trans-unit id="errors.cannotModerateOwnScore" datatype="html"><source>You cannot moderate your own score.</source><target>No puedes moderar tu propia puntuación.</target></trans-unit><trans-unit id="errors.alreadyModerator" datatype="html"><source>This user is already a moderator for this game.</source><target>Este usuario ya es moderador de este juego.</target></trans-unit><trans-unit id="errors.notModerator" datatype="html"><source>User is not a moderator for this game.</source><target>El usuario no es moderador de este juego.</target></trans-unit><trans-unit id="errors.cannotRemoveOwner" datatype="html"><source>Cannot remove the game owner as moderator.</source><target>No se puede eliminar al propietario del juego como moderador.</target></trans-unit><trans-unit id="errors.gameAlreadyExists" datatype="html"><source>A game with this name already exists.</source><target>Ya existe un juego con este nombre.</target></trans-unit><trans-unit id="errors.rateLimitExceeded" datatype="html"><source>Too many requests. Please try again later.</source><target>Demasiadas solicitudes. Por favor, intenta de nuevo más tarde.</target></trans-unit><trans-unit id="errors.internalError" datatype="html"><source>An unexpected error occurred. Please try again.</source><target>Ocurrió un error inesperado. Por favor, intenta de nuevo.</target></trans-unit><trans-unit id="errors.serviceUnavailable" datatype="html"><source>Service temporarily unavailable. Please try again later.</source><target>Servicio temporalmente no disponible. Por favor, intenta de nuevo más tarde.</target></trans-unit><trans-unit id="errors.databaseError" datatype="html"><source>Database error. Please try again later.</source><target>Error de base de datos. Por favor, intenta de nuevo más tarde.</target></trans-unit><trans-unit id="errors.externalServiceError" datatype="html"><source>External service error. Please try again later.</source><target>Error de servicio externo. Por favor, intenta de nuevo más tarde.</target></trans-unit><trans-unit id="errors.clerkError" datatype="html"><source>Authentication service error. Please try again.</source><target>Error del servicio de autenticación. Por favor, intenta de nuevo.</target></trans-unit><trans-unit id="errors.webhookVerificationFailed" datatype="html"><source>Webhook verification failed.</source><target>La verificación del webhook falló.</target></trans-unit><trans-unit id="errors.networkError" datatype="html"><source>Network error. Please check your connection.</source><target>Error de red. Por favor, verifica tu conexión.</target></trans-unit><trans-unit id="errors.badRequest" datatype="html"><source>Bad request. Please check your input.</source><target>Solicitud incorrecta. Por favor, revisa tu entrada.</target></trans-unit><trans-unit id="errors.unknown" datatype="html"><source>An unknown error occurred.</source><target>Ocurrió un error desconocido.</target></trans-unit></body>
+        <trans-unit id="gameDetail.inactiveLeaderboard" datatype="html">
+        <source>This leaderboard is inactive and does not accept submissions.</source>
+      <target>Esta clasificación está inactiva y no acepta envíos.</target></trans-unit>
+    <trans-unit id="gameDetail.inactiveSuffix" datatype="html">
+        <source>(Inactive)</source>
+      <target>(Inactivo)</target></trans-unit>
+    <trans-unit id="gameDetail.manageLeaderboards" datatype="html">
+        <source>🏆 Manage Leaderboards</source>
+      <target>🏆 Administrar clasificaciones</target></trans-unit>
+    <trans-unit id="gameDetail.noLeaderboards" datatype="html">
+        <source>No leaderboards are available.</source>
+      <target>No hay clasificaciones disponibles.</target></trans-unit>
+    <trans-unit id="gameDetail.selectActiveLeaderboard" datatype="html">
+        <source>Select an active leaderboard to submit a score.</source>
+      <target>Selecciona una clasificación activa para enviar una puntuación.</target></trans-unit>
+    <trans-unit id="gameDetail.selectLeaderboard" datatype="html">
+        <source>Leaderboard</source>
+      <target>Clasificación</target></trans-unit>
+    <trans-unit id="leaderboardManagement.acceptSubmissions" datatype="html">
+        <source>Accept new submissions</source>
+      <target>Aceptar nuevos envíos</target></trans-unit>
+    <trans-unit id="leaderboardManagement.active" datatype="html">
+        <source>Active</source>
+      <target>Activo</target></trans-unit>
+    <trans-unit id="leaderboardManagement.backToGame" datatype="html">
+        <source>← Back to Game</source>
+      <target>← Volver al juego</target></trans-unit>
+    <trans-unit id="leaderboardManagement.cancel" datatype="html">
+        <source>Cancel</source>
+      <target>Cancelar</target></trans-unit>
+    <trans-unit id="leaderboardManagement.createLeaderboard" datatype="html">
+        <source>Create leaderboard</source>
+      <target>Crear clasificación</target></trans-unit>
+    <trans-unit id="leaderboardManagement.delete" datatype="html">
+        <source>Delete</source>
+      <target>Eliminar</target></trans-unit>
+    <trans-unit id="leaderboardManagement.descriptionLabel" datatype="html">
+        <source>Description</source>
+      <target>Descripción</target></trans-unit>
+    <trans-unit id="leaderboardManagement.edit" datatype="html">
+        <source>Edit</source>
+      <target>Editar</target></trans-unit>
+    <trans-unit id="leaderboardManagement.editLeaderboard" datatype="html">
+        <source>Edit leaderboard</source>
+      <target>Editar clasificación</target></trans-unit>
+    <trans-unit id="leaderboardManagement.existingLeaderboards" datatype="html">
+        <source>Existing leaderboards</source>
+      <target>Clasificaciones existentes</target></trans-unit>
+    <trans-unit id="leaderboardManagement.eyebrow" datatype="html">
+        <source>Game configuration</source>
+      <target>Configuración del juego</target></trans-unit>
+    <trans-unit id="leaderboardManagement.inactive" datatype="html">
+        <source>Inactive</source>
+      <target>Inactivo</target></trans-unit>
+    <trans-unit id="leaderboardManagement.loading" datatype="html">
+        <source>Loading leaderboards...</source>
+      <target>Cargando clasificaciones...</target></trans-unit>
+    <trans-unit id="leaderboardManagement.nameLabel" datatype="html">
+        <source>Name</source>
+      <target>Nombre</target></trans-unit>
+    <trans-unit id="leaderboardManagement.nameRequired" datatype="html">
+        <source>A name is required.</source>
+      <target>Se requiere un nombre.</target></trans-unit>
+    <trans-unit id="leaderboardManagement.noLeaderboards" datatype="html">
+        <source>No leaderboards found.</source>
+      <target>No se encontraron clasificaciones.</target></trans-unit>
+    <trans-unit id="leaderboardManagement.noPermission" datatype="html">
+        <source>You do not have permission to manage leaderboards for this game.</source>
+      <target>No tienes permiso para administrar las clasificaciones de este juego.</target></trans-unit>
+    <trans-unit id="leaderboardManagement.saveChanges" datatype="html">
+        <source>Save changes</source>
+      <target>Guardar cambios</target></trans-unit>
+    <trans-unit id="leaderboardManagement.saving" datatype="html">
+        <source>Saving...</source>
+      <target>Guardando...</target></trans-unit>
+    <trans-unit id="leaderboardManagement.subtitle" datatype="html">
+        <source>Create separate scoring systems and control whether each accepts new submissions.</source>
+      <target>Crea sistemas de puntuación independientes y controla si cada uno acepta nuevos envíos.</target></trans-unit>
+    <trans-unit id="leaderboardManagement.title" datatype="html">
+        <source>Leaderboards for <x id="INTERPOLATION" equiv-text="{{ gameData.name }}"/></source>
+      <target>Clasificaciones para <x id="INTERPOLATION" equiv-text="{{ gameData.name }}"/></target></trans-unit>
+    <trans-unit id="pendingScores.thLeaderboard" datatype="html">
+        <source>Leaderboard</source>
+      <target>Clasificación</target></trans-unit>
+<trans-unit id="errors.unauthorized" datatype="html"><source>Unauthorized access. Please log in.</source><target>Acceso no autorizado. Por favor, inicia sesión.</target></trans-unit><trans-unit id="errors.forbidden" datatype="html"><source>You do not have permission to perform this action.</source><target>No tienes permiso para realizar esta acción.</target></trans-unit><trans-unit id="errors.invalidToken" datatype="html"><source>Invalid or expired authentication token.</source><target>Token de autenticación inválido o expirado.</target></trans-unit><trans-unit id="errors.tokenExpired" datatype="html"><source>Your session has expired. Please log in again.</source><target>Tu sesión ha expirado. Por favor, inicia sesión de nuevo.</target></trans-unit><trans-unit id="errors.validationFailed" datatype="html"><source>Validation failed. Please check your input.</source><target>La validación ha fallado. Por favor, revisa tu entrada.</target></trans-unit><trans-unit id="errors.invalidRequest" datatype="html"><source>Invalid request. Please check your data.</source><target>Solicitud inválida. Por favor, revisa tus datos.</target></trans-unit><trans-unit id="errors.notFound" datatype="html"><source>The requested resource was not found.</source><target>El recurso solicitado no fue encontrado.</target></trans-unit><trans-unit id="errors.gameNotFound" datatype="html"><source>Game not found.</source><target>Juego no encontrado.</target></trans-unit><trans-unit id="errors.scoreNotFound" datatype="html"><source>Score not found.</source><target>Puntuación no encontrada.</target></trans-unit><trans-unit id="errors.userNotFound" datatype="html"><source>User not found.</source><target>Usuario no encontrado.</target></trans-unit><trans-unit id="errors.apiKeyNotFound" datatype="html"><source>API key not found.</source><target>Clave API no encontrada.</target></trans-unit><trans-unit id="errors.submissionsNotAllowed" datatype="html"><source>Submissions are not allowed for this game.</source><target>Los envíos no están permitidos para este juego.</target></trans-unit><trans-unit id="errors.scoreNotHigher" datatype="html"><source>Score must be higher than your current best.</source><target>La puntuación debe ser mayor que tu mejor actual.</target></trans-unit><trans-unit id="errors.duplicateSubmission" datatype="html"><source>A submission with this ID already exists.</source><target>Ya existe un envío con este ID.</target></trans-unit><trans-unit id="errors.cannotModerateOwnScore" datatype="html"><source>You cannot moderate your own score.</source><target>No puedes moderar tu propia puntuación.</target></trans-unit><trans-unit id="errors.alreadyModerator" datatype="html"><source>This user is already a moderator for this game.</source><target>Este usuario ya es moderador de este juego.</target></trans-unit><trans-unit id="errors.notModerator" datatype="html"><source>User is not a moderator for this game.</source><target>El usuario no es moderador de este juego.</target></trans-unit><trans-unit id="errors.cannotRemoveOwner" datatype="html"><source>Cannot remove the game owner as moderator.</source><target>No se puede eliminar al propietario del juego como moderador.</target></trans-unit><trans-unit id="errors.gameAlreadyExists" datatype="html"><source>A game with this name already exists.</source><target>Ya existe un juego con este nombre.</target></trans-unit><trans-unit id="errors.rateLimitExceeded" datatype="html"><source>Too many requests. Please try again later.</source><target>Demasiadas solicitudes. Por favor, intenta de nuevo más tarde.</target></trans-unit><trans-unit id="errors.internalError" datatype="html"><source>An unexpected error occurred. Please try again.</source><target>Ocurrió un error inesperado. Por favor, intenta de nuevo.</target></trans-unit><trans-unit id="errors.serviceUnavailable" datatype="html"><source>Service temporarily unavailable. Please try again later.</source><target>Servicio temporalmente no disponible. Por favor, intenta de nuevo más tarde.</target></trans-unit><trans-unit id="errors.databaseError" datatype="html"><source>Database error. Please try again later.</source><target>Error de base de datos. Por favor, intenta de nuevo más tarde.</target></trans-unit><trans-unit id="errors.externalServiceError" datatype="html"><source>External service error. Please try again later.</source><target>Error de servicio externo. Por favor, intenta de nuevo más tarde.</target></trans-unit><trans-unit id="errors.clerkError" datatype="html"><source>Authentication service error. Please try again.</source><target>Error del servicio de autenticación. Por favor, intenta de nuevo.</target></trans-unit><trans-unit id="errors.webhookVerificationFailed" datatype="html"><source>Webhook verification failed.</source><target>La verificación del webhook falló.</target></trans-unit><trans-unit id="errors.networkError" datatype="html"><source>Network error. Please check your connection.</source><target>Error de red. Por favor, verifica tu conexión.</target></trans-unit><trans-unit id="errors.badRequest" datatype="html"><source>Bad request. Please check your input.</source><target>Solicitud incorrecta. Por favor, revisa tu entrada.</target></trans-unit><trans-unit id="errors.unknown" datatype="html"><source>An unknown error occurred.</source><target>Ocurrió un error desconocido.</target></trans-unit></body>
   </file>
 </xliff>

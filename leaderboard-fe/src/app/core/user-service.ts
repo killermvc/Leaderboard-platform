@@ -15,6 +15,8 @@ export interface User {
 export interface GameRanking {
   gameId: number;
   gameName: string;
+  leaderboardId: number;
+  leaderboardName: string;
   rank: number | null;
   bestScore: number;
   scoresSubmitted: number;
@@ -24,6 +26,8 @@ export interface UserScore {
   id: number;
   gameId: number;
   gameName: string;
+  leaderboardId: number;
+  leaderboardName: string;
   value: number;
   dateAchieved: string;
 }

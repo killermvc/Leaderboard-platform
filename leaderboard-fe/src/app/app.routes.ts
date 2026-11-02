@@ -15,6 +15,7 @@ import { ScorePostComponent } from './score-post/score-post';
 import { ApiKeysComponent } from './api-keys/api-keys';
 import { NewGame } from './new-game/new-game';
 import { GameConfigure } from './game-configure/game-configure';
+import { LeaderboardManagementComponent } from './leaderboard-management/leaderboard-management';
 import { requireAuth, requireGuest } from './core/clerk-guards';
 
 export const routes: Routes = [
@@ -64,6 +65,11 @@ export const routes: Routes = [
   {
     path: 'games/:id/configure',
     component: GameConfigure,
+    canActivate: [requireAuth]
+  },
+  {
+    path: 'games/:id/leaderboards',
+    component: LeaderboardManagementComponent,
     canActivate: [requireAuth]
   },
   {

@@ -113,8 +113,10 @@ export class MySubmissionsComponent implements OnInit {
     });
   }
 
-  viewGame(gameId: number) {
-    this.router.navigate(['/games', gameId]);
+  viewGame(gameId: number, leaderboardId?: number) {
+    this.router.navigate(['/games', gameId], {
+      queryParams: leaderboardId ? { leaderboardId } : undefined,
+    });
   }
 
   viewScorePost(scoreId: number) {

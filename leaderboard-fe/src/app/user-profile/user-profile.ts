@@ -68,6 +68,10 @@ export class UserProfileComponent implements OnInit {
     this.router.navigate(['/games', gameId]);
   }
 
+  viewLeaderboard(gameId: number, leaderboardId: number) {
+    this.router.navigate(['/games', gameId], { queryParams: { leaderboardId } });
+  }
+
   getTimeAgo(dateString: string): string {
     const date = new Date(dateString);
     const now = new Date();

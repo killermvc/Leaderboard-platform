@@ -31,6 +31,7 @@
           <tr>
             <th i18n="@@pendingScores.thPost">Post</th>
             <th i18n="@@pendingScores.thPlayer">Player</th>
+            <th i18n="@@pendingScores.thLeaderboard">Leaderboard</th>
             <th i18n="@@pendingScores.thScore">Score</th>
             <th i18n="@@pendingScores.thSubmitted">Submitted</th>
             <th i18n="@@pendingScores.thActions">Actions</th>
@@ -54,6 +55,7 @@
                   <span class="player-name">{{ score.playerName ?? unknownPlayer() }}</span>
                 }
               </td>
+              <td>{{ score.leaderboardName }}</td>
               <td class="score-value">{{ score.value | number }}</td>
               <td class="date">{{ formatDate(score.dateAchieved) }}</td>
               <td class="actions">

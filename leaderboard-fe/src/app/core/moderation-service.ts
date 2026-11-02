@@ -41,6 +41,8 @@ export interface PendingScore {
     id: number;
     name: string;
   };
+  leaderboardId: number;
+  leaderboardName: string;
   value: number;
   dateAchieved: string;
   title: string;
@@ -93,10 +95,13 @@ export class ModerationService {
   /**
    * Get pending scores for a specific game
    */
-  getPendingScoresForGame(gameId: number, limit = 20, offset = 0): Observable<PendingScore[]> {
-    const params = new HttpParams()
+  getPendingScoresForGame(gameId: number, limit = 20, offset = 0, leaderboardId?: number): Observable<PendingScore[]> {
+    let params = new HttpParams()
       .set('limit', limit.toString())
       .set('offset', offset.toString());
+    if (leaderboardId !== undefined) {
+      params = params.set('leaderboardId', leaderboardId.toString());
+    }
     return this.http.get<PendingScore[]>(`${this.baseUrl}/games/${gameId}/pending-scores`, { params });
   }
 
