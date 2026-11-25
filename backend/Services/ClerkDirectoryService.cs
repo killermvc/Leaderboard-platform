@@ -180,6 +180,10 @@ public sealed class ClerkDirectoryService(
 		}
 		if (string.IsNullOrWhiteSpace(displayName))
 		{
+			displayName = GetPrimaryEmail(user);
+		}
+		if (string.IsNullOrWhiteSpace(displayName))
+		{
 			displayName = clerkUserId;
 		}
 
@@ -194,4 +198,57 @@ public sealed class ClerkDirectoryService(
 
 	private static string? GetString(JsonElement element, string propertyName) =>
 		element.TryGetProperty(propertyName, out JsonElement value) ? value.GetString() : null;
+
+	private static string? GetPrimaryEmail(JsonElement user)
+	{
+		if ((!user.TryGetProperty("email_addresses", out JsonElement emails) &&
+			 !user.TryGetProperty("emailAddresses", out emails)) ||
+			emails.ValueKind != JsonValueKind.Array)
+		{
+			// Clerk may expose a single email_address field in some payloads.
+			string? singleEmail = GetString(user, "email_address");
+			if (string.IsNullOrWhiteSpace(singleEmail))
+			{
+				singleEmail = GetString(user, "emailAddress");
+			}
+			return string.IsNullOrWhiteSpace(singleEmail) ? null : singleEmail;
+		}
+
+		string? primaryEmailId = GetString(user, "primary_email_address_id");
+		if (string.IsNullOrWhiteSpace(primaryEmailId))
+		{
+			primaryEmailId = GetString(user, "primaryEmailAddressId");
+		}
+
+		foreach (JsonElement email in emails.EnumerateArray())
+		{
+			string? emailId = GetString(email, "id");
+			string? emailAddress = GetString(email, "email_address");
+			if (string.IsNullOrWhiteSpace(emailAddress))
+			{
+				emailAddress = GetString(email, "emailAddress");
+			}
+			if (!string.IsNullOrWhiteSpace(primaryEmailId) &&
+				string.Equals(emailId, primaryEmailId, StringComparison.Ordinal) &&
+				!string.IsNullOrWhiteSpace(emailAddress))
+			{
+				return emailAddress;
+			}
+		}
+
+		foreach (JsonElement email in emails.EnumerateArray())
+		{
+			string? emailAddress = GetString(email, "email_address");
+			if (string.IsNullOrWhiteSpace(emailAddress))
+			{
+				emailAddress = GetString(email, "emailAddress");
+			}
+			if (!string.IsNullOrWhiteSpace(emailAddress))
+			{
+				return emailAddress;
+			}
+		}
+
+		return null;
+	}
 }
